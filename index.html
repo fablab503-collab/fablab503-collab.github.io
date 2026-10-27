@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D-CREATIONS · Building brick by brick</title>
+<meta name="description" content="D-CREATIONS, Montpellier: open-source projects turned into apps for everyone. The new site is being built in the open, page by page.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2314b8a6'/><text x='50' y='68' font-size='58' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'>D</text></svg>">
+<style>
+:root{--bg:#f6f7f9;--card:#ffffff;--ink:#111827;--mute:#6b7280;--accent:#14b8a6;--accent2:#0ea5e9;--line:#e5e7eb}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0f14;--card:#121821;--ink:#e5e7eb;--mute:#94a3b8;--line:#1f2937}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:16px}
+main{width:100%;max-width:760px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.06)}
+.tag{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+h1{font-size:clamp(24px,5vw,34px);line-height:1.15;margin:0 0 6px}
+p.lead{color:var(--mute);margin:0 0 16px}
+canvas{width:100%;height:auto;display:block;border-radius:16px;background:linear-gradient(180deg,rgba(20,184,166,.07),rgba(14,165,233,.05));border:1px solid var(--line);touch-action:none;cursor:pointer}
+.hud{display:flex;justify-content:space-between;color:var(--mute);font-size:13px;margin:8px 2px 14px}
+.links{display:flex;flex-wrap:wrap;gap:10px}
+a.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:12px;text-decoration:none;font-weight:600;border:1px solid var(--line);color:var(--ink);background:var(--card)}
+a.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+a.btn:hover{filter:brightness(1.05)}
+footer{color:var(--mute);font-size:12px;text-align:center;margin-top:14px}
+#win{display:none;margin:0 0 14px;padding:12px 14px;border-radius:12px;background:rgba(20,184,166,.12);color:var(--ink)}
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <span class="tag">D-CREATIONS · Montpellier</span>
+    <h1>We're rebuilding this site, brick by brick.</h1>
+    <p class="lead">Every brick below is a page of the new site. Break them all, or jump straight to the workshop where it's being built in the open.</p>
+    <canvas id="g" width="720" height="420" aria-label="Breakout game: each brick is a page of the future site"></canvas>
+    <div class="hud"><span id="info">Tap or press Space to launch · move with mouse, finger or ← →</span><span id="score">Pages built: 0 / 0</span></div>
+    <div id="win">🎉 You built the whole site. Now come see the real one taking shape on GitHub.</div>
+    <div class="links">
+      <a class="btn primary" href="https://github.com/fablab503-collab">🔧 Build it with me on GitHub</a>
+      <a class="btn" href="https://github.com/D-Creates">🏢 D-Creates studio</a>
+      <a class="btn" href="https://github.com/danielgheorghemadac">👤 Daniel Madac</a>
+      <a class="btn" href="https://www.linkedin.com/in/daniel-madac-3694091bb">💼 LinkedIn</a>
+    </div>
+  </div>
+  <footer>Open-source projects turned into apps for everyone · one Rust core, every platform · © D-CREATIONS</footer>
+</main>
+<script>
+(()=>{
+const c=document.getElementById('g'),x=c.getContext('2d'),W=c.width,H=c.height;
+const pages=['Home','Apps','Bouclier','CineBuddy','Cinema 101','Phoenix','Atlas','Majordome','Kits','Rust core','AI team','FabLab 503','Open source','Write-ups','Support','Contact'];
+const cols=4,rows=4,bw=(W-40-(cols-1)*10)/cols,bh=34;let bricks,ball,pad,run,keys={},built;
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function reset(){bricks=[];pages.forEach((t,i)=>bricks.push({x:20+(i%cols)*(bw+10),y:22+Math.floor(i/cols)*(bh+10),t,on:true}));
+pad={w:110,h:12,x:W/2-55};ball={x:W/2,y:H-60,r:8,vx:3.2,vy:-4.2,stuck:true};built=0;run=true;upd();document.getElementById('win').style.display='none'}
+function upd(){document.getElementById('score').textContent=`Pages built: ${built} / ${pages.length}`}
+function launch(){if(ball.stuck){ball.stuck=false}else if(!run){reset()}}
+addEventListener('keydown',e=>{keys[e.key]=1;if(e.code==='Space'){e.preventDefault();launch()}});addEventListener('keyup',e=>keys[e.key]=0);
+function aim(cx){const r=c.getBoundingClientRect();pad.x=Math.max(0,Math.min(W-pad.w,(cx-r.left)*W/r.width-pad.w/2))}
+c.addEventListener('mousemove',e=>aim(e.clientX));c.addEventListener('click',launch);
+c.addEventListener('touchstart',e=>{aim(e.touches[0].clientX);launch()},{passive:true});c.addEventListener('touchmove',e=>{aim(e.touches[0].clientX)},{passive:true});
+function rr(X,Y,w,h,r){x.beginPath();x.roundRect(X,Y,w,h,r);x.fill()}
+function step(){
+ if(keys.ArrowLeft)pad.x=Math.max(0,pad.x-8);if(keys.ArrowRight)pad.x=Math.min(W-pad.w,pad.x+8);
+ if(run){if(ball.stuck){ball.x=pad.x+pad.w/2;ball.y=H-34-ball.r}else{ball.x+=ball.vx;ball.y+=ball.vy;
+  if(ball.x<ball.r||ball.x>W-ball.r)ball.vx*=-1;if(ball.y<ball.r)ball.vy*=-1;
+  if(ball.y>H-34-ball.r&&ball.y<H-22&&ball.x>pad.x&&ball.x<pad.x+pad.w&&ball.vy>0){const h=(ball.x-(pad.x+pad.w/2))/(pad.w/2);ball.vx=5*h;ball.vy=-Math.max(3.6,Math.abs(ball.vy))}
+  if(ball.y>H+20){ball.stuck=true;ball.vx=3.2;ball.vy=-4.2}
+  for(const b of bricks)if(b.on&&ball.x>b.x&&ball.x<b.x+bw&&ball.y-ball.r<b.y+bh&&ball.y+ball.r>b.y){b.on=false;ball.vy*=-1;built++;upd();break}
+  if(built===pages.length){run=false;document.getElementById('win').style.display='block';document.getElementById('info').textContent='Tap to play again'}}}
+ x.clearRect(0,0,W,H);
+ for(const b of bricks){x.fillStyle=b.on?css('--accent'):'rgba(148,163,184,.18)';rr(b.x,b.y,bw,bh,9);x.fillStyle=b.on?'#fff':css('--mute');x.font='600 14px -apple-system,system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(b.on?b.t:'✓ '+b.t,b.x+bw/2,b.y+bh/2+1)}
+ x.fillStyle=css('--accent2');rr(pad.x,H-34,pad.w,pad.h,6);
+ x.fillStyle=css('--ink');x.beginPath();x.arc(ball.x,ball.y,ball.r,0,7);x.fill();
+ requestAnimationFrame(step)}
+reset();step();
+})();
+</script>
+</body>
+</html>
