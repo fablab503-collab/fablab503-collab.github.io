@@ -1,0 +1,34 @@
+dcreations.fr - credits and licences
+=====================================
+
+Everything below is installed from npm with an exact version and bundled
+into this site at build time. Nothing is loaded from a CDN or a third party
+at runtime, and there are no trackers.
+
+Code
+----
+- Astro 5.18.2 - MIT - https://github.com/withastro/astro
+- cobe 2.0.1 (3D globe on the home page) - MIT - https://github.com/shuding/cobe
+  cobe's built-in world map is based on (per the cobe README):
+  https://de.wikipedia.org/wiki/Datei:World_map_blank_without_borders.svg
+- embla-carousel 8.6.0 (screenshot carousel, Projects page) - MIT - https://github.com/davidjerleke/embla-carousel
+- jsPDF 4.2.1 (contract tool) - MIT - https://github.com/parallax/jsPDF
+
+Fonts (self-hosted, latin subset)
+---------------------------------
+- Overpass Variable and Overpass Mono Variable, @fontsource-variable/overpass 5.3.0 and
+  @fontsource-variable/overpass-mono 5.3.0 - SIL Open Font License 1.1 (free typeface inspired by Highway Gothic / Interstate)
+  https://github.com/RedHatOfficial/Overpass - https://fontsource.org/fonts/overpass
+
+Icons
+-----
+- Simple Icons 16.35.0 (tool logos, GitHub logo) - CC0 1.0 - https://github.com/simple-icons/simple-icons
+  The logos are trademarks of their owners. They are shown only to say which
+  tools I use; this implies no partnership or endorsement.
+- Offer icons (camera, browser, star), arrows and play/pause: drawn for this site.
+
+Images
+------
+- Screenshots of Bouclier, DotWorld, Adamandeva and Majordome, and the CineBuddy
+  icon: my own apps and sites (Daniel Madac / D-CREATIONS).
+- D-CREATIONS logo: my own.
