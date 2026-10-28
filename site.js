@@ -158,3 +158,23 @@
     });
   }
 })();
+
+/* Header menu on narrow screens: the Menu button opens a centred dropdown with every page.
+   Closes on Escape, on a click outside, or after picking a page. */
+(function () {
+  var btn = document.querySelector('[data-nav-toggle]');
+  var header = document.querySelector('.site-header');
+  if (!btn || !header) return;
+  var set = function (open) {
+    header.classList.toggle('nav-open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+  btn.addEventListener('click', function () { set(!header.classList.contains('nav-open')); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && header.classList.contains('nav-open')) { set(false); btn.focus(); }
+  });
+  document.addEventListener('click', function (e) {
+    if (header.classList.contains('nav-open') && !header.contains(e.target)) set(false);
+  });
+  header.querySelectorAll('.site-nav a').forEach(function (a) { a.addEventListener('click', function () { set(false); }); });
+})();
