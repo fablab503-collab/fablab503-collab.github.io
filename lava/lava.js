@@ -67,7 +67,7 @@
       if (r.bottom < -40 || r.top > H + 40 || r.width < 4 || r.height < 4) continue;
       // Skip big wrappers whose children are already listed (keeps gaps between cards usable).
       if (r.width > W * 0.92 && r.height > H * 0.6 && !el.matches('[data-lava-avoid]')) continue;
-      out.push({ l: r.left - PAD, t: r.top - PAD, r: r.right + PAD, b: r.bottom + PAD });
+      out.push({ el, l: r.left - PAD, t: r.top - PAD, r: r.right + PAD, b: r.bottom + PAD, wide: r.left < 60 && r.right > W - 60 });
       if (out.length > 160) break;
     }
     avoid = out;
@@ -78,17 +78,22 @@
   const blobs = [];
   const drops = [];
   const size = () => Math.max(0.5, Math.min(1.15, Math.min(W, H) / 900));
-  const newTarget = (b) => { b.tx = rnd(0.04, 0.96) * W; b.ty = rnd(0.08, 0.95) * H; b.tt = rnd(5, 11); };
+  const newTarget = (b) => { b.tx = rnd(0.04, 0.96) * W; b.ty = rnd(0.05, 0.6) * H; b.tt = rnd(2, 7); };
+  // Each blob runs its own cycle: wander at random, fall slowly onto the content (resting on it and
+  // sliding off its nearest edge), reach the bottom, climb back up a side of the screen, wander again.
+  const wander = (b) => { b.mode = 'wander'; b.mt = rnd(5, 16); b.ledge = null; newTarget(b); };
+  const box = (el) => { const r = el.getBoundingClientRect(); return { l: r.left - PAD, t: r.top - PAD, r: r.right + PAD, b: r.bottom + PAD }; };
   const seed = () => {
     const k = W < 600 ? 4 : 7, s = size();
     for (let i = 0; i < k; i++) {
-      const b = { x: i % 2 ? rnd(0.75, 0.97) * W : rnd(0.03, 0.25) * W, y: rnd(0.15, 0.9) * H, vx: 0, vy: 0, r: rnd(26, 54) * s, ph: rnd(0, 6.3), state: 'idle', t: 0 };
-      b.r0 = b.r; newTarget(b); blobs.push(b);
+      const b = { x: i % 2 ? rnd(0.75, 0.97) * W : rnd(0.03, 0.25) * W, y: rnd(0.15, 0.9) * H, vx: 0, vy: 0, r: rnd(26, 54) * s, ph: rnd(0, 6.3), sp: rnd(0.6, 1.5), state: 'idle', t: 0 };
+      b.r0 = b.r; wander(b); b.mt = rnd(1, 14); blobs.push(b);
     }
   };
 
-  const pushOut = (o, rad, k) => {
+  const pushOut = (o, rad, k, skipWide) => {
     for (const a of avoid) {
+      if (skipWide && a.wide) continue;
       const cx = Math.max(a.l, Math.min(o.x, a.r)), cy = Math.max(a.t, Math.min(o.y, a.b));
       const dx = o.x - cx, dy = o.y - cy, d2 = dx * dx + dy * dy;
       if (d2 >= rad * rad) continue;
@@ -99,6 +104,51 @@
         if (i === 0) o.x -= s; else if (i === 1) o.x += s; else if (i === 2) o.y -= s; else o.y += s;
       }
     }
+  };
+
+  const fall = (b, dt, time) => {
+    if (b.ledge) {
+      // Resting on a block: roll slowly to its nearest edge, then drip off.
+      const a = box(b.ledge);
+      b.vx = Math.max(-95, Math.min(95, b.vx + b.dir * 80 * dt));
+      b.x += b.vx * dt;
+      b.y += (a.t - b.r * 0.9 - b.y) * Math.min(1, 6 * dt);
+      if (b.x < a.l - b.r * 0.5 || b.x > a.r + b.r * 0.5 || a.t > H || a.b < 0) { b.ledge = null; b.vy = 15; b.vx *= 0.4; }
+      return;
+    }
+    const prev = b.y + b.r * 0.9;
+    b.vy = Math.min(b.vy + 80 * dt, 120);
+    b.vx = b.vx * (1 - 1.5 * dt) + Math.sin(time * 0.8 + b.ph) * 14 * dt;
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    for (const a of avoid) {
+      if (b.x < a.l - b.r * 0.3 || b.x > a.r + b.r * 0.3) continue;
+      if (a.wide) {
+        // A full-width block: sink through it slowly, as if entering a new section.
+        if (b.y > a.t && b.y < a.b) { b.vy = Math.min(b.vy, 45); }
+        continue;
+      }
+      if (prev <= a.t + 3 && b.y + b.r * 0.9 > a.t) {
+        b.ledge = a.el; b.vy = 0;
+        const left = b.x - a.l, right = a.r - b.x;
+        b.dir = Math.random() < (right < left ? 0.8 : 0.2) ? 1 : -1;
+        b.vx = b.dir * Math.abs(b.vx) * 0.3;
+        return;
+      }
+    }
+    pushOut(b, b.r, 0.35, true);
+    if (b.y > H - b.r * 0.9) { b.mode = 'climb'; b.side = b.x < W / 2 ? -1 : 1; b.vy = 0; }
+  };
+  const climb = (b, dt, time) => {
+    // Glide to the nearest side along the bottom, then rise slowly up the edge of the screen.
+    const tx = b.side < 0 ? b.r * 0.35 : W - b.r * 0.35;
+    b.x += (tx - b.x) * Math.min(1, 0.9 * dt) + Math.sin(time * 1.3 + b.ph) * 6 * dt;
+    if (Math.abs(tx - b.x) < b.r) b.y -= (38 + 18 * b.sp) * dt;
+    else b.y += (H - b.r * 0.9 - b.y) * Math.min(1, 2 * dt);
+    b.vx = b.vy = 0;
+    // Stop under the header (or any full-width bar at the top), then push back into the page.
+    let top = 0;
+    for (const a of avoid) if (a.wide && a.t < H * 0.2) top = Math.max(top, a.b);
+    if (b.y < top + b.r * 1.2) { wander(b); b.vx = -b.side * 90; b.vy = 20; }
   };
 
   const drag = { b: null, id: -1, sx: 0, sy: 0, t0: 0, moved: false, lx: 0, ly: 0, lt: 0, vx: 0, vy: 0 };
@@ -114,21 +164,27 @@
         if (k >= 1) { burst(b); blobs.splice(i, 1); }
         continue;
       }
-      b.tt -= dt;
-      if (b.tt <= 0) newTarget(b);
-      b.vx += ((b.tx - b.x) * 0.06 + Math.sin(time * 0.7 + b.ph) * 10) * dt;
-      b.vy += ((b.ty - b.y) * 0.06 + Math.cos(time * 0.5 + b.ph) * 10) * dt;
-      b.vx *= 0.985; b.vy *= 0.985;
-      const sp = Math.hypot(b.vx, b.vy), max = 140;
-      if (sp > max) { b.vx *= max / sp; b.vy *= max / sp; }
-      b.x += b.vx * dt; b.y += b.vy * dt;
       b.r += (b.r0 * (1 + Math.sin(time * 0.9 + b.ph) * 0.06) - b.r) * 2 * dt;
-      pushOut(b, b.r * 1.15, 0.45);
-      // Soft walls: blobs stay on screen.
-      if (b.x < b.r * 0.3) b.vx += 60 * dt;
-      if (b.x > W - b.r * 0.3) b.vx -= 60 * dt;
-      if (b.y < b.r * 0.3) b.vy += 60 * dt;
-      if (b.y > H - b.r * 0.3) b.vy -= 60 * dt;
+      if (b.mode === 'fall') fall(b, dt, time);
+      else if (b.mode === 'climb') climb(b, dt, time);
+      else {
+        b.mt -= dt; b.tt -= dt;
+        if (b.tt <= 0) newTarget(b);
+        if (b.mt <= 0) { b.mode = 'fall'; b.vy = Math.max(b.vy, 0); }
+        b.vx += ((b.tx - b.x) * 0.07 * b.sp + Math.sin(time * 0.7 * b.sp + b.ph) * 22) * dt;
+        b.vy += ((b.ty - b.y) * 0.07 * b.sp + Math.cos(time * 0.53 * b.sp + b.ph * 1.7) * 22) * dt;
+        b.vx *= 0.985; b.vy *= 0.985;
+        const sp = Math.hypot(b.vx, b.vy), max = 150 * b.sp;
+        if (sp > max) { b.vx *= max / sp; b.vy *= max / sp; }
+        b.x += b.vx * dt; b.y += b.vy * dt;
+        pushOut(b, b.r * 1.15, 0.45);
+      }
+      if (b.mode !== 'climb') {
+        // Soft walls: blobs stay on screen.
+        if (b.x < b.r * 0.3) b.vx += 60 * dt;
+        if (b.x > W - b.r * 0.3) b.vx -= 60 * dt;
+        if (b.y < b.r * 0.3) b.vy += 60 * dt;
+      }
     }
     for (let i = drops.length - 1; i >= 0; i--) {
       const d = drops[i];
@@ -219,7 +275,7 @@
     const b = drag.b;
     if (!drag.moved && performance.now() - drag.t0 < 350) { b.state = 'pop'; b.t = 0; b.r0 = b.r; }
     else {
-      b.state = 'idle';
+      b.state = 'idle'; wander(b); b.mt = rnd(3, 9);
       const sp = Math.hypot(drag.vx, drag.vy), max = 900;
       b.vx = drag.vx * (sp > max ? max / sp : 1); b.vy = drag.vy * (sp > max ? max / sp : 1);
       b.tx = b.x + b.vx * 0.6; b.ty = b.y + b.vy * 0.6; b.tt = rnd(4, 8);
