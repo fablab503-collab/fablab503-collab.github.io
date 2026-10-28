@@ -151,12 +151,31 @@ function drawTopRow(ctx) {
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
   ctx.fillText(`ELEMENT ${state.id || '0'}`, 6, 6);
-  if (Number.isFinite(Number(state.bat)) && Number(state.bat) >= 0) {
-    ctx.textAlign = 'right';
-    ctx.fillText(`${Math.round(Number(state.bat))}%`, 194, 6);
-  }
+  drawBattery(ctx);
   ctx.textAlign = 'center';
 }
+
+// Wi-Fi sign left of the battery, like the puck: steady when joined, blinking while it looks.
+function wifiShown() {
+  const w = String(state.wifi || 'off');
+  const joined = w.includes('dBm');
+  const trying = !joined && w !== 'off' && w !== 'no saved network';
+  return { trying, show: joined || (trying && Math.floor(Date.now() / 1000) % 2 === 0) };
+}
+function drawBattery(ctx) {
+  if (!(Number.isFinite(Number(state.bat)) && Number(state.bat) >= 0)) return;
+  ctx.textAlign = 'right';
+  const t = `${Number(state.chg) === 1 ? '\u26A1' : ''}${Math.round(Number(state.bat))}%`;
+  ctx.fillText(t, 194, 6);
+  if (!wifiShown().show) return;
+  const cx = 194 - ctx.measureText(t).width - 7, cy = 14;   // three small arcs and a dot
+  ctx.save();
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 1.2;
+  for (const r of [2.5, 5, 7.5]) { ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI * 0.75, -Math.PI * 0.25); ctx.stroke(); }
+  ctx.beginPath(); ctx.arc(cx, cy, 0.9, 0, Math.PI * 2); ctx.fillStyle = '#000'; ctx.fill();
+  ctx.restore();
+}
+setInterval(() => { if (wifiShown().trying) renderScreen(); }, 1000);
 
 // Keep the REC dot blinking while recording.
 setInterval(() => { if (state.screen === 'element' && Number(state.rec) === 1) renderScreen(); }, 333);
@@ -184,10 +203,7 @@ function renderScreen() {
     ctx.textBaseline = 'top';
     ctx.textAlign = 'left';
     ctx.fillText(`ELEMENT ${state.id || '0'}`, 6, 6);
-    if (Number.isFinite(Number(state.bat)) && Number(state.bat) >= 0) {
-      ctx.textAlign = 'right';
-      ctx.fillText(`${Math.round(Number(state.bat))}%`, 194, 6);
-    }
+    drawBattery(ctx);
     ctx.textAlign = 'center';
 
     // Two option boxes 168x46 at top 50 and 102: logo (28 px) + name (Montserrat 20); selected = white on black
