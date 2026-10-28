@@ -508,8 +508,53 @@ function updateBattery() {
   el.title = state.mv ? `Puck battery ${Math.round(pct)}% (${(state.mv / 1000).toFixed(2)} V)` : 'Puck battery';
 }
 
+// "Your Element" controls in the settings panel: they only send commands to a real Element (never in simulation).
+const ctl = (id) => document.getElementById(id);
+function elementLive() {
+  const viaBridge = bridgeSocket && bridgeSocket.readyState === WebSocket.OPEN && bridgeStatus === 'connected';
+  return !isSimulationMode && (viaBridge || (isConnected && cmdChar));
+}
+function ctlSend(cmd) { if (elementLive()) sendCommand(cmd); }
+function updateElementControls() {
+  const live = elementLive();
+  ctl('element-controls').classList.toggle('off', !live);
+  ctl('ctl-hint').hidden = live;
+  ctl('ctl-fw').textContent = state.fw || '--';
+  const upd = state.upd || '';
+  ctl('ctl-upd').textContent = upd || '--';
+  ctl('ctl-upd-go').hidden = !upd.endsWith('available');
+  ctl('ctl-wifi').textContent = state.wifi ? `${state.wifi}${state.wifis != null ? ` · ${state.wifis} saved` : ''}` : '--';
+  ctl('ctl-wifi-on').checked = !!state.wifi && state.wifi !== 'off';
+  if (document.activeElement !== ctl('ctl-vol') && state.vol != null) ctl('ctl-vol').value = state.vol;
+  if (state.pet != null) {
+    const sel = ctl('ctl-pet');
+    if (![...sel.options].some((o) => +o.value === state.pet)) sel.add(new Option(`Every ${state.pet} min`, state.pet));
+    sel.value = String(state.pet);
+  }
+}
+function setupElementControls() {
+  ctl('ctl-upd-check').addEventListener('click', () => ctlSend('update:check'));
+  ctl('ctl-upd-go').addEventListener('click', () => ctlSend('update:go'));
+  ctl('ctl-wifi-on').addEventListener('change', (e) => ctlSend(e.target.checked ? 'wifi:on' : 'wifi:off'));
+  ctl('ctl-wifi-save').addEventListener('click', () => {
+    const ssid = ctl('ctl-ssid').value.trim(), pass = ctl('ctl-pass').value, note = ctl('ctl-wifi-note');
+    note.hidden = false;
+    if (!elementLive()) { note.textContent = 'Not saved: connect your Element first.'; return; }
+    if (!ssid) { note.textContent = 'Type the network name.'; return; }
+    ctlSend(`wifi+${ssid}\t${pass}`);
+    ctlSend('wifi:on');
+    ctl('ctl-pass').value = '';
+    note.textContent = 'Saved on the Element. It joins in about 30 seconds.';
+  });
+  ctl('ctl-wifi-forget').addEventListener('click', () => { const s = ctl('ctl-ssid').value.trim(); if (s) ctlSend(`wifi-${s}`); });
+  ctl('ctl-vol').addEventListener('change', (e) => ctlSend(`vol:${e.target.value}`));
+  ctl('ctl-pet').addEventListener('change', (e) => ctlSend(`pet:${e.target.value}`));
+  document.querySelectorAll('[data-chirp]').forEach((b) => b.addEventListener('click', () => ctlSend(`chirp:${b.dataset.chirp}`)));
+}
+
 function updateSettingsUI() {
   updateBattery();
+  updateElementControls();
   if (sdLineEl) {
     sdLineEl.textContent = state.sd || 'No SD card';
   }
@@ -1221,6 +1266,8 @@ function animate(now) {
 }
 
 async function init() {
+  setupElementControls();
+  updateElementControls();
   renderScreen();
   requestAnimationFrame(animate);
 

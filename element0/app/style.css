@@ -494,3 +494,14 @@ body {
   border-radius: 1px;
 }
 .battery.low .battery-fill { background: #dc2626; }
+
+/* "Your Element" controls */
+.panel-title { font-size: 13px; font-weight: 600; margin: 0 0 8px; }
+.element-controls { display: flex; flex-direction: column; gap: 8px; }
+.element-controls.off > :not(.panel-title):not(.ctl-hint) { opacity: 0.4; pointer-events: none; }
+.ctl-hint { font-size: 12px; opacity: 0.65; margin: 0; }
+.ctl-input, .ctl-select { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.15); font: inherit; font-size: 13px; background: #fff; color: #111; }
+.ctl-select { width: auto; }
+.ctl-range { width: 140px; }
+.ctl-sounds { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.ctl-sounds .btn { padding: 6px 4px; font-size: 12px; }

@@ -88,6 +88,53 @@
 
     <div class="panel-divider"></div>
 
+    <!-- Control the real Element (needs a connection: Bluetooth in Chrome/Edge, or the Mac bridge in Safari) -->
+    <section id="element-controls" class="element-controls">
+      <h3 class="panel-title">Your Element</h3>
+      <p id="ctl-hint" class="ctl-hint">Connect your Element to use these.</p>
+
+      <div class="panel-row"><span class="panel-label">Firmware</span><span id="ctl-fw" class="sd-value">--</span></div>
+      <div class="panel-row"><span class="panel-label">Update</span><span id="ctl-upd" class="sd-value">--</span></div>
+      <div class="ble-actions">
+        <button id="ctl-upd-check" class="btn" type="button">Check for update</button>
+        <button id="ctl-upd-go" class="btn btn-primary" type="button" hidden>Install over Wi-Fi</button>
+      </div>
+
+      <div class="panel-row"><span class="panel-label">Wi-Fi</span><span id="ctl-wifi" class="sd-value">--</span></div>
+      <div class="panel-row">
+        <span class="panel-label">Wi-Fi on the Element</span>
+        <label class="switch" aria-label="Wi-Fi on the Element"><input id="ctl-wifi-on" type="checkbox"><span class="switch-slider"></span></label>
+      </div>
+      <input id="ctl-ssid" class="ctl-input" type="text" placeholder="Network name" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <input id="ctl-pass" class="ctl-input" type="password" placeholder="Password" autocomplete="off">
+      <div class="ble-actions">
+        <button id="ctl-wifi-save" class="btn" type="button">Save on the Element</button>
+        <button id="ctl-wifi-forget" class="btn" type="button">Forget</button>
+      </div>
+      <p id="ctl-wifi-note" class="ctl-hint" hidden></p>
+
+      <div class="panel-row">
+        <span class="panel-label">Volume</span>
+        <input id="ctl-vol" class="ctl-range" type="range" min="0" max="100" step="5" aria-label="Volume">
+      </div>
+
+      <div class="panel-row">
+        <span class="panel-label">Pet sounds</span>
+        <select id="ctl-pet" class="ctl-select" aria-label="How often">
+          <option value="0">Off</option><option value="30">Every 30 min</option><option value="60">Every hour</option>
+          <option value="120">Every 2 hours</option><option value="240">Every 4 hours</option>
+        </select>
+      </div>
+      <div class="ctl-sounds">
+        <button class="btn" type="button" data-chirp="1">Pip-pip</button><button class="btn" type="button" data-chirp="2">Mrrp</button>
+        <button class="btn" type="button" data-chirp="3">Hm?</button><button class="btn" type="button" data-chirp="4">Yawn</button>
+        <button class="btn" type="button" data-chirp="5">Giggle</button><button class="btn" type="button" data-chirp="6">Coo</button>
+        <button class="btn" type="button" data-chirp="7">Boop</button><button class="btn" type="button" data-chirp="8">Sigh</button>
+      </div>
+    </section>
+
+    <div class="panel-divider"></div>
+
     <button id="btn-reset-view" class="btn" type="button">Reset view</button>
   </aside>
 
