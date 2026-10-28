@@ -80,3 +80,7 @@ Every puck has a permanent ID, kept in its flash (NVS `elements`/`id`) and in it
 - **Charging**: `chg` in the state (1 = USB link to a computer, or battery voltage rising or >= 4.17 V on a charger). Battery shows a bolt; idle face becomes cozy/content; "charging" bottom left of the Element screen; a pip-pip when plugged in.
 - **Low battery** (<= 20 %, not charging): tired faces, "charge me" bottom left, one sigh when it drops to 20 %.
 - **Full on a wall charger** (no computer link, >= 4.18 V and flat for 3 min): "full, unplug me" and a coo. The firmware cannot switch off USB power (the charger chip is not wired to the ESP32); the charger chip itself stops at full.
+
+## Firmware 1.5 (2026-10-28): paged menu, memory for Wi-Fi
+- **Menu**: 12 items, 4 per page, 3 pages (Montserrat 14, page "1/3" bottom right). Page 1: Element, Faces, Pair a phone, Info. Page 2: Wi-Fi on/off, Update (check, then install), Pet sounds (off/30 min/1 h/2 h/4 h), Volume (25-100 %, up to the limit). Page 3: Beeps on/off, Answer time (10/20/30/60 s), Button guide, Sleep. Settings change in place. `menu:<0-11>` opens or changes item n. State on the menu: `mi` = the 4 labels of the page joined by `|`, `mp` = `"1/3"`, `menuSel` = 0-11.
+- **Memory**: LVGL pool 64 -> 32 KB (uses ~20 KB), voice ring 24 -> 12 KB, LVGL demos off. Before this, Wi-Fi could not start ("Expected to init 4 rx buffer, actual is 0"). USB status line shows heap, largest block, LVGL use and Wi-Fi.
