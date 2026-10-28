@@ -69,3 +69,7 @@ Every puck has a permanent ID, kept in its flash (NVS `elements`/`id`) and in it
 - **Volume cap**: `volmax:<10-100>` (kept in NVS) caps the voice and tones.
 - **Wi-Fi**: `wifi+<ssid>\t<password>` saves a network (up to 10, NVS namespace `wifi`), `wifi-<ssid>` forgets it, `wifi:on|off`. The puck joins the strongest saved network it can see. State: `wifi` (`off`, `searching`, `<ssid> -54dBm`, `no saved network nearby`), `wifis` (count). Passwords are stored in the puck's flash (NVS, not encrypted).
 - **Display / memory**: LVGL renders in 8-bit grey (L8, `LV_COLOR_DEPTH 8` in `~/Documents/Arduino/libraries/lv_conf.h`), no `EPD_Clear` before each flush; free heap ~120 KB with Wi-Fi off.
+
+## Firmware 1.1 (2026-10-28): pet sounds and USB commands
+- **Pet sounds** (made on the puck, no phone needed): `pet:<minutes>` sound interval (0 = off, minimum 15, default 120, kept in NVS; each wait is 70-130 % of it), `petq:<from>,<to>` quiet hours in local time (default `22,8`; `0,0` = never quiet), `chirp:<1-8>` play one now (`chirp:0` = random). Sounds: 1 pip-pip, 2 mrrp, 3 hm?, 4 yawn, 5 giggle, 6 coo, 7 boop-beep, 8 sigh. Never while the Element talks, listens or plays a voice. State: `pet` (minutes), `petq` (`"22-8"`).
+- **USB serial**: every text command above can also be typed on the USB serial port (115200 baud, one per line), for tests without Bluetooth.
