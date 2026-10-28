@@ -144,4 +144,17 @@
       }).observe(mq);
     }
   }
+
+  // Theme toggle in the header: auto -> light -> dark -> auto (state lives in the head script, window.dcTheme).
+  var tb = document.querySelector('[data-theme-toggle]');
+  if (tb && window.dcTheme) {
+    var labels = {}; try { labels = JSON.parse(tb.getAttribute('data-labels')); } catch (e) {}
+    var label = function () { var c = window.dcTheme.get(); if (labels[c]) tb.setAttribute('aria-label', labels[c]); tb.title = labels[c] || ''; };
+    label();
+    tb.addEventListener('click', function () {
+      var c = window.dcTheme.get();
+      window.dcTheme.set(c === 'auto' ? 'light' : c === 'light' ? 'dark' : 'auto');
+      label();
+    });
+  }
 })();
