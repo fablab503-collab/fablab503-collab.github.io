@@ -693,5 +693,115 @@
   "id": "hearing",
   "en": "Hearing",
   "fr": "J'écoute"
+ },
+ {
+  "id": "look_left",
+  "en": "Looking left",
+  "fr": "Regarde à gauche"
+ },
+ {
+  "id": "look_right",
+  "en": "Looking right",
+  "fr": "Regarde à droite"
+ },
+ {
+  "id": "look_up",
+  "en": "Looking up",
+  "fr": "Regarde en haut"
+ },
+ {
+  "id": "look_down",
+  "en": "Looking down",
+  "fr": "Regarde en bas"
+ },
+ {
+  "id": "blink",
+  "en": "Blink",
+  "fr": "Clignement"
+ },
+ {
+  "id": "blink_happy",
+  "en": "Happy blink",
+  "fr": "Clin heureux"
+ },
+ {
+  "id": "talk_small",
+  "en": "Talking (small)",
+  "fr": "Parle (petit)"
+ },
+ {
+  "id": "talk_open",
+  "en": "Talking (open)",
+  "fr": "Parle (ouvert)"
+ },
+ {
+  "id": "talk_wide",
+  "en": "Talking (wide)",
+  "fr": "Parle (grand)"
+ },
+ {
+  "id": "talk_happy",
+  "en": "Talking happily",
+  "fr": "Parle joyeusement"
+ },
+ {
+  "id": "think_left",
+  "en": "Pondering",
+  "fr": "Réfléchit"
+ },
+ {
+  "id": "think_right",
+  "en": "Wondering",
+  "fr": "Se demande"
+ },
+ {
+  "id": "giggle",
+  "en": "Giggling",
+  "fr": "Glousse"
+ },
+ {
+  "id": "shy_glance",
+  "en": "Shy glance",
+  "fr": "Regard timide"
+ },
+ {
+  "id": "sneaky",
+  "en": "Sneaky",
+  "fr": "Sournois"
+ },
+ {
+  "id": "peekaboo",
+  "en": "Peekaboo",
+  "fr": "Coucou"
+ },
+ {
+  "id": "amazed_wow",
+  "en": "Wide-eyed",
+  "fr": "Yeux ronds"
+ },
+ {
+  "id": "sleepy_yawn",
+  "en": "Big yawn",
+  "fr": "Gros bâillement"
+ },
+ {
+  "id": "boop",
+  "en": "Booped",
+  "fr": "Boop"
+ },
+ {
+  "id": "tongue_out",
+  "en": "Tongue out",
+  "fr": "Tire la langue"
+ },
+ {
+  "id": "proud_beam",
+  "en": "Proud",
+  "fr": "Fier"
+ },
+ {
+  "id": "curious_peek",
+  "en": "Peeking",
+  "fr": "Jette un œil"
  }
 ]
