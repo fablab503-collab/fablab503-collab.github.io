@@ -60,14 +60,18 @@
     gl.uniform2f(uRes, canvas.width, canvas.height);
     gl.uniform1f(uDpr, dpr);
   };
+  // Full-width bars blobs sink through (as if entering a new section) instead of landing on them.
+  const BAND = '.site-header, .marquee, .tools, .contact-strip, [data-lava-band]';
   const collect = () => {
     const out = [];
     for (const el of document.querySelectorAll(AVOID)) {
+      // One box per block: a card's title and text are inside the card's own box.
+      if (out.some((o) => !o.wide && o.el.contains(el))) continue;
       const r = el.getBoundingClientRect();
       if (r.bottom < -40 || r.top > H + 40 || r.width < 4 || r.height < 4) continue;
       // Skip big wrappers whose children are already listed (keeps gaps between cards usable).
       if (r.width > W * 0.92 && r.height > H * 0.6 && !el.matches('[data-lava-avoid]')) continue;
-      out.push({ el, l: r.left - PAD, t: r.top - PAD, r: r.right + PAD, b: r.bottom + PAD, wide: r.left < 60 && r.right > W - 60 });
+      out.push({ el, l: r.left - PAD, t: r.top - PAD, r: r.right + PAD, b: r.bottom + PAD, wide: el.matches(BAND) });
       if (out.length > 160) break;
     }
     avoid = out;
@@ -78,7 +82,14 @@
   const blobs = [];
   const drops = [];
   const size = () => Math.max(0.5, Math.min(1.15, Math.min(W, H) / 900));
-  const newTarget = (b) => { b.tx = rnd(0.04, 0.96) * W; b.ty = rnd(0.05, 0.6) * H; b.tt = rnd(2, 7); };
+  // Wander towards a random point in empty space (a few tries; the last one is kept anyway).
+  const newTarget = (b) => {
+    for (let k = 0; k < 14; k++) {
+      b.tx = rnd(0.04, 0.96) * W; b.ty = rnd(0.05, 0.6 + k * 0.025) * H;
+      if (!avoid.some((a) => b.tx > a.l - b.r && b.tx < a.r + b.r && b.ty > a.t - b.r && b.ty < a.b + b.r)) break;
+    }
+    b.tt = rnd(2, 7);
+  };
   // Each blob runs its own cycle: wander at random, fall slowly onto the content (resting on it and
   // sliding off its nearest edge), reach the bottom, climb back up a side of the screen, wander again.
   const wander = (b) => { b.mode = 'wander'; b.mt = rnd(5, 16); b.ledge = null; newTarget(b); };
@@ -106,37 +117,55 @@
     }
   };
 
+  // The screen's side margins work as gutters: a blob there falls past the blocks (needed when
+  // the text fills the whole width, as on phones).
+  const edge = (b) => b.x < b.r * 0.6 || b.x > W - b.r * 0.6;
   const fall = (b, dt, time) => {
     if (b.ledge) {
-      // Resting on a block: roll slowly to its nearest edge, then drip off.
+      // Resting on a block (it moves with the page when scrolling): pause, roll to the nearest
+      // edge, dip round the corner and drip off.
       const a = box(b.ledge);
-      b.vx = Math.max(-95, Math.min(95, b.vx + b.dir * 80 * dt));
+      if (a.t > H - b.r || a.b < 0) { b.lastLedge = b.ledge; b.ledge = null; return; }
+      if (b.rest > 0) { b.rest -= dt; b.vx *= Math.max(0, 1 - 8 * dt); }
+      else b.vx = Math.max(-60, Math.min(60, b.vx + b.dir * 45 * dt));
       b.x += b.vx * dt;
-      b.y += (a.t - b.r * 0.9 - b.y) * Math.min(1, 6 * dt);
-      if (b.x < a.l - b.r * 0.5 || b.x > a.r + b.r * 0.5 || a.t > H || a.b < 0) { b.ledge = null; b.vy = 15; b.vx *= 0.4; }
+      const over = Math.max(0, a.l - b.x, b.x - a.r);
+      const dip = over > 0 ? Math.min(b.r * 0.6, (over * over) / (b.r * 0.8)) : 0;
+      b.y += (a.t - b.r * 0.95 + dip - b.y) * Math.min(1, 12 * dt);
+      if (over > b.r * 0.35) {
+        // A block touching this one at the same height (cards in a row): keep rolling across it.
+        const next = avoid.find((n) => !n.wide && n.el !== b.ledge && Math.abs(n.t - a.t) < 12 && b.x > n.l && b.x < n.r);
+        if (next && !edge(b)) b.ledge = next.el;
+        else { b.lastLedge = b.ledge; b.ledge = null; b.vy = 20; b.vx *= 0.35; }
+      } else if (edge(b)) { b.lastLedge = b.ledge; b.ledge = null; b.vy = 20; b.vx *= 0.35; }
       return;
     }
-    const prev = b.y + b.r * 0.9;
-    b.vy = Math.min(b.vy + 80 * dt, 120);
+    // Slow, viscous gravity: speeds up smoothly towards about 115 px/s.
+    b.vy += (140 - 1.2 * b.vy) * dt;
     b.vx = b.vx * (1 - 1.5 * dt) + Math.sin(time * 0.8 + b.ph) * 14 * dt;
     b.x += b.vx * dt; b.y += b.vy * dt;
+    if (b.y > H - b.r * 0.9) { b.mode = 'climb'; b.side = b.x < W / 2 ? -1 : 1; b.vy = 0; return; }
+    const bot = b.y + b.r * 0.95, gutter = edge(b);
     for (const a of avoid) {
-      if (b.x < a.l - b.r * 0.3 || b.x > a.r + b.r * 0.3) continue;
+      if (b.x < a.l - b.r * 0.8 || b.x > a.r + b.r * 0.8 || bot < a.t || b.y - b.r > a.b) continue;
       if (a.wide) {
-        // A full-width block: sink through it slowly, as if entering a new section.
-        if (b.y > a.t && b.y < a.b) { b.vy = Math.min(b.vy, 45); }
+        // Sink slowly through a full-width bar.
+        if (b.vy > 35) b.vy += (35 - b.vy) * Math.min(1, 5 * dt);
         continue;
       }
-      if (prev <= a.t + 3 && b.y + b.r * 0.9 > a.t) {
-        b.ledge = a.el; b.vy = 0;
-        const left = b.x - a.l, right = a.r - b.x;
-        b.dir = Math.random() < (right < left ? 0.8 : 0.2) ? 1 : -1;
-        b.vx = b.dir * Math.abs(b.vx) * 0.3;
+      if (gutter || a.t > H - b.r * 1.1 || a.el === b.lastLedge) continue;
+      if (b.y <= a.t + b.r * 0.4) {
+        // Touched the top: land with a small liquid swell, then rest.
+        b.ledge = a.el; b.lastLedge = null;
+        b.r = Math.min(b.r0 * 1.2, b.r + b.vy * 0.05);
+        b.vy = 0; b.vx *= 0.2; b.rest = rnd(0.4, 1.2);
+        b.dir = b.x - a.l < a.r - b.x ? -1 : 1;
         return;
       }
+      // The block came up under the blob (page scrolled): ease it out sideways, never upwards.
+      const tx = b.x < (a.l + a.r) / 2 ? a.l - b.r : a.r + b.r;
+      b.x += (tx - b.x) * Math.min(1, 6 * dt); b.vx *= 0.5;
     }
-    pushOut(b, b.r, 0.35, true);
-    if (b.y > H - b.r * 0.9) { b.mode = 'climb'; b.side = b.x < W / 2 ? -1 : 1; b.vy = 0; }
   };
   const climb = (b, dt, time) => {
     // Glide to the nearest side along the bottom, then rise slowly up the edge of the screen.
@@ -147,7 +176,7 @@
     b.vx = b.vy = 0;
     // Stop under the header (or any full-width bar at the top), then push back into the page.
     let top = 0;
-    for (const a of avoid) if (a.wide && a.t < H * 0.2) top = Math.max(top, a.b);
+    for (const a of avoid) if (a.wide && a.t < 20 && a.b < H * 0.2) top = Math.max(top, a.b);
     if (b.y < top + b.r * 1.2) { wander(b); b.vx = -b.side * 90; b.vy = 20; }
   };
 
@@ -170,7 +199,7 @@
       else {
         b.mt -= dt; b.tt -= dt;
         if (b.tt <= 0) newTarget(b);
-        if (b.mt <= 0) { b.mode = 'fall'; b.vy = Math.max(b.vy, 0); }
+        if (b.mt <= 0) { b.mode = 'fall'; b.lastLedge = null; b.vy = Math.max(b.vy * 0.3, 5); b.vx *= 0.35; continue; }
         b.vx += ((b.tx - b.x) * 0.07 * b.sp + Math.sin(time * 0.7 * b.sp + b.ph) * 22) * dt;
         b.vy += ((b.ty - b.y) * 0.07 * b.sp + Math.cos(time * 0.53 * b.sp + b.ph * 1.7) * 22) * dt;
         b.vx *= 0.985; b.vy *= 0.985;
@@ -305,8 +334,8 @@
   const frame = (now) => {
     raf = 0;
     const busy = drag.b || drops.length || blobs.some((b) => b.state !== 'idle') || now - lastPoke < 2500;
-    if (!busy && now - last < 41) { raf = requestAnimationFrame(frame); return; }
-    const dt = Math.min(0.033, (now - last) / 1000 || 0.016);
+    if (!busy && now - last < 32) { raf = requestAnimationFrame(frame); return; }
+    const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
     last = now;
     if (now - lastCollect > 200) { collect(); lastCollect = now; }
     step(dt, now / 1000);
@@ -315,7 +344,8 @@
   };
   function wake() { if (!raf && !document.hidden && !reduce) { last = performance.now(); raf = requestAnimationFrame(frame); } }
   document.addEventListener('visibilitychange', wake);
-  addEventListener('scroll', poke, { passive: true });
+  // Re-measure the blocks on every scroll frame so the page never slides through falling blobs.
+  addEventListener('scroll', () => { lastCollect = 0; poke(); }, { passive: true });
   let rt = 0;
   addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { measure(); collect(); draw(); }, 120); });
 

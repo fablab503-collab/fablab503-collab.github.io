@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Element 0 logo: the Soft face with two small rounded ears outside the top corners -->
+  <ellipse cx="128" cy="118" rx="44" ry="56" transform="rotate(-28 128 118)" fill="#ffffff"/>
+  <ellipse cx="384" cy="118" rx="44" ry="56" transform="rotate(28 384 118)" fill="#ffffff"/>
+  <ellipse cx="128" cy="122" rx="20" ry="28" transform="rotate(-28 128 122)" fill="#121214"/>
+  <ellipse cx="384" cy="122" rx="20" ry="28" transform="rotate(28 384 122)" fill="#121214"/>
+  <rect x="76" y="116" width="360" height="340" rx="96" fill="#ffffff"/>
+  <circle cx="200" cy="266" r="22" fill="#121214"/>
+  <circle cx="312" cy="266" r="22" fill="#121214"/>
+  <path d="M220 344 Q256 372 292 344" fill="none" stroke="#121214" stroke-width="22" stroke-linecap="round"/>
+</svg>

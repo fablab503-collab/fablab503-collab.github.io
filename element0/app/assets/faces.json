@@ -1,0 +1,697 @@
+[
+ {
+  "id": "neutral",
+  "en": "Neutral",
+  "fr": "Neutre"
+ },
+ {
+  "id": "soft",
+  "en": "Soft",
+  "fr": "Doux"
+ },
+ {
+  "id": "content",
+  "en": "Content",
+  "fr": "Satisfait"
+ },
+ {
+  "id": "happy",
+  "en": "Happy",
+  "fr": "Heureux"
+ },
+ {
+  "id": "joyful",
+  "en": "Joyful",
+  "fr": "Joyeux"
+ },
+ {
+  "id": "grinning",
+  "en": "Grinning",
+  "fr": "Grand sourire"
+ },
+ {
+  "id": "laughing",
+  "en": "Laughing",
+  "fr": "Rire"
+ },
+ {
+  "id": "lol",
+  "en": "Crying laughing",
+  "fr": "Mort de rire"
+ },
+ {
+  "id": "beaming",
+  "en": "Beaming",
+  "fr": "Rayonnant"
+ },
+ {
+  "id": "blushing",
+  "en": "Blushing",
+  "fr": "Rougissant"
+ },
+ {
+  "id": "shy",
+  "en": "Shy",
+  "fr": "Timide"
+ },
+ {
+  "id": "love",
+  "en": "In love",
+  "fr": "Amoureux"
+ },
+ {
+  "id": "adoring",
+  "en": "Adoring",
+  "fr": "Adorant"
+ },
+ {
+  "id": "kiss",
+  "en": "Kiss",
+  "fr": "Bisou"
+ },
+ {
+  "id": "starstruck",
+  "en": "Star-struck",
+  "fr": "Ébloui"
+ },
+ {
+  "id": "excited",
+  "en": "Excited",
+  "fr": "Excité"
+ },
+ {
+  "id": "proud",
+  "en": "Proud",
+  "fr": "Fier"
+ },
+ {
+  "id": "relieved",
+  "en": "Relieved",
+  "fr": "Soulagé"
+ },
+ {
+  "id": "peaceful",
+  "en": "Peaceful",
+  "fr": "Paisible"
+ },
+ {
+  "id": "grateful",
+  "en": "Grateful",
+  "fr": "Reconnaissant"
+ },
+ {
+  "id": "hopeful",
+  "en": "Hopeful",
+  "fr": "Plein d'espoir"
+ },
+ {
+  "id": "playful",
+  "en": "Playful",
+  "fr": "Taquin"
+ },
+ {
+  "id": "silly",
+  "en": "Silly",
+  "fr": "Bête"
+ },
+ {
+  "id": "goofy",
+  "en": "Goofy",
+  "fr": "Farfelu"
+ },
+ {
+  "id": "cheeky",
+  "en": "Cheeky",
+  "fr": "Coquin"
+ },
+ {
+  "id": "wink",
+  "en": "Wink",
+  "fr": "Clin d'œil"
+ },
+ {
+  "id": "sly",
+  "en": "Sly",
+  "fr": "Rusé"
+ },
+ {
+  "id": "smug",
+  "en": "Smug",
+  "fr": "Suffisant"
+ },
+ {
+  "id": "cool",
+  "en": "Cool",
+  "fr": "Cool"
+ },
+ {
+  "id": "confident",
+  "en": "Confident",
+  "fr": "Confiant"
+ },
+ {
+  "id": "cat",
+  "en": "Cat face",
+  "fr": "Chat"
+ },
+ {
+  "id": "cute",
+  "en": "Cute",
+  "fr": "Mignon"
+ },
+ {
+  "id": "uwu",
+  "en": "Sweet",
+  "fr": "Tout doux"
+ },
+ {
+  "id": "singing",
+  "en": "Singing",
+  "fr": "Chante"
+ },
+ {
+  "id": "whistling",
+  "en": "Whistling",
+  "fr": "Siffle"
+ },
+ {
+  "id": "celebrating",
+  "en": "Celebrating",
+  "fr": "Fête"
+ },
+ {
+  "id": "sad",
+  "en": "Sad",
+  "fr": "Triste"
+ },
+ {
+  "id": "down",
+  "en": "Down",
+  "fr": "Abattu"
+ },
+ {
+  "id": "disappointed",
+  "en": "Disappointed",
+  "fr": "Déçu"
+ },
+ {
+  "id": "pensive",
+  "en": "Pensive",
+  "fr": "Pensif"
+ },
+ {
+  "id": "crying",
+  "en": "Crying",
+  "fr": "Pleure"
+ },
+ {
+  "id": "sobbing",
+  "en": "Sobbing",
+  "fr": "Sanglote"
+ },
+ {
+  "id": "hurt",
+  "en": "Hurt",
+  "fr": "Blessé"
+ },
+ {
+  "id": "lonely",
+  "en": "Lonely",
+  "fr": "Seul"
+ },
+ {
+  "id": "worried",
+  "en": "Worried",
+  "fr": "Inquiet"
+ },
+ {
+  "id": "anxious",
+  "en": "Anxious",
+  "fr": "Anxieux"
+ },
+ {
+  "id": "nervous",
+  "en": "Nervous",
+  "fr": "Nerveux"
+ },
+ {
+  "id": "scared",
+  "en": "Scared",
+  "fr": "Effrayé"
+ },
+ {
+  "id": "terrified",
+  "en": "Terrified",
+  "fr": "Terrifié"
+ },
+ {
+  "id": "awkward",
+  "en": "Awkward",
+  "fr": "Gêné"
+ },
+ {
+  "id": "embarrassed",
+  "en": "Embarrassed",
+  "fr": "Embarrassé"
+ },
+ {
+  "id": "oops",
+  "en": "Oops",
+  "fr": "Oups"
+ },
+ {
+  "id": "angry",
+  "en": "Angry",
+  "fr": "Fâché"
+ },
+ {
+  "id": "furious",
+  "en": "Furious",
+  "fr": "Furieux"
+ },
+ {
+  "id": "grumpy",
+  "en": "Grumpy",
+  "fr": "Grognon"
+ },
+ {
+  "id": "annoyed",
+  "en": "Annoyed",
+  "fr": "Agacé"
+ },
+ {
+  "id": "frustrated",
+  "en": "Frustrated",
+  "fr": "Frustré"
+ },
+ {
+  "id": "shouting",
+  "en": "Shouting",
+  "fr": "Crie"
+ },
+ {
+  "id": "grimace",
+  "en": "Grimace",
+  "fr": "Grimace"
+ },
+ {
+  "id": "disgusted",
+  "en": "Disgusted",
+  "fr": "Dégoûté"
+ },
+ {
+  "id": "unamused",
+  "en": "Unamused",
+  "fr": "Pas amusé"
+ },
+ {
+  "id": "bored",
+  "en": "Bored",
+  "fr": "Ennuyé"
+ },
+ {
+  "id": "eyeroll",
+  "en": "Eye roll",
+  "fr": "Yeux au ciel"
+ },
+ {
+  "id": "skeptical",
+  "en": "Skeptical",
+  "fr": "Sceptique"
+ },
+ {
+  "id": "suspicious",
+  "en": "Suspicious",
+  "fr": "Méfiant"
+ },
+ {
+  "id": "surprised",
+  "en": "Surprised",
+  "fr": "Surpris"
+ },
+ {
+  "id": "shocked",
+  "en": "Shocked",
+  "fr": "Choqué"
+ },
+ {
+  "id": "amazed",
+  "en": "Amazed",
+  "fr": "Émerveillé"
+ },
+ {
+  "id": "wow",
+  "en": "Wow",
+  "fr": "Waouh"
+ },
+ {
+  "id": "astonished",
+  "en": "Astonished",
+  "fr": "Stupéfait"
+ },
+ {
+  "id": "confused",
+  "en": "Confused",
+  "fr": "Perplexe"
+ },
+ {
+  "id": "puzzled",
+  "en": "Puzzled",
+  "fr": "Intrigué"
+ },
+ {
+  "id": "thinking",
+  "en": "Thinking",
+  "fr": "Réfléchit"
+ },
+ {
+  "id": "curious",
+  "en": "Curious",
+  "fr": "Curieux"
+ },
+ {
+  "id": "idea",
+  "en": "Idea",
+  "fr": "Idée"
+ },
+ {
+  "id": "eureka",
+  "en": "Eureka",
+  "fr": "Eurêka"
+ },
+ {
+  "id": "focused",
+  "en": "Focused",
+  "fr": "Concentré"
+ },
+ {
+  "id": "determined",
+  "en": "Determined",
+  "fr": "Déterminé"
+ },
+ {
+  "id": "listening",
+  "en": "Listening",
+  "fr": "Écoute"
+ },
+ {
+  "id": "talking",
+  "en": "Talking",
+  "fr": "Parle"
+ },
+ {
+  "id": "searching",
+  "en": "Searching",
+  "fr": "Cherche"
+ },
+ {
+  "id": "working",
+  "en": "Working",
+  "fr": "Travaille"
+ },
+ {
+  "id": "waiting",
+  "en": "Waiting",
+  "fr": "Attend"
+ },
+ {
+  "id": "done",
+  "en": "Done",
+  "fr": "Fini"
+ },
+ {
+  "id": "error",
+  "en": "Error",
+  "fr": "Erreur"
+ },
+ {
+  "id": "notification",
+  "en": "Notification",
+  "fr": "Notification"
+ },
+ {
+  "id": "money",
+  "en": "Money",
+  "fr": "Argent"
+ },
+ {
+  "id": "paid",
+  "en": "Paid",
+  "fr": "Payé"
+ },
+ {
+  "id": "broke",
+  "en": "Broke",
+  "fr": "Fauché"
+ },
+ {
+  "id": "sleepy",
+  "en": "Sleepy",
+  "fr": "Somnolent"
+ },
+ {
+  "id": "tired",
+  "en": "Tired",
+  "fr": "Fatigué"
+ },
+ {
+  "id": "yawning",
+  "en": "Yawning",
+  "fr": "Bâille"
+ },
+ {
+  "id": "sleeping",
+  "en": "Sleeping",
+  "fr": "Dort"
+ },
+ {
+  "id": "dreaming",
+  "en": "Dreaming",
+  "fr": "Rêve"
+ },
+ {
+  "id": "waking",
+  "en": "Waking up",
+  "fr": "Se réveille"
+ },
+ {
+  "id": "morning",
+  "en": "Good morning",
+  "fr": "Bonjour"
+ },
+ {
+  "id": "night",
+  "en": "Good night",
+  "fr": "Bonne nuit"
+ },
+ {
+  "id": "dizzy",
+  "en": "Dizzy",
+  "fr": "Étourdi"
+ },
+ {
+  "id": "sick",
+  "en": "Sick",
+  "fr": "Malade"
+ },
+ {
+  "id": "hot",
+  "en": "Hot",
+  "fr": "Chaud"
+ },
+ {
+  "id": "cold",
+  "en": "Cold",
+  "fr": "Froid"
+ },
+ {
+  "id": "exhausted",
+  "en": "Exhausted",
+  "fr": "Épuisé"
+ },
+ {
+  "id": "knocked_out",
+  "en": "Knocked out",
+  "fr": "K.O."
+ },
+ {
+  "id": "hungry",
+  "en": "Hungry",
+  "fr": "Affamé"
+ },
+ {
+  "id": "yummy",
+  "en": "Yummy",
+  "fr": "Miam"
+ },
+ {
+  "id": "speechless",
+  "en": "Speechless",
+  "fr": "Sans voix"
+ },
+ {
+  "id": "shh",
+  "en": "Quiet",
+  "fr": "Chut"
+ },
+ {
+  "id": "zipped",
+  "en": "Lips sealed",
+  "fr": "Bouche cousue"
+ },
+ {
+  "id": "robot",
+  "en": "Robot",
+  "fr": "Robot"
+ },
+ {
+  "id": "glitch",
+  "en": "Glitch",
+  "fr": "Bug"
+ },
+ {
+  "id": "loading",
+  "en": "Loading",
+  "fr": "Chargement"
+ },
+ {
+  "id": "offline",
+  "en": "Offline",
+  "fr": "Hors ligne"
+ },
+ {
+  "id": "low_battery",
+  "en": "Low battery",
+  "fr": "Batterie faible"
+ },
+ {
+  "id": "hello",
+  "en": "Hello",
+  "fr": "Salut"
+ },
+ {
+  "id": "goodbye",
+  "en": "Goodbye",
+  "fr": "Au revoir"
+ },
+ {
+  "id": "thanks",
+  "en": "Thank you",
+  "fr": "Merci"
+ },
+ {
+  "id": "sorry",
+  "en": "Sorry",
+  "fr": "Désolé"
+ },
+ {
+  "id": "yes",
+  "en": "Yes",
+  "fr": "Oui"
+ },
+ {
+  "id": "no",
+  "en": "No",
+  "fr": "Non"
+ },
+ {
+  "id": "maybe",
+  "en": "Maybe",
+  "fr": "Peut-être"
+ },
+ {
+  "id": "brave",
+  "en": "Brave",
+  "fr": "Courageux"
+ },
+ {
+  "id": "mischief",
+  "en": "Mischievous",
+  "fr": "Malicieux"
+ },
+ {
+  "id": "sparkly",
+  "en": "Sparkly",
+  "fr": "Pétillant"
+ },
+ {
+  "id": "zen",
+  "en": "Zen",
+  "fr": "Zen"
+ },
+ {
+  "id": "pleading",
+  "en": "Pleading",
+  "fr": "Suppliant"
+ },
+ {
+  "id": "touched",
+  "en": "Touched",
+  "fr": "Ému"
+ },
+ {
+  "id": "flattered",
+  "en": "Flattered",
+  "fr": "Flatté"
+ },
+ {
+  "id": "chill",
+  "en": "Chill",
+  "fr": "Cool tranquille"
+ },
+ {
+  "id": "impatient",
+  "en": "Impatient",
+  "fr": "Impatient"
+ },
+ {
+  "id": "guilty",
+  "en": "Guilty",
+  "fr": "Coupable"
+ },
+ {
+  "id": "jealous",
+  "en": "Jealous",
+  "fr": "Jaloux"
+ },
+ {
+  "id": "overwhelmed",
+  "en": "Overwhelmed",
+  "fr": "Débordé"
+ },
+ {
+  "id": "nostalgic",
+  "en": "Nostalgic",
+  "fr": "Nostalgique"
+ },
+ {
+  "id": "ecstatic",
+  "en": "Ecstatic",
+  "fr": "Fou de joie"
+ },
+ {
+  "id": "relaxed",
+  "en": "Relaxed",
+  "fr": "Détendu"
+ },
+ {
+  "id": "daydreaming",
+  "en": "Daydreaming",
+  "fr": "Rêveur"
+ },
+ {
+  "id": "inspired",
+  "en": "Inspired",
+  "fr": "Inspiré"
+ },
+ {
+  "id": "cozy",
+  "en": "Cozy",
+  "fr": "Douillet"
+ },
+ {
+  "id": "hearing",
+  "en": "Hearing",
+  "fr": "J'écoute"
+ }
+]
