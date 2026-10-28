@@ -339,6 +339,28 @@ function renderScreen() {
     const y0 = Math.max(4, (200 - lines.length * lh) / 2);
     lines.forEach((l, i) => ctx.fillText(l, 100, y0 + i * lh, 190));
 
+  } else if (scr === 'menu' && state.mi != null) {
+    // Firmware 1.5+: 4 rows of the current page ("mi"), page number ("mp") bottom right
+    drawTopRow(ctx);
+    const items = String(state.mi).split('|'), sel = Number(state.menuSel || 0) % 4;
+    items.slice(0, 4).forEach((item, r) => {
+      const y = 28 + r * 36, on = r === sel;
+      if (on) { ctx.fillStyle = '#000'; drawRoundedRect(ctx, 10, y, 180, 30, 8); ctx.fill(); }
+      ctx.fillStyle = on ? '#fff' : '#000';
+      ctx.font = '600 14px "Montserrat", -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(item, 100, y + 16, 172);
+    });
+    ctx.fillStyle = '#000';
+    ctx.font = '500 10px "Montserrat", -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textBaseline = 'bottom';
+    ctx.textAlign = 'left';
+    ctx.fillText('BOOT: move  PWR: open', 8, 194);
+    ctx.textAlign = 'right';
+    ctx.fillText(state.mp || '', 192, 194);
+    ctx.textAlign = 'center';
+
   } else if (scr === 'menu') {
     drawTopRow(ctx);
     const items = ['Element', 'Pair a phone', 'Info'];
@@ -994,7 +1016,12 @@ function handleScreenCoordinateClick(px, py) {
   } else if (scr === 'text' || scr === 'info') {
     sendCommand('back');
   } else if (scr === 'menu') {
-    for (let i = 0; i < 3; i++) if (py >= 32 + i * 46 && py < 78 + i * 46) sendCommand(`menu:${i}`);
+    if (state.mi != null) {
+      const page = Math.floor(Number(state.menuSel || 0) / 4);
+      for (let r = 0; r < 4; r++) if (py >= 26 + r * 36 && py < 62 + r * 36) sendCommand(`menu:${page * 4 + r}`);
+    } else {
+      for (let i = 0; i < 3; i++) if (py >= 32 + i * 46 && py < 78 + i * 46) sendCommand(`menu:${i}`);
+    }
   } else if (scr === 'qr') {
     // qr -> tap = confirm
     sendCommand('confirm');
