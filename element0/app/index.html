@@ -135,6 +135,29 @@
 
     <div class="panel-divider"></div>
 
+    <!-- Talk to Element 0 with Google Gemini: the key stays in this browser (localStorage) and only goes to Google -->
+    <section id="talk-settings" class="element-controls">
+      <h3 class="panel-title">Talk (Google Gemini)</h3>
+      <p class="ctl-hint">Free key: <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. It stays in this browser and is only sent to Google.</p>
+      <input id="ai-key" class="ctl-input" type="password" placeholder="Paste your Gemini key (AIza...)" autocomplete="off" spellcheck="false">
+      <div class="ble-actions">
+        <button id="ai-save" class="btn btn-primary" type="button">Save key</button>
+        <button id="ai-forget" class="btn" type="button">Forget</button>
+      </div>
+      <div class="panel-row"><span class="panel-label">Model</span><span id="ai-model" class="sd-value">--</span></div>
+      <div class="panel-row">
+        <span class="panel-label">Kid-safe</span>
+        <label class="switch" aria-label="Kid-safe"><input id="ai-kidsafe" type="checkbox" checked><span class="switch-slider"></span></label>
+      </div>
+      <div class="panel-row">
+        <span class="panel-label">Speak answers</span>
+        <label class="switch" aria-label="Speak answers"><input id="ai-speak" type="checkbox" checked><span class="switch-slider"></span></label>
+      </div>
+      <p id="ai-note" class="ctl-hint" hidden></p>
+    </section>
+
+    <div class="panel-divider"></div>
+
     <button id="btn-reset-view" class="btn" type="button">Reset view</button>
   </aside>
 
@@ -161,6 +184,14 @@
     </div>
     <button id="btn-back-3d" class="back-3d-btn" type="button">Back to 3D (Esc)</button>
   </div>
+
+  <form id="ask-bar" class="ask-bar" hidden autocomplete="off">
+    <button id="ask-mic" class="ask-mic" type="button" aria-label="Speak your question" hidden>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5"/></svg>
+    </button>
+    <input id="ask-input" class="ask-input" type="text" placeholder="Ask Element 0..." maxlength="500">
+    <button id="ask-send" class="btn btn-primary ask-send" type="submit">Ask</button>
+  </form>
 
   <script type="module" src="app.js"></script>
 </body>
