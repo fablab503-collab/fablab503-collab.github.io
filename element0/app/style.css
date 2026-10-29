@@ -516,3 +516,4 @@ body.display-mode .ask-bar { bottom: 120px; }
 .ask-mic.on { background: #0F172A; color: #fff; }
 .ask-bar.busy .ask-send { opacity: 0.5; pointer-events: none; }
 #talk-settings a { color: inherit; }
+.brand-logo { width: 30px; height: 30px; display: block; }
