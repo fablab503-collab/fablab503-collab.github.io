@@ -4,6 +4,10 @@
    - Grab a blob and drag it anywhere; let go and it keeps drifting from there (a quick flick throws it).
    - A quick click pops the blob: it swells, bursts into drops that fall, slide off the corners of
      content and disappear. Popped blobs do not come back until the next page load.
+   - Now and then a blob pinches off little droplets (sometimes a spray), which can shed even smaller ones;
+     they drift, melt back into a blob they touch, or fade away.
+   - On a phone, gravity follows the tilt (gyroscope): lean it and the lava runs to the low side,
+     lay it flat and the blobs float. iPhone asks for motion access on the first tap.
    Drawn white with a difference blend: black on light, white on dark, text over it inverts. Pauses when the tab is hidden;
    one still frame with reduced motion; nothing at all without WebGL. */
 (() => {
@@ -86,6 +90,8 @@
   const newTarget = (b) => {
     for (let k = 0; k < 14; k++) {
       b.tx = rnd(0.04, 0.96) * W; b.ty = rnd(0.05, 0.6 + k * 0.025) * H;
+      // Phone leaning: targets slide towards the low side.
+      if (g.on) b.tx += ((g.x > 0 ? 0.96 * W : 0.04 * W) - b.tx) * Math.min(0.85, Math.abs(g.x) * 1.2);
       if (!avoid.some((a) => b.tx > a.l - b.r && b.tx < a.r + b.r && b.ty > a.t - b.r && b.ty < a.b + b.r)) break;
     }
     b.tt = rnd(2, 7);
@@ -98,7 +104,7 @@
     const k = W < 600 ? 4 : 7, s = size();
     for (let i = 0; i < k; i++) {
       const b = { x: i % 2 ? rnd(0.75, 0.97) * W : rnd(0.03, 0.25) * W, y: rnd(0.15, 0.9) * H, vx: 0, vy: 0, r: rnd(26, 54) * s, ph: rnd(0, 6.3), sp: rnd(0.6, 1.5), state: 'idle', t: 0 };
-      b.r0 = b.r; wander(b); b.mt = rnd(1, 14); blobs.push(b);
+      b.r0 = b.r; b.shed = rnd(1, 6); wander(b); b.mt = rnd(1, 14); blobs.push(b);
     }
   };
 
@@ -119,15 +125,44 @@
 
   // The screen's side margins work as gutters: a blob there falls past the blocks (needed when
   // the text fills the whole width, as on phones).
-  const edge = (b) => b.x < b.r * 0.6 || b.x > W - b.r * 0.6;
+  const edge = (b) => b.x < b.r * 1.2 || b.x > W - b.r * 1.2;
+
+  // ---- tilt: on a phone, gravity follows the way the phone is held (gyroscope) ----
+  // g is the pull in screen pixels (unit length when the phone is upright); (0, 1) without a sensor.
+  const g = { x: 0, y: 1, on: false };
+  const onTilt = (e) => {
+    if (e.beta == null || e.gamma == null) return;
+    const R = Math.PI / 180, ang = ((screen.orientation && screen.orientation.angle) || window.orientation || 0) * R;
+    const sx = Math.sin(e.gamma * R) * Math.cos(e.beta * R), sy = Math.sin(e.beta * R);
+    // Turn the device's pull into screen axes for landscape too.
+    const x = sx * Math.cos(ang) + sy * Math.sin(ang), y = sy * Math.cos(ang) - sx * Math.sin(ang);
+    g.x += (x - g.x) * 0.25; g.y += (y - g.y) * 0.25; g.on = true;
+    poke();
+  };
+  if (matchMedia('(pointer: coarse)').matches && 'DeviceOrientationEvent' in window) {
+    const DOE = window.DeviceOrientationEvent;
+    addEventListener('deviceorientation', onTilt);
+    // iPhone: motion access must be asked from a tap, so ask once, on the first tap.
+    if (typeof DOE.requestPermission === 'function') {
+      const ask = () => { DOE.requestPermission().then((s) => { if (s === 'granted') addEventListener('deviceorientation', onTilt); }).catch(() => {}); };
+      addEventListener('touchend', ask, { once: true, passive: true });
+    }
+  }
+  const upright = () => !g.on || g.y > 0.35;
+  // Phone lying flat: almost no pull, so the blobs float around freely.
+  const weightless = () => g.on && Math.hypot(g.x, g.y) < 0.3;
   const fall = (b, dt, time) => {
     if (b.ledge) {
       // Resting on a block (it moves with the page when scrolling): pause, roll to the nearest
       // edge, dip round the corner and drip off.
       const a = box(b.ledge);
       if (a.t > H - b.r || a.b < 0) { b.lastLedge = b.ledge; b.ledge = null; return; }
+      // Tilting the phone sideways decides which way it rolls (and faster the steeper it is).
+      if (g.on && Math.abs(g.x) > 0.12) { b.dir = Math.sign(g.x); b.rest = Math.min(b.rest, 0.1); }
+      if (!upright()) { b.lastLedge = b.ledge; b.ledge = null; return; }
+      const roll = g.on ? 45 + 160 * Math.abs(g.x) : 45, cap = g.on ? 60 + 140 * Math.abs(g.x) : 60;
       if (b.rest > 0) { b.rest -= dt; b.vx *= Math.max(0, 1 - 8 * dt); }
-      else b.vx = Math.max(-60, Math.min(60, b.vx + b.dir * 45 * dt));
+      else b.vx = Math.max(-cap, Math.min(cap, b.vx + b.dir * roll * dt));
       b.x += b.vx * dt;
       const over = Math.max(0, a.l - b.x, b.x - a.r);
       const dip = over > 0 ? Math.min(b.r * 0.6, (over * over) / (b.r * 0.8)) : 0;
@@ -141,10 +176,21 @@
       return;
     }
     // Slow, viscous gravity: speeds up smoothly towards about 115 px/s.
-    b.vy += (140 - 1.2 * b.vy) * dt;
-    b.vx = b.vx * (1 - 1.5 * dt) + Math.sin(time * 0.8 + b.ph) * 14 * dt;
+    if (weightless()) { wander(b); return; }
+    // On a phone the pull follows the tilt: sideways, or upwards when it is upside down.
+    b.vy += (140 * g.y - 1.2 * b.vy) * dt;
+    b.vx += ((g.on ? 140 * g.x : 0) - 1.5 * b.vx + Math.sin(time * 0.8 + b.ph) * 14) * dt;
     b.x += b.vx * dt; b.y += b.vy * dt;
-    if (b.y > H - b.r * 0.9) { b.mode = 'climb'; b.side = b.x < W / 2 ? -1 : 1; b.vy = 0; return; }
+    if (b.x < b.r) { b.x = b.r; b.vx = Math.abs(b.vx) * 0.2; }
+    if (b.x > W - b.r) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * 0.2; }
+    if (b.y > H - b.r * 0.9) {
+      // Climb the low side when the phone leans, else the nearest side.
+      if (upright()) { b.mode = 'climb'; b.side = g.on && Math.abs(g.x) > 0.15 ? Math.sign(g.x) : b.x < W / 2 ? -1 : 1; b.vy = 0; }
+      else { b.y = H - b.r * 0.9; b.vy = -Math.abs(b.vy) * 0.2; }
+      return;
+    }
+    // Phone held flat or upside down: the blob floats back up and wanders when it gets there.
+    if (b.y < b.r && b.vy < 0) { b.y = b.r; wander(b); return; }
     const bot = b.y + b.r * 0.95, gutter = edge(b);
     for (const a of avoid) {
       if (b.x < a.l - b.r * 0.8 || b.x > a.r + b.r * 0.8 || bot < a.t || b.y - b.r > a.b) continue;
@@ -169,7 +215,10 @@
   };
   const climb = (b, dt, time) => {
     // Glide to the nearest side along the bottom, then rise slowly up the edge of the screen.
-    const tx = b.side < 0 ? b.r * 0.35 : W - b.r * 0.35;
+    // Not upright any more (phone tilted or laid flat): let go of the wall.
+    if (!upright() || (g.on && g.x * b.side < -0.35)) { b.mode = 'fall'; b.vy = 0; return; }
+    // Stuck to the glass like a drop: the whole blob stays visible.
+    const tx = b.side < 0 ? b.r * 1.05 : W - b.r * 1.05;
     b.x += (tx - b.x) * Math.min(1, 0.9 * dt) + Math.sin(time * 1.3 + b.ph) * 6 * dt;
     if (Math.abs(tx - b.x) < b.r) b.y -= (38 + 18 * b.sp) * dt;
     else b.y += (H - b.r * 0.9 - b.y) * Math.min(1, 2 * dt);
@@ -194,14 +243,19 @@
         continue;
       }
       b.r += (b.r0 * (1 + Math.sin(time * 0.9 + b.ph) * 0.06) - b.r) * 2 * dt;
+      // Randomizer: now and then a blob pinches off little droplets (sometimes a whole spray).
+      if ((b.shed -= dt) <= 0) { shed(b, Math.random() < 0.12 ? Math.round(rnd(4, 8)) : Math.round(rnd(1, 3)), 0); b.shed = rnd(2.5, 9); }
       if (b.mode === 'fall') fall(b, dt, time);
       else if (b.mode === 'climb') climb(b, dt, time);
       else {
         b.mt -= dt; b.tt -= dt;
         if (b.tt <= 0) newTarget(b);
-        if (b.mt <= 0) { b.mode = 'fall'; b.lastLedge = null; b.vy = Math.max(b.vy * 0.3, 5); b.vx *= 0.35; continue; }
+        if (b.mt <= 0 && weightless()) b.mt = rnd(2, 6);
+        else if (b.mt <= 0) { b.mode = 'fall'; b.lastLedge = null; b.vy = Math.max(b.vy * 0.3, 5); b.vx *= 0.35; continue; }
         b.vx += ((b.tx - b.x) * 0.07 * b.sp + Math.sin(time * 0.7 * b.sp + b.ph) * 22) * dt;
         b.vy += ((b.ty - b.y) * 0.07 * b.sp + Math.cos(time * 0.53 * b.sp + b.ph * 1.7) * 22) * dt;
+        // The whole lamp sloshes towards the low side when the phone tilts.
+        if (g.on) { b.vx += g.x * 160 * dt; b.mt -= Math.abs(g.x) * 2 * dt; if (Math.abs(g.x) > 0.3 && Math.random() < dt) newTarget(b); }
         b.vx *= 0.985; b.vy *= 0.985;
         const sp = Math.hypot(b.vx, b.vy), max = 150 * b.sp;
         if (sp > max) { b.vx *= max / sp; b.vy *= max / sp; }
@@ -220,6 +274,22 @@
       d.life -= dt;
       if (d.life < 0.6) d.r *= 1 - 2.2 * dt;
       if (d.life <= 0 || d.r < 1.5) { drops.splice(i, 1); continue; }
+      if (d.bead) {
+        // A droplet shed by a blob: drifts and sinks slowly, keeps out of the content, can shed
+        // an even smaller one, melts back into any blob it touches, otherwise fades away.
+        d.age += dt;
+        if (d.gen < 2 && (d.shed -= dt) <= 0) { shed(d, 1, d.gen + 1); d.shed = rnd(2, 6); }
+        d.vx += (g.on ? g.x * 60 : 0) * dt + Math.sin(time * 1.1 + d.ph) * 16 * dt;
+        d.vy += (g.y * 38 - 0.9 * d.vy) * dt + Math.cos(time * 0.9 + d.ph) * 12 * dt;
+        d.vx *= 1 - 0.9 * dt;
+        d.x += d.vx * dt; d.y += d.vy * dt;
+        pushOut(d, d.r * 1.4, 0.35, true);
+        if (d.x < d.r) d.vx += 40 * dt; if (d.x > W - d.r) d.vx -= 40 * dt;
+        if (d.y > H - d.r) { d.y = H - d.r; d.vy *= -0.3; }
+        if (d.y < d.r) { d.y = d.r; d.vy = Math.abs(d.vy) * 0.3; }
+        if (d.age > 0.8) for (const o of blobs) if (o.state === 'idle' && Math.hypot(o.x - d.x, o.y - d.y) < o.r * 0.9) { d.life = Math.min(d.life, 0.5); d.vx += (o.x - d.x) * 3 * dt; d.vy += (o.y - d.y) * 3 * dt; break; }
+        continue;
+      }
       if (d.slide) {
         // Sliding along the top of a box toward its nearest corner, then dripping off it.
         const a = d.slide;
@@ -228,7 +298,7 @@
         if (d.x < a.l - d.r * 0.4 || d.x > a.r + d.r * 0.4) { d.slide = null; d.vy = 40; d.vx *= 0.25; }
         continue;
       }
-      d.vy += 1500 * dt;
+      d.vy += 1500 * g.y * dt; if (g.on) d.vx += 1500 * g.x * dt;
       const px = d.x, py = d.y;
       d.x += d.vx * dt; d.y += d.vy * dt;
       for (const a of avoid) {
@@ -243,6 +313,18 @@
     }
   };
 
+  // Little droplets pinch off a blob (or a droplet) and drift away; capped so the shader keeps up.
+  const shed = (b, n, gen) => {
+    if (reduce) return;
+    const s = size();
+    for (let i = 0; i < n && blobs.length + drops.length < N - 4; i++) {
+      const a = rnd(0, Math.PI * 2), r = gen ? b.r * rnd(0.45, 0.65) : rnd(5, 11) * s * (b.r / (40 * s));
+      if (r < 2.5) return;
+      drops.push({ bead: true, gen, x: b.x + Math.cos(a) * b.r * 0.85, y: b.y + Math.sin(a) * b.r * 0.85,
+        vx: Math.cos(a) * rnd(20, 60) + (b.vx || 0) * 0.5, vy: Math.sin(a) * rnd(20, 60) + (b.vy || 0) * 0.5,
+        r: Math.max(3, r), life: rnd(4, 10), age: 0, ph: rnd(0, 6.3), shed: rnd(1.5, 5) });
+    }
+  };
   const burst = (b) => {
     const n = Math.round(14 + b.r0 / 3), s = size();
     for (let i = 0; i < n; i++) {
@@ -333,7 +415,7 @@
   function poke() { lastPoke = performance.now(); wake(); }
   const frame = (now) => {
     raf = 0;
-    const busy = drag.b || drops.length || blobs.some((b) => b.state !== 'idle') || now - lastPoke < 2500;
+    const busy = drag.b || drops.some((d) => !d.bead) || blobs.some((b) => b.state !== 'idle') || now - lastPoke < 2500;
     if (!busy && now - last < 32) { raf = requestAnimationFrame(frame); return; }
     const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
     last = now;

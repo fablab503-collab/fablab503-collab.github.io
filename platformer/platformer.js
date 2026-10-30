@@ -1,5 +1,6 @@
 // javascript-tiny-platformer by Jake Gordon (MIT, see LICENSE), adapted for dcreations.fr:
-// black-and-white palette that follows light/dark mode, touch buttons, coin counter, no FPS meter.
+// black-and-white palette that follows light/dark mode, touch buttons, coin counter, no FPS meter,
+// 404 levels (levels.js), a camera that follows the player, an exit door per level, detail layers (detail.js).
 (function() { // module pattern
 
   //-------------------------------------------------------------------------
@@ -67,8 +68,14 @@
       step     = 1/fps,
       canvas   = document.getElementById('game'),
       ctx      = canvas.getContext('2d'),
-      width    = canvas.width  = MAP.tw * TILE,
-      height   = canvas.height = MAP.th * TILE,
+      VIEW_W   = canvas.width  = 1024,  // camera size in pixels (32 x 18 tiles)
+      VIEW_H   = canvas.height = 576,
+      LAST     = 404,
+      width    = 0, height = 0,         // world size, set per level
+      camX     = 0, camY = 0,
+      level    = 1,
+      exit     = null,
+      levelT   = 0,                     // 0 at level 1, 1 at level 404
       player   = {},
       monsters = [],
       treasure = [],
@@ -102,16 +109,48 @@
   function score() {
     var el = document.getElementById('game-score');
     if (el) el.textContent = player.collected + ' / ' + treasure.length;
-    if (player.collected === treasure.length && treasure.length) {
+    var lv = document.getElementById('game-level');
+    if (lv) lv.textContent = level + ' / ' + LAST;
+    var pc = document.getElementById('game-pct');
+    if (pc) pc.textContent = Math.round(levelT * 100) + ' %';
+    var bar = document.getElementById('game-bar');
+    if (bar) bar.style.width = (levelT * 100) + '%';
+  }
+
+  function store(key, value) { try { if (value === undefined) return localStorage.getItem(key); localStorage.setItem(key, value); } catch (e) { return null; } }
+
+  function loadLevel(n) {
+    level = Math.max(1, Math.min(LAST, n | 0));
+    var L = window.D404Levels, map = null;
+    if (L && L.generate) { try { map = L.generate(level); } catch (e) { if (window.console) console.warn('level generator failed', e); } }
+    if (map) { setup(map); started(); return; }
+    level = 1;   // no generator: the original level only
+    get("/platformer/level.json", function(req) { setup(JSON.parse(req.responseText)); started(); });
+  }
+
+  function started() {
+    score();
+    var url = new URL(location.href); url.searchParams.set('level', level);
+    history.replaceState(null, '', url);
+  }
+
+  function nextLevel() {
+    if (level >= LAST) {
       var win = document.getElementById('game-win');
       if (win) win.hidden = false;
+      exit = null;
+      return;
     }
+    var best = parseInt(store('d404-best'), 10) || 1;
+    if (level + 1 > best) store('d404-best', String(level + 1));
+    loadLevel(level + 1);
   }
   
   function update(dt) {
     updatePlayer(dt);
     updateMonsters(dt);
     checkTreasure();
+    checkExit();
   }
 
   function updatePlayer(dt) {
@@ -148,6 +187,10 @@
   function killMonster(monster) {
     player.killed++;
     monster.dead = true;
+  }
+
+  function checkExit() {
+    if (exit && overlap(player.x, player.y, TILE, TILE, exit.x, exit.y, TILE, TILE * 2)) nextLevel();
   }
 
   function killPlayer(player) {
@@ -254,7 +297,10 @@
     }
   
     entity.falling = ! (celldown || (nx && celldiag));
-  
+
+    if (entity.y > height + TILE) {   // fell into a pit
+      if (entity.player) killPlayer(entity); else entity.dead = true;
+    }
   }
 
   //-------------------------------------------------------------------------
@@ -262,18 +308,55 @@
   //-------------------------------------------------------------------------
   
   function render(ctx, frame, dt) {
-    ctx.clearRect(0, 0, width, height);
-    renderMap(ctx);
+    camX = Math.round(bound(player.x + TILE/2 - VIEW_W/2, 0, Math.max(0, width - VIEW_W)));
+    camY = Math.round(bound(player.y + TILE/2 - VIEW_H/2, 0, Math.max(0, height - VIEW_H)));
+    var D = window.D404Detail,
+        s = { t: levelT, frame: frame, camX: camX, camY: camY, viewW: VIEW_W, viewH: VIEW_H,
+              worldW: width, worldH: height, ink: INK, paper: PAPER, dark: INK === '#fff' };
+    ctx.clearRect(0, 0, VIEW_W, VIEW_H);
+    if (D && D.drawBackground) safe(function() { D.drawBackground(ctx, s); });
+    ctx.save();
+    ctx.translate(-camX, -camY);
+    renderMap(ctx, D, s);
+    renderExit(ctx, frame);
     renderTreasure(ctx, frame);
     renderPlayer(ctx, dt);
     renderMonsters(ctx, dt);
+    ctx.restore();
+    if (D && D.drawForeground) safe(function() { D.drawForeground(ctx, s); });
   }
 
-  function renderMap(ctx) {
-    var x, y, cell;
-    for(y = 0 ; y < MAP.th ; y++) {
-      for(x = 0 ; x < MAP.tw ; x++) {
+  var detailBroken = false;
+  function safe(fn) {   // a bug in the detail layer must never stop the game
+    if (detailBroken) return;
+    try { fn(); } catch (e) { detailBroken = true; if (window.console) console.warn('detail layer off:', e); }
+  }
+
+  function renderExit(ctx, frame) {
+    if (!exit) return;
+    var x = exit.x, y = exit.y - TILE;   // a door two tiles high
+    ctx.fillStyle = INK;
+    ctx.fillRect(x, y, TILE, TILE * 2);
+    ctx.fillStyle = PAPER;
+    ctx.fillRect(x + 6, y + 6, TILE - 12, TILE * 2 - 6);
+    ctx.fillStyle = INK;
+    ctx.fillRect(x + TILE - 12, y + TILE, 4, 4);   // handle
+    ctx.font = '800 14px "Overpass Variable", "Overpass", system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(level < LAST ? String(level + 1) : 'END', x + TILE/2, y - 4 - 2 * Math.abs(Math.sin(frame / 20)));
+  }
+
+  function renderMap(ctx, D, s) {
+    var x, y, cell,
+        x0 = Math.max(0, p2t(camX)), x1 = Math.min(MAP.tw - 1, p2t(camX + VIEW_W)),
+        y0 = Math.max(0, p2t(camY)), y1 = Math.min(MAP.th - 1, p2t(camY + VIEW_H)),
+        custom = D && D.drawTile && levelT > 0 && !detailBroken;
+    for(y = y0 ; y <= y1 ; y++) {
+      for(x = x0 ; x <= x1 ; x++) {
         cell = tcell(x, y);
+        if (cell && custom) {
+          try { D.drawTile(ctx, s, x * TILE, y * TILE, x, y); continue; } catch (e) { detailBroken = true; }
+        }
         if (cell) {
           ctx.fillStyle = INK;
           ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
@@ -308,6 +391,10 @@
     ctx.fillStyle = INK;
     ctx.font = '800 ' + Math.round(TILE * 1.3) + 'px "Overpass Variable", "Overpass", system-ui, sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (levelT > 0) {   // paper outline keeps characters readable over the detailed city
+      ctx.lineWidth = 6; ctx.lineJoin = 'round'; ctx.strokeStyle = PAPER;
+      ctx.strokeText(ch, x + TILE/2, y + TILE/2 + 2);
+    }
     ctx.fillText(ch, x + TILE/2, y + TILE/2 + 2);
   }
 
@@ -317,7 +404,9 @@
     for(n = 0, max = treasure.length ; n < max ; n++) {
       t = treasure[n];
       if (!t.collected) {
-        ctx.beginPath(); ctx.arc(t.x + TILE/2, t.y + TILE/2, r, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(t.x + TILE/2, t.y + TILE/2, r, 0, Math.PI * 2);
+        if (levelT > 0) { ctx.lineWidth = 4; ctx.strokeStyle = PAPER; ctx.stroke(); }
+        ctx.fill();
       }
     }
   }
@@ -337,6 +426,11 @@
         objects = map.layers[1].objects,
         n, obj, entity;
 
+    MAP.tw = map.width; MAP.th = map.height;
+    width = MAP.tw * TILE; height = MAP.th * TILE;
+    monsters = []; treasure = []; exit = null;
+    levelT = (level - 1) / (LAST - 1);
+
     for(n = 0 ; n < objects.length ; n++) {
       obj = objects[n];
       entity = setupEntity(obj);
@@ -344,6 +438,7 @@
       case "player"   : player = entity; break;
       case "monster"  : monsters.push(entity); break;
       case "treasure" : treasure.push(entity); break;
+      case "exit"     : exit = entity; break;
       }
     }
 
@@ -356,6 +451,7 @@
     entity.y        = obj.y;
     entity.dx       = 0;
     entity.dy       = 0;
+    obj.properties  = obj.properties || {};
     entity.gravity  = METER * (obj.properties.gravity || GRAVITY);
     entity.maxdx    = METER * (obj.properties.maxdx   || MAXDX);
     entity.maxdy    = METER * (obj.properties.maxdy   || MAXDY);
@@ -405,12 +501,19 @@
   document.addEventListener('keydown', function(ev) { return onkey(ev, ev.keyCode, true);  }, false);
   document.addEventListener('keyup',   function(ev) { return onkey(ev, ev.keyCode, false); }, false);
 
-  get("/platformer/level.json", function(req) {
-    setup(JSON.parse(req.responseText));
-    hold('btn-left', 'left'); hold('btn-right', 'right'); hold('btn-jump', 'jump');
-    score();
-    frame();
-  });
+  // start at ?level=N, else at the furthest level this visitor reached
+  var asked = parseInt(new URL(location.href).searchParams.get('level'), 10),
+      best  = parseInt(store('d404-best'), 10) || 1;
+  hold('btn-left', 'left'); hold('btn-right', 'right'); hold('btn-jump', 'jump');
+  var restart = document.getElementById('game-restart');
+  if (restart) restart.addEventListener('click', function() { store('d404-best', '1'); loadLevel(1); });
+  var looping = false;
+  var _setup = setup;
+  setup = function(map) { _setup(map); if (!looping) { looping = true; frame(); } };
+  loadLevel(asked > 0 ? Math.min(asked, LAST) : best);
+  // test hook, only with ?debug=1: put the player on the exit door
+  if (new URL(location.href).searchParams.get('debug') === '1')
+    window.__d404 = { toExit: function() { if (exit) { player.x = exit.x; player.y = exit.y; } }, level: function() { return level; } };
 
 })();
 
