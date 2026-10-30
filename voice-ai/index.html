@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>voice ai · D-CREATIONS</title>
+<meta name="description" content="voice ai: voice translation into more than 195 languages that keeps your own voice, with the same tone, the same words and the same way of speaking.">
+<link rel="canonical" href="https://dcreations.fr/voice-ai/">
+<style>
+  :root { --bg: #f4f4f2; --card: #ffffff; --text: #111111; --text-2: #5a5a5a; --line: #e2e2de; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #121212; --card: #1c1c1c; --text: #f2f2f2; --text-2: #a8a8a8; --line: #2c2c2c; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 14px; }
+  header a { color: var(--text-2); text-decoration: none; }
+  header a:hover { color: var(--text); }
+  .lang button { background: none; border: 1px solid var(--line); color: var(--text-2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
+  .hero { display: grid; grid-template-columns: 180px 1fr; gap: 32px; align-items: center; padding: 32px 0 40px; }
+  .logo { width: 180px; height: 180px; border-radius: 50%; background: var(--card); display: grid; place-items: center; box-shadow: 0 12px 40px rgba(0,0,0,.10); }
+  .logo svg { width: 110px; height: 110px; color: var(--text); }
+  h1 { font-size: 44px; line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.02em; }
+  .lead { font-size: 19px; color: var(--text-2); margin: 0; }
+  h2 { font-size: 22px; margin: 40px 0 16px; }
+  ul.facts { padding-left: 20px; color: var(--text-2); }
+  ul.facts li { margin: 6px 0; }
+  .badge { display: inline-block; font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; margin-bottom: 14px; color: var(--text-2); }
+  footer { margin: 64px 0 32px; font-size: 13px; color: var(--text-2); }
+  [data-l="fr"] { display: none; }
+  html[lang="fr"] [data-l="en"] { display: none; }
+  html[lang="fr"] [data-l="fr"] { display: revert; }
+  @media (max-width: 640px) { .hero { grid-template-columns: 1fr; justify-items: start; } h1 { font-size: 34px; } .logo { width: 140px; height: 140px; } .logo svg { width: 86px; height: 86px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="/" data-l="en">← D-CREATIONS</a><a href="/fr/projets/" data-l="fr">← D-CREATIONS</a>
+    <span class="lang"><button type="button" id="lang" aria-label="Changer de langue / Switch language">FR</button></span>
+  </header>
+
+  <section class="hero">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round">
+        <line x1="14" y1="42" x2="14" y2="58"/><line x1="32" y1="28" x2="32" y2="72"/><line x1="50" y1="14" x2="50" y2="86"/><line x1="68" y1="28" x2="68" y2="72"/><line x1="86" y1="42" x2="86" y2="58"/>
+      </svg>
+    </div>
+    <div>
+      <span class="badge" data-l="en">In progress · October 2026</span>
+      <span class="badge" data-l="fr">En cours · octobre 2026</span>
+      <h1>voice ai</h1>
+      <p class="lead" data-l="en">Voice translation into more than 195 languages that keeps your real voice. You speak once, and you hear yourself in another language, with the same tone, the same choice of words and the same way of speaking. Your own voice, made polyglot.</p>
+      <p class="lead" data-l="fr">Une traduction vocale dans plus de 195 langues qui garde votre vraie voix. Vous parlez une fois, et vous vous entendez dans une autre langue, avec le même ton, le même vocabulaire et la même façon de parler. Votre propre voix, devenue polyglotte.</p>
+    </div>
+  </section>
+
+  <h2 data-l="en">How it works</h2><h2 data-l="fr">Comment ça marche</h2>
+  <ul class="facts" data-l="en">
+    <li><strong>Your voice, not a synthetic one.</strong> The translation is spoken with the voice of the person who is talking.</li>
+    <li><strong>Same tone.</strong> Emotion, rhythm and intonation carry over from the original sentence.</li>
+    <li><strong>Same words.</strong> The translation follows the speaker's vocabulary and level of language, not a generic phrasing.</li>
+    <li><strong>More than 195 languages.</strong> One voice, every language.</li>
+  </ul>
+  <ul class="facts" data-l="fr">
+    <li><strong>Votre voix, pas une voix de synthèse.</strong> La traduction est dite avec la voix de la personne qui parle.</li>
+    <li><strong>Le même ton.</strong> L'émotion, le rythme et l'intonation de la phrase d'origine sont conservés.</li>
+    <li><strong>Les mêmes mots.</strong> La traduction suit le vocabulaire et le niveau de langue de la personne, pas une formulation générique.</li>
+    <li><strong>Plus de 195 langues.</strong> Une seule voix, toutes les langues.</li>
+  </ul>
+
+  <footer>
+    <span data-l="en">Designed and built by Daniel Madac, D-CREATIONS, Montpellier.</span>
+    <span data-l="fr">Conçu et réalisé par Daniel Madac, D-CREATIONS, Montpellier.</span>
+  </footer>
+</div>
+<script>
+  (function () {
+    var root = document.documentElement, btn = document.getElementById('lang');
+    var saved = null; try { saved = localStorage.getItem('voice-ai-lang'); } catch (e) {}
+    var lang = saved || (/^fr/i.test(navigator.language) ? 'fr' : 'en');
+    function set(l) { root.lang = l; btn.textContent = l === 'fr' ? 'EN' : 'FR'; }
+    set(lang);
+    btn.addEventListener('click', function () { lang = lang === 'fr' ? 'en' : 'fr'; set(lang); try { localStorage.setItem('voice-ai-lang', lang); } catch (e) {} });
+  })();
+</script>
+</body>
+</html>
