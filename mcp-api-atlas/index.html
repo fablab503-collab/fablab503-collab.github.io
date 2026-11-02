@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCP API Atlas · D-CREATIONS</title>
+<meta name="description" content="MCP API Atlas: one map of the top 1,000 open-source MCP servers and 3,790 free public APIs, with their connections, and one Rust MCP server that searches the map and calls the free APIs no MCP server covers yet.">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="canonical" href="https://dcreations.fr/mcp-api-atlas/">
+<style>
+  :root { --bg: #f4f4f2; --card: #ffffff; --text: #111111; --text-2: #5a5a5a; --line: #e2e2de; --accent: #111111; --accent-fg: #ffffff; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #121212; --card: #1c1c1c; --text: #f2f2f2; --text-2: #a8a8a8; --line: #2c2c2c; --accent: #f2f2f2; --accent-fg: #111111; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 14px; }
+  header a { color: var(--text-2); text-decoration: none; }
+  header a:hover { color: var(--text); }
+  .lang button { background: none; border: 1px solid var(--line); color: var(--text-2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
+  .hero { display: grid; grid-template-columns: 180px 1fr; gap: 32px; align-items: center; padding: 32px 0 40px; }
+  .logo { width: 180px; height: 180px; border-radius: 50%; background: var(--card); display: grid; place-items: center; box-shadow: 0 12px 40px rgba(0,0,0,.10); }
+  .logo img { width: 130px; height: 130px; }
+  h1 { font-size: 44px; line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.02em; }
+  .lead { font-size: 19px; color: var(--text-2); margin: 0; }
+  .badge { display: inline-block; font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; margin-bottom: 14px; color: var(--text-2); }
+  h2 { font-size: 22px; margin: 48px 0 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .card h3 { margin: 0; font-size: 17px; }
+  .card p { margin: 0; color: var(--text-2); font-size: 15px; }
+  .num { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  ul.facts { padding-left: 20px; color: var(--text-2); }
+  ul.facts li { margin: 6px 0; }
+  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+  footer { margin: 64px 0 32px; font-size: 13px; color: var(--text-2); }
+  [data-l="fr"] { display: none; }
+  html[lang="fr"] [data-l="en"] { display: none; }
+  html[lang="fr"] [data-l="fr"] { display: revert; }
+  @media (max-width: 640px) { .hero { grid-template-columns: 1fr; justify-items: start; } h1 { font-size: 34px; } .logo { width: 140px; height: 140px; } .logo img { width: 100px; height: 100px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="/" data-l="en">← D-CREATIONS</a><a href="/fr/projets/" data-l="fr">← D-CREATIONS</a>
+    <span class="lang"><button type="button" id="lang" aria-label="Changer de langue / Switch language">FR</button></span>
+  </header>
+
+  <section class="hero">
+    <div class="logo"><img src="logo.svg" alt="MCP API Atlas logo"></div>
+    <div>
+      <span class="badge" data-l="en">Working build · November 2026</span>
+      <span class="badge" data-l="fr">Version fonctionnelle · novembre 2026</span>
+      <h1>MCP API Atlas</h1>
+      <p class="lead" data-l="en">One map of the open-source MCP servers and the free public APIs of the world, with every connection between them, and one Rust MCP server that lets any AI assistant search that map and call the free APIs nobody has wrapped yet.</p>
+      <p class="lead" data-l="fr">Une carte des serveurs MCP open source et des API publiques gratuites du monde, avec toutes leurs connexions, et un serveur MCP en Rust qui permet à n'importe quel assistant IA de chercher dans cette carte et d'appeler les API gratuites que personne n'a encore branchées.</p>
+    </div>
+  </section>
+
+  <h2 data-l="en">What is inside</h2><h2 data-l="fr">Ce qu'il contient</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="num">1,000</div>
+      <h3 data-l="en">Top MCP servers</h3><h3 data-l="fr">Meilleurs serveurs MCP</h3>
+      <p data-l="en">The most-starred open-source MCP servers, ranked from GitHub, the official MCP registry, Smithery, ModelScope (China) and the main awesome lists, in English and Chinese.</p>
+      <p data-l="fr">Les serveurs MCP open source les plus étoilés, classés à partir de GitHub, du registre MCP officiel, de Smithery, de ModelScope (Chine) et des principales listes « awesome », en anglais et en chinois.</p>
+    </div>
+    <div class="card">
+      <div class="num">3,790</div>
+      <h3 data-l="en">Free public APIs</h3><h3 data-l="fr">API publiques gratuites</h3>
+      <p data-l="en">Merged from twelve community lists, including free LLM APIs and Chinese free-API lists. Each one was checked live: 3,111 answered.</p>
+      <p data-l="fr">Fusionnées à partir de douze listes communautaires, dont des API LLM gratuites et des listes chinoises. Chacune a été testée en direct : 3 111 ont répondu.</p>
+    </div>
+    <div class="card">
+      <div class="num">1,173</div>
+      <h3 data-l="en">Usable right now</h3><h3 data-l="fr">Utilisables tout de suite</h3>
+      <p data-l="en">Free APIs that need no key and answered the live check: the ones the connector can call directly.</p>
+      <p data-l="fr">API gratuites sans clé qui ont répondu au test : celles que le connecteur peut appeler directement.</p>
+    </div>
+  </div>
+
+  <h2 data-l="en">The map</h2><h2 data-l="fr">La carte</h2>
+  <ul class="facts" data-l="en">
+    <li><strong>A knowledge graph.</strong> Every MCP server, every free API, the services they talk to (GitHub, Notion, weather, maps…), about 40 shared categories, languages and makers, built with graphify and grouped into communities.</li>
+    <li><strong>Real connections.</strong> An MCP server is linked to a service when its homepage or README names that service's domain or API host. Each link is marked as found in the source or deduced, with a confidence score.</li>
+    <li><strong>The gaps.</strong> Free, no-key, live APIs that no MCP server covers yet: those are the connector's targets.</li>
+  </ul>
+  <ul class="facts" data-l="fr">
+    <li><strong>Un graphe de connaissances.</strong> Chaque serveur MCP, chaque API gratuite, les services qu'ils utilisent (GitHub, Notion, météo, cartes…), une quarantaine de catégories communes, les langages et les auteurs, construit avec graphify et regroupé en communautés.</li>
+    <li><strong>De vraies connexions.</strong> Un serveur MCP est relié à un service quand sa page d'accueil ou son README cite le domaine ou l'adresse de l'API. Chaque lien est marqué « trouvé dans la source » ou « déduit », avec un score de confiance.</li>
+    <li><strong>Les manques.</strong> Les API gratuites, sans clé et en ligne qu'aucun serveur MCP ne couvre encore : ce sont les cibles du connecteur.</li>
+  </ul>
+
+  <h2 data-l="en">The connector (Rust)</h2><h2 data-l="fr">Le connecteur (Rust)</h2>
+  <ul class="facts" data-l="en">
+    <li><strong>One MCP server, six tools:</strong> <code>atlas_search</code>, <code>find_mcp_for_service</code>, <code>atlas_neighbors</code>, <code>list_free_apis</code>, <code>call_free_api</code>, <code>atlas_stats</code>.</li>
+    <li><strong>Why not rewrite every server in Rust?</strong> More than a thousand projects in many languages and licenses could never be checked properly. One small, tested Rust server that maps them all and fills the gaps does more.</li>
+    <li><strong>Safe by design.</strong> <code>call_free_api</code> only makes HTTPS GET requests to the API's own host, connects only to addresses it has checked (no private or local networks), follows at most three redirects, sends no cookies or credentials, and caps answers at 100 KB.</li>
+    <li><strong>Made by a team of AIs.</strong> Claude orchestrated, Antigravity researched the sources around the world, Vibe wrote the code, and Codex reviewed its security.</li>
+  </ul>
+  <ul class="facts" data-l="fr">
+    <li><strong>Un serveur MCP, six outils :</strong> <code>atlas_search</code>, <code>find_mcp_for_service</code>, <code>atlas_neighbors</code>, <code>list_free_apis</code>, <code>call_free_api</code>, <code>atlas_stats</code>.</li>
+    <li><strong>Pourquoi ne pas tout réécrire en Rust ?</strong> Plus d'un millier de projets dans de nombreux langages et licences ne pourraient jamais être vérifiés correctement. Un seul petit serveur Rust testé, qui les cartographie tous et comble les manques, fait mieux.</li>
+    <li><strong>Sûr dès la conception.</strong> <code>call_free_api</code> ne fait que des requêtes HTTPS GET vers l'hôte de l'API, ne se connecte qu'à des adresses vérifiées (jamais de réseau privé ou local), suit au plus trois redirections, n'envoie ni cookie ni identifiant et limite les réponses à 100 Ko.</li>
+    <li><strong>Fait par une équipe d'IA.</strong> Claude a orchestré, Antigravity a cherché les sources dans le monde entier, Vibe a écrit le code et Codex a vérifié sa sécurité.</li>
+  </ul>
+
+  <footer>
+    <span data-l="en">Designed and built by Daniel Madac, D-CREATIONS, Montpellier. Working build; not published yet. "Free" comes from community lists: check each API's terms before relying on it.</span>
+    <span data-l="fr">Conçu et réalisé par Daniel Madac, D-CREATIONS, Montpellier. Version fonctionnelle, pas encore publiée. « Gratuit » vient de listes communautaires : vérifiez les conditions de chaque API avant de vous en servir.</span>
+  </footer>
+</div>
+<script>
+  (function () {
+    var root = document.documentElement, btn = document.getElementById('lang');
+    var saved = null; try { saved = localStorage.getItem('atlas-lang'); } catch (e) {}
+    var lang = saved || (/^fr/i.test(navigator.language) ? 'fr' : 'en');
+    function set(l) { root.lang = l; btn.textContent = l === 'fr' ? 'EN' : 'FR'; }
+    set(lang);
+    btn.addEventListener('click', function () { lang = lang === 'fr' ? 'en' : 'fr'; set(lang); try { localStorage.setItem('atlas-lang', lang); } catch (e) {} });
+  })();
+</script>
+</body>
+</html>

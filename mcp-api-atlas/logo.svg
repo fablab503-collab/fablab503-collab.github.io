@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="MCP API Atlas">
+  <style>
+    .l { stroke: #111111; } .n { fill: #111111; } .h { fill: #ffffff; stroke: #111111; }
+    @media (prefers-color-scheme: dark) { .l { stroke: #f2f2f2; } .n { fill: #f2f2f2; } .h { fill: #1c1c1c; stroke: #f2f2f2; } }
+  </style>
+  <g class="l" stroke-width="3" stroke-linecap="round" fill="none">
+    <path d="M60 60 L24 30 M60 60 L96 28 M60 60 L100 78 M60 60 L30 92 M60 60 L66 104 M24 30 L96 28 M30 92 L66 104 M100 78 L66 104"/>
+  </g>
+  <circle class="n" cx="24" cy="30" r="8"/>
+  <circle class="n" cx="96" cy="28" r="7"/>
+  <circle class="n" cx="100" cy="78" r="8"/>
+  <circle class="n" cx="30" cy="92" r="7"/>
+  <circle class="n" cx="66" cy="104" r="6"/>
+  <circle class="h" cx="60" cy="60" r="15" stroke-width="4"/>
+</svg>
