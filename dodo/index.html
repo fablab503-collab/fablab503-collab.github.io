@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dodo · D-CREATIONS</title>
+<meta name="description" content="Dodo: a small e-ink puck that records your own voice notes and conversations when you press its button. Connect it to your iPhone with Dodo Listener, or to Android over Bluetooth.">
+<link rel="icon" href="dodo-logo.svg" type="image/svg+xml">
+<link rel="canonical" href="https://dcreations.fr/dodo/">
+<style>
+  :root { --bg: #f4f4f2; --card: #ffffff; --text: #111111; --text-2: #5a5a5a; --line: #e2e2de; --accent: #111111; --accent-fg: #ffffff; --ok: #1f7a3a; --warn: #9a5b00; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #121212; --card: #1c1c1c; --text: #f2f2f2; --text-2: #a8a8a8; --line: #2c2c2c; --accent: #f2f2f2; --accent-fg: #111111; --ok: #5fd07f; --warn: #f0b45a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 14px; }
+  header a { color: var(--text-2); text-decoration: none; }
+  .lang button { background: none; border: 1px solid var(--line); color: var(--text-2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
+  .hero { display: grid; grid-template-columns: 150px 1fr; gap: 28px; align-items: center; padding: 20px 0 28px; }
+  .logo { width: 150px; height: 150px; border-radius: 50%; background: var(--card); display: grid; place-items: center; box-shadow: 0 12px 40px rgba(0,0,0,.10); }
+  .logo img { width: 104px; height: 104px; }
+  .logo .dark { display: none; }
+  @media (prefers-color-scheme: dark) { .logo .light { display: none; } .logo .dark { display: block; } }
+  h1 { font-size: 40px; line-height: 1.1; margin: 0 0 10px; letter-spacing: -0.02em; }
+  .lead { font-size: 18px; color: var(--text-2); margin: 0; }
+  h2 { font-size: 20px; margin: 0 0 10px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin: 16px 0; }
+  .card p { margin: 6px 0; color: var(--text-2); }
+  .btn { display: inline-block; background: var(--accent); color: var(--accent-fg); text-decoration: none; border: 0; border-radius: 999px; padding: 11px 20px; font-family: inherit; font-size: 16px; font-weight: 600; line-height: 1.2; cursor: pointer; margin-top: 8px; }
+  .btn.ghost { background: none; color: var(--text); border: 1px solid var(--line); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  ol { padding-left: 20px; color: var(--text-2); margin: 8px 0; }
+  ol li { margin: 4px 0; }
+  .rows { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin-top: 12px; font-size: 15px; }
+  .rows dt { color: var(--text-2); }
+  .rows dd { margin: 0; font-variant-numeric: tabular-nums; }
+  input { width: 100%; font: inherit; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); margin-top: 8px; }
+  .note { font-size: 14px; color: var(--text-2); }
+  .status { font-weight: 600; }
+  .status.ok { color: var(--ok); } .status.warn { color: var(--warn); }
+  .hidden { display: none !important; }
+  .nets { display: grid; gap: 6px; margin: 12px 0 4px; }
+  .net { display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left; font: inherit; color: var(--text);
+         background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; cursor: pointer; }
+  .net.on { border-color: var(--text); font-weight: 600; }
+  .net small { color: var(--text-2); }
+  footer { margin: 48px 0 32px; font-size: 13px; color: var(--text-2); }
+  [data-l="fr"] { display: none; }
+  html[lang="fr"] [data-l="en"] { display: none; }
+  html[lang="fr"] [data-l="fr"] { display: revert; }
+  @media (max-width: 600px) { .hero { grid-template-columns: 1fr; } h1 { font-size: 32px; } .logo { width: 120px; height: 120px; } .logo img { width: 84px; height: 84px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="/" data-l="en">← D-CREATIONS</a><a href="/fr/projets/" data-l="fr">← D-CREATIONS</a>
+    <span class="lang"><button type="button" id="lang" aria-label="Changer de langue / Switch language">FR</button></span>
+  </header>
+
+  <section class="hero">
+    <div class="logo"><img class="light" src="dodo-logo.svg" alt="Dodo"><img class="dark" src="dodo-logo-dark.svg" alt=""></div>
+    <div>
+      <h1>Dodo</h1>
+      <p class="lead" data-l="en">A small e-ink pet that keeps your memory: press its button and it records your voice notes and conversations, always showing when it listens.</p>
+      <p class="lead" data-l="fr">Un petit compagnon à encre électronique qui garde ta mémoire : appuie sur son bouton et il enregistre tes notes vocales et conversations, en montrant toujours quand il écoute.</p>
+    </div>
+  </section>
+
+  <!-- iPhone / iPad / Mac: open the Dodo Listener app, which connects over Bluetooth -->
+  <section class="card" id="apple">
+    <h2 data-l="en">iPhone: open Dodo Listener</h2>
+    <h2 data-l="fr">iPhone : ouvrir Dodo Listener</h2>
+    <p data-l="en">Dodo Listener connects to <b id="dodo-name-en">your Dodo</b> over Bluetooth, downloads its recordings on your Wi-Fi, and makes transcripts, translations and a daily recap.</p>
+    <p data-l="fr">Dodo Listener se connecte à <b id="dodo-name-fr">ton Dodo</b> en Bluetooth, récupère ses enregistrements sur ton Wi-Fi, et fait transcriptions, traductions et un résumé quotidien.</p>
+    <a class="btn" id="open-app" href="dodolistener://pair"><span data-l="en">Open Dodo Listener</span><span data-l="fr">Ouvrir Dodo Listener</span></a>
+    <p class="note" data-l="en">Nothing happens? The app is not on this iPhone yet: it is in private testing (not on the App Store yet). Ask D-CREATIONS for an invitation.</p>
+    <p class="note" data-l="fr">Rien ne se passe ? L'app n'est pas encore sur cet iPhone : elle est en test privé (pas encore sur l'App Store). Demande une invitation à D-CREATIONS.</p>
+  </section>
+
+  <!-- Android and computers with Chrome or Edge: Web Bluetooth, no app needed -->
+  <section class="card" id="android">
+    <h2 data-l="en">Android: connect over Bluetooth</h2>
+    <h2 data-l="fr">Android : connecter en Bluetooth</h2>
+    <p data-l="en">No app needed: Chrome talks to Dodo directly. Keep Dodo close and awake, then tap Connect and pick “The Elements”.</p>
+    <p data-l="fr">Pas besoin d'app : Chrome parle directement à Dodo. Garde Dodo près de toi et allumé, puis touche Connecter et choisis « The Elements ».</p>
+    <button class="btn" id="connect" type="button"><span data-l="en">Connect to Dodo</span><span data-l="fr">Connecter Dodo</span></button>
+    <p class="note hidden" id="no-ble"><span data-l="en">This browser cannot use Bluetooth. On Android, open this page in Chrome. On a computer, use Chrome or Edge.</span><span data-l="fr">Ce navigateur ne peut pas utiliser le Bluetooth. Sur Android, ouvre cette page dans Chrome. Sur ordinateur, utilise Chrome ou Edge.</span></p>
+    <p class="status" id="state"></p>
+
+    <dl class="rows hidden" id="info">
+      <dt data-l="en">Battery</dt><dt data-l="fr">Batterie</dt><dd id="bat">—</dd>
+      <dt>Wi-Fi</dt><dd id="wifi">—</dd>
+      <dt data-l="en">Listening</dt><dt data-l="fr">Écoute</dt><dd id="rec">—</dd>
+      <dt>Firmware</dt><dd id="fw">—</dd>
+    </dl>
+
+    <div class="hidden" id="wifi-form">
+      <h2 style="margin-top:20px" data-l="en">Give Dodo your Wi-Fi</h2>
+      <h2 style="margin-top:20px" data-l="fr">Donner ton Wi-Fi à Dodo</h2>
+      <p data-l="en">These are the networks Dodo can see. Tap yours and type its password. Dodo keeps up to 10 and joins the strongest one, so it stays online without your phone.</p>
+      <p data-l="fr">Voici les réseaux que Dodo voit. Touche le tien et tape son mot de passe. Dodo en garde jusqu'à 10 et rejoint le plus fort, pour rester en ligne sans ton téléphone.</p>
+      <div id="nets" class="nets"></div>
+      <button class="btn ghost" id="rescan" type="button"><span data-l="en">Look again</span><span data-l="fr">Chercher à nouveau</span></button>
+      <button class="btn ghost" id="other" type="button"><span data-l="en">Other network…</span><span data-l="fr">Autre réseau…</span></button>
+      <input id="ssid" class="hidden" autocomplete="off" autocapitalize="none" placeholder="Network name / Nom du réseau">
+      <input id="pass" class="hidden" type="password" autocomplete="off" placeholder="Password / Mot de passe">
+      <button class="btn hidden" id="send-wifi" type="button"><span data-l="en">Send to Dodo</span><span data-l="fr">Envoyer à Dodo</span></button>
+      <p class="note" id="wifi-note"></p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 data-l="en">Wi-Fi without a phone app</h2>
+    <h2 data-l="fr">Le Wi-Fi sans application</h2>
+    <ol data-l="en"><li>On Dodo: Menu → Wi-Fi setup.</li><li>Scan the QR code on Dodo's screen with your camera.</li><li>Pick your network, type its password, Save on Dodo.</li></ol>
+    <ol data-l="fr"><li>Sur Dodo : Menu → Wi-Fi setup.</li><li>Scanne le QR code de l'écran avec l'appareil photo.</li><li>Choisis ton réseau, tape son mot de passe, « Save on Dodo ».</li></ol>
+    <p class="note" data-l="en">Dodo records only when you press its button, and shows it on its screen. Recording someone's private words without their consent is a crime in France (Code pénal, art. 226-1): tell people when Dodo is listening.</p>
+    <p class="note" data-l="fr">Dodo n'enregistre que quand tu appuies sur son bouton, et l'affiche à l'écran. Enregistrer les paroles privées de quelqu'un sans son consentement est un délit en France (Code pénal, art. 226-1) : préviens les personnes quand Dodo écoute.</p>
+  </section>
+
+  <footer>D-CREATIONS · Dodo is a working prototype (November 2026).</footer>
+</div>
+<script>
+// Dodo page: the QR code on Dodo points here with ?id=<Dodo ID>&p=ios|android. iPhone -> open the app with that ID;
+// Android/Chrome -> Web Bluetooth to the same GATT service the apps use (state JSON + "wifi+name\tpassword" command).
+(() => {
+  const q = new URLSearchParams(location.search);
+  const id = (q.get('id') || '').replace(/[^0-9A-Za-z]/g, '').slice(0, 10);
+  const ua = navigator.userAgent;
+  const isApple = q.get('p') === 'ios' || /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const isAndroid = q.get('p') === 'android' || /Android/.test(ua);
+  if (id) {
+    document.getElementById('open-app').href = `dodolistener://pair?id=${encodeURIComponent(id)}`;
+    document.getElementById('dodo-name-en').textContent = `Dodo ${id}`;
+    document.getElementById('dodo-name-fr').textContent = `Dodo ${id}`;
+  }
+  // Show the section for this phone first (both stay available).
+  if (isAndroid && !isApple) document.getElementById('android').parentNode.insertBefore(document.getElementById('android'), document.getElementById('apple'));
+
+  const html = document.documentElement;
+  const lb = document.getElementById('lang');
+  const setLang = (l) => { html.lang = l; lb.textContent = l === 'fr' ? 'EN' : 'FR'; try { localStorage.setItem('lang', l); } catch {} };
+  let saved = null; try { saved = localStorage.getItem('lang'); } catch {}
+  setLang(saved || ((navigator.language || '').startsWith('fr') ? 'fr' : 'en'));
+  lb.onclick = () => setLang(html.lang === 'fr' ? 'en' : 'fr');
+
+  const SERVICE = 'e1e70001-5a1d-4c6e-9d1e-0e1e3e7e0001', STATE = 'e1e70002-5a1d-4c6e-9d1e-0e1e3e7e0001', COMMAND = 'e1e70003-5a1d-4c6e-9d1e-0e1e3e7e0001';
+  const WIFILIST = 'e1e70006-5a1d-4c6e-9d1e-0e1e3e7e0001';   // firmware B1.8: Dodo's own Wi-Fi scan ("name\tdBm\tsecured" lines)
+  let chosen = '';
+  const pick = (name) => {
+    chosen = name;
+    document.querySelectorAll('.net').forEach((b) => b.classList.toggle('on', b.dataset.n === name));
+    $('ssid').classList.add('hidden');
+    $('pass').classList.remove('hidden'); $('send-wifi').classList.remove('hidden');
+    $('pass').placeholder = (fr() ? 'Mot de passe de ' : 'Password for ') + name;
+    $('pass').focus();
+  };
+  const showNets = (text) => {
+    const box = $('nets'); box.textContent = '';
+    const nets = text.split('\n').map((l) => l.split('\t')).filter((f) => f.length >= 3 && f[0]);
+    if (!nets.length) { box.textContent = fr() ? 'Aucun réseau trouvé (Dodo ne voit que le 2,4 GHz).' : 'No networks found (Dodo only sees 2.4 GHz).'; return; }
+    for (const [name, rssi, sec] of nets) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'net'; b.dataset.n = name;
+      const bars = +rssi >= -55 ? '▂▄▆' : +rssi >= -70 ? '▂▄' : '▂';
+      b.innerHTML = '<span></span><small></small>';
+      b.firstChild.textContent = name;
+      b.lastChild.textContent = `${sec === '1' ? '🔒 ' : ''}${bars}`;
+      b.onclick = () => pick(name);
+      box.appendChild(b);
+    }
+  };
+  let listChar = null;
+  const scan = async () => {
+    if (!cmd) return;
+    $('nets').textContent = fr() ? 'Dodo cherche les réseaux…' : 'Dodo is looking for networks…';
+    await cmd.writeValue(new TextEncoder().encode('wifiscan'));
+    if (!listChar) setTimeout(() => { if (!listChar) $('nets').textContent = fr() ? 'Mets Dodo à jour pour voir la liste, ou utilise « Autre réseau ».' : 'Update Dodo to see the list, or use “Other network”.'; }, 12000);
+  };
+  const fr = () => html.lang === 'fr';
+  const $ = (x) => document.getElementById(x);
+  let cmd = null;
+  if (!navigator.bluetooth) { $('no-ble').classList.remove('hidden'); $('connect').disabled = true; }
+
+  const say = (en, frText, cls = '') => { $('state').textContent = fr() ? frText : en; $('state').className = 'status ' + cls; };
+  const show = (s) => {
+    $('info').classList.remove('hidden');
+    $('bat').textContent = s.bat >= 0 ? `${s.bat} %${s.chg ? (fr() ? ', en charge' : ', charging') : ''}` : '—';
+    const on = s.ip && s.ip.length;
+    $('wifi').textContent = on ? `${(s.wifi || '').replace(/ -?\d+dBm$/, '')} · ${s.ip}` : (fr() ? 'Pas encore en Wi-Fi' : 'Not on Wi-Fi yet');
+    $('rec').textContent = s.whistle ? (fr() ? 'Oui, Dodo écoute' : 'Yes, Dodo is listening') : (fr() ? 'Non' : 'No');
+    $('fw').textContent = s.fw || '—';
+  };
+  const decode = (v) => { try { return JSON.parse(new TextDecoder().decode(v)); } catch { return null; } };
+
+  $('connect').onclick = async () => {
+    try {
+      say('Looking for Dodo…', 'Recherche de Dodo…');
+      const filters = id ? [{ name: `The Elements ${id}` }, { services: [SERVICE] }] : [{ services: [SERVICE] }];
+      const dev = await navigator.bluetooth.requestDevice({ filters, optionalServices: [SERVICE] });
+      dev.addEventListener('gattserverdisconnected', () => { cmd = null; say('Disconnected. Tap Connect again.', 'Déconnecté. Touche Connecter à nouveau.', 'warn'); });
+      const server = await dev.gatt.connect();
+      const svc = await server.getPrimaryService(SERVICE);
+      const st = await svc.getCharacteristic(STATE);
+      cmd = await svc.getCharacteristic(COMMAND);
+      const first = decode(await st.readValue());
+      if (first) show(first);
+      await st.startNotifications();
+      st.addEventListener('characteristicvaluechanged', async (e) => { const s = decode(e.target.value) || decode(await st.readValue()); if (s) show(s); });
+      // Dodo names its recordings by the clock: give it local time.
+      const local = Math.floor(Date.now() / 1000) - new Date().getTimezoneOffset() * 60;
+      await cmd.writeValue(new TextEncoder().encode(`time:${local}`));
+      say(`Connected to ${dev.name || 'Dodo'}`, `Connecté à ${dev.name || 'Dodo'}`, 'ok');
+      $('wifi-form').classList.remove('hidden');
+      try {                                           // older firmware has no list: "Other network" still works
+        listChar = await svc.getCharacteristic(WIFILIST);
+        await listChar.startNotifications();
+        listChar.addEventListener('characteristicvaluechanged', (e) => showNets(new TextDecoder().decode(e.target.value)));
+      } catch { listChar = null; }
+      scan();
+    } catch (err) {
+      if (err && err.name === 'NotFoundError') say('No Dodo chosen.', 'Aucun Dodo choisi.', 'warn');
+      else say(`Could not connect: ${err.message || err}`, `Connexion impossible : ${err.message || err}`, 'warn');
+    }
+  };
+
+  $('rescan').onclick = scan;
+  $('other').onclick = () => { chosen = ''; document.querySelectorAll('.net').forEach((b) => b.classList.remove('on'));
+    $('ssid').classList.remove('hidden'); $('pass').classList.remove('hidden'); $('send-wifi').classList.remove('hidden'); $('ssid').focus(); };
+  $('send-wifi').onclick = async () => {
+    const n = (chosen || $('ssid').value).trim(), p = $('pass').value;
+    if (!n || !cmd) return;
+    try {
+      await cmd.writeValue(new TextEncoder().encode(`wifi+${n}\t${p}`));
+      $('pass').value = '';                                  // never kept by the page
+      $('wifi-note').textContent = fr() ? `Envoyé. Dodo rejoint ${n}…` : `Sent. Dodo is joining ${n}…`;
+    } catch (err) { $('wifi-note').textContent = (fr() ? 'Échec : ' : 'Failed: ') + (err.message || err); }
+  };
+})();
+</script>
+</body>
+</html>
