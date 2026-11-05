@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kilnform — Architectural Stoneware Cups &amp; Plant Vessels</title>
+  <meta name="description" content="Kilnform crafts architectural stoneware cups from 90 ml espresso vessels to 600 ml mugs and 8 L botanical plant pots with drainage saucers." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <!-- 44px Dark Global Navigation -->
+  <nav class="global-nav" aria-label="Global">
+    <div class="global-nav__inner">
+      <a class="global-nav__brand" href="index.html" aria-label="Kilnform Home">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+          <path d="M5 5h14l-2.2 12.2a3 3 0 0 1-2.95 2.47H10.15a3 3 0 0 1-2.95-2.47L5 5Z" stroke="currentColor" stroke-width="1.8" />
+          <ellipse cx="12" cy="5" rx="7" ry="2" fill="currentColor" opacity="0.35" />
+        </svg>
+        <span>Kilnform</span>
+      </a>
+
+      <ul class="global-nav__links" id="global-nav-links">
+        <li><a class="global-nav__link" href="#cups" aria-current="page">Cups</a></li>
+        <li><a class="global-nav__link" href="#plant-pots">Plant Pots</a></li>
+        <li><a class="global-nav__link" href="customize.html">Customize</a></li>
+        <li><a class="global-nav__link" href="#compare">Compare</a></li>
+      </ul>
+
+      <div class="global-nav__actions">
+        <button
+          type="button"
+          class="global-nav__bag-btn"
+          id="nav-bag-btn"
+          aria-label="Shopping Bag"
+          aria-expanded="false"
+          aria-controls="bag-drawer"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 8h12l-1 12H7L6 8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+            <path d="M9 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+          </svg>
+          <span class="bag-badge" id="bag-count-badge" hidden>0</span>
+        </button>
+
+        <button
+          type="button"
+          class="global-nav__menu-btn"
+          id="mobile-menu-btn"
+          aria-label="Toggle Menu"
+          aria-expanded="false"
+          aria-controls="global-nav-links"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 8h16M4 16h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Bag Drawer Popover -->
+  <aside class="bag-drawer" id="bag-drawer" role="dialog" aria-label="Your Shopping Bag">
+    <div class="bag-drawer__header">
+      <h2 class="bag-drawer__title">Your Bag</h2>
+      <button type="button" class="bag-drawer__close" id="bag-drawer-close" aria-label="Close Bag">&times;</button>
+    </div>
+    <p class="bag-drawer__empty" id="bag-drawer-empty">Your bag is empty. Customize a vessel to add it here.</p>
+    <ul class="bag-drawer__list" id="bag-drawer-list"></ul>
+    <div class="bag-drawer__footer" id="bag-drawer-footer" hidden>
+      <div class="bag-drawer__total-row">
+        <span>Total</span>
+        <span id="bag-drawer-total">€0.00</span>
+      </div>
+      <a class="btn-pill btn-pill--primary" href="customize.html">Customize Another Vessel</a>
+      <button type="button" class="bag-item__remove" id="bag-clear-btn">Clear demo bag</button>
+    </div>
+  </aside>
+
+  <main id="main-content">
+    <h1 class="visually-hidden">Kilnform — Custom Stoneware Cups, Travel Tumblers, and Architectural Plant Pots</h1>
+
+    <div class="tile-stack" id="cups">
+      <!-- HERO TILE 1: Dark (#000000) — Flute 250 & Pebble 90 -->
+      <section class="hero-tile hero-tile--dark" aria-labelledby="hero-flute-title">
+        <div class="hero-tile__copy">
+          <span class="hero-tile__eyebrow">Small 90 ml &amp; Medium 250 ml</span>
+          <h2 class="hero-tile__headline" id="hero-flute-title">Flute &amp; Pebble</h2>
+          <p class="hero-tile__subline">High-fired stoneware tuned to the exact thermal curve of espresso and pour-over.</p>
+          <p class="hero-tile__meta">Pebble 90 ml from €18 · Flute 250 ml from €26</p>
+          <div class="cta-pair">
+            <a class="btn-pill btn-pill--primary" href="#compare">Learn more</a>
+            <a class="btn-pill btn-pill--outline-dark" href="customize.html?family=flute&amp;size=250ml">Buy</a>
+          </div>
+        </div>
+
+        <div class="hero-tile__visual">
+          <svg viewBox="0 0 880 390" role="img" aria-label="Pebble 90 ml wide espresso cup beside Flute 250 ml tall ceramic cup">
+            <defs>
+              <linearGradient id="h1_tall" x1="0%" y1="0%" x2="100%" y2="6%">
+                <stop offset="0%" stop-color="#5a5a62" />
+                <stop offset="30%" stop-color="#2b2b30" />
+                <stop offset="78%" stop-color="#19191d" />
+                <stop offset="100%" stop-color="#0b0b0d" />
+              </linearGradient>
+              <linearGradient id="h1_wide" x1="0%" y1="0%" x2="100%" y2="8%">
+                <stop offset="0%" stop-color="#ffffff" />
+                <stop offset="34%" stop-color="#eae7df" />
+                <stop offset="82%" stop-color="#cbc6bc" />
+                <stop offset="100%" stop-color="#aea89d" />
+              </linearGradient>
+              <radialGradient id="h1_glow" cx="50%" cy="60%" r="55%">
+                <stop offset="0%" stop-color="#2997ff" stop-opacity="0.18" />
+                <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+
+            <ellipse cx="440" cy="335" rx="340" ry="44" fill="url(#h1_glow)" />
+
+            <!-- Pebble 90 ml (Small Wide Cup, left) -->
+            <g transform="translate(285, 0)">
+              <ellipse cx="0" cy="340" rx="88" ry="15" fill="#09090b" opacity="0.8" />
+              <path d="M -78 205 L -62 325 Q 0 346 62 325 L 78 205 Z" fill="url(#h1_wide)" />
+              <path d="M -58 326 Q 0 345 58 326 L 54 333 Q 0 350 -54 333 Z" fill="#b8a58e" />
+              <ellipse cx="0" cy="205" rx="78" ry="14" fill="#dcd8ce" />
+              <ellipse cx="0" cy="205" rx="71" ry="11" fill="#3a2618" />
+              <path d="M -46 226 L -38 312" stroke="#ffffff" stroke-opacity="0.55" stroke-width="8" stroke-linecap="round" />
+            </g>
+
+            <!-- Flute 250 ml (Medium Tall Cup, right) -->
+            <g transform="translate(555, 0)">
+              <ellipse cx="0" cy="342" rx="95" ry="18" fill="#09090b" opacity="0.9" />
+              <path d="M -82 78 L -62 324 Q 0 348 62 324 L 82 78 Z" fill="url(#h1_tall)" />
+              <path d="M -58 325 Q 0 347 58 325 L 53 333 Q 0 353 -53 333 Z" fill="#9c8c79" />
+              <!-- Architectural vertical fluting -->
+              <line x1="-45" y1="98" x2="-34" y2="314" stroke="#ffffff" stroke-opacity="0.1" stroke-width="3" stroke-linecap="round" />
+              <line x1="-15" y1="98" x2="-11" y2="318" stroke="#ffffff" stroke-opacity="0.08" stroke-width="3" stroke-linecap="round" />
+              <line x1="15" y1="98" x2="11" y2="318" stroke="#000000" stroke-opacity="0.35" stroke-width="3" stroke-linecap="round" />
+              <line x1="45" y1="98" x2="34" y2="314" stroke="#000000" stroke-opacity="0.45" stroke-width="3" stroke-linecap="round" />
+              <ellipse cx="0" cy="78" rx="82" ry="15" fill="#3d3d44" />
+              <ellipse cx="0" cy="78" rx="74" ry="11.5" fill="#18181b" />
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <!-- HERO TILE 2: Light (#f5f5f7) — Roam 400 & Nomad 600 (Tumbler with Lid & Travel Cup) -->
+      <section class="hero-tile hero-tile--alt" aria-labelledby="hero-roam-title">
+        <div class="hero-tile__copy">
+          <span class="hero-tile__eyebrow">Big 400 ml &amp; Extra-Big 600 ml</span>
+          <h2 class="hero-tile__headline" id="hero-roam-title">Roam &amp; Nomad</h2>
+          <p class="hero-tile__subline">Tumbler with press-fit lid and double-wall travel cup. Ceramic purity in motion.</p>
+          <p class="hero-tile__meta">Roam 400 ml from €38 · Nomad 600 ml from €50</p>
+          <div class="cta-pair">
+            <a class="btn-pill btn-pill--primary" href="#compare">Learn more</a>
+            <a class="btn-pill btn-pill--outline-light" href="customize.html?family=roam&amp;size=400ml">Buy</a>
+          </div>
+        </div>
+
+        <div class="hero-tile__visual">
+          <svg viewBox="0 0 880 390" role="img" aria-label="Roam 400 ml tumbler with lid and Nomad 600 ml insulated travel cup">
+            <defs>
+              <linearGradient id="h2_celadon" x1="0%" y1="0%" x2="100%" y2="8%">
+                <stop offset="0%" stop-color="#bfd1c5" />
+                <stop offset="32%" stop-color="#8fa396" />
+                <stop offset="80%" stop-color="#6e8275" />
+                <stop offset="100%" stop-color="#53665a" />
+              </linearGradient>
+              <linearGradient id="h2_cobalt" x1="0%" y1="0%" x2="100%" y2="8%">
+                <stop offset="0%" stop-color="#6e90b3" />
+                <stop offset="30%" stop-color="#3c5a78" />
+                <stop offset="80%" stop-color="#294159" />
+                <stop offset="100%" stop-color="#1b2c3d" />
+              </linearGradient>
+              <radialGradient id="h2_shadow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#000000" stop-opacity="0.18" />
+                <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+
+            <!-- Roam 400 ml Tumbler with Lid (left) -->
+            <g transform="translate(295, 0)">
+              <ellipse cx="0" cy="344" rx="96" ry="18" fill="url(#h2_shadow)" />
+              <path d="M -76 116 L -58 326 Q 0 348 58 326 L 76 116 Z" fill="url(#h2_celadon)" />
+              <path d="M -54 326 Q 0 346 54 326 L 50 333 Q 0 351 -50 333 Z" fill="#c7b8a3" />
+              <path d="M -42 140 L -32 308" stroke="#ffffff" stroke-opacity="0.38" stroke-width="10" stroke-linecap="round" />
+              <!-- Press-fit Sip Lid -->
+              <path d="M -79 116 L -70 94 L 70 94 L 79 116 Z" fill="#2c2c2e" />
+              <ellipse cx="0" cy="94" rx="70" ry="12" fill="#3e3e42" />
+              <ellipse cx="32" cy="94" rx="12" ry="4" fill="#141416" />
+            </g>
+
+            <!-- Nomad 600 ml Extra-Big Travel Cup (right) -->
+            <g transform="translate(575, 0)">
+              <ellipse cx="0" cy="346" rx="104" ry="20" fill="url(#h2_shadow)" />
+              <path d="M -82 72 L -60 328 Q 0 352 60 328 L 82 72 Z" fill="url(#h2_cobalt)" />
+              <!-- Tactile grip sleeve -->
+              <path d="M -76 136 Q 0 152 76 136 L 70 218 Q 0 234 -70 218 Z" fill="#1e3145" opacity="0.72" />
+              <path d="M -46 94 L -34 312" stroke="#ffffff" stroke-opacity="0.28" stroke-width="11" stroke-linecap="round" />
+              <!-- Leak-resistant Travel Lock Cap -->
+              <path d="M -85 72 L -74 48 L 74 48 L 85 72 Z" fill="#1d1d1f" />
+              <ellipse cx="0" cy="48" rx="74" ry="13" fill="#323236" />
+              <rect x="-24" y="34" width="48" height="14" rx="7" fill="#161617" stroke="#636366" stroke-width="1.5" />
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <!-- HERO TILE 3: White (#ffffff) — Hearth 600 Mug & Cairn 400 Wide Bowl -->
+      <section class="hero-tile hero-tile--light" aria-labelledby="hero-hearth-title">
+        <div class="hero-tile__copy">
+          <span class="hero-tile__eyebrow">Wide 400 ml &amp; Handled 600 ml</span>
+          <h2 class="hero-tile__headline" id="hero-hearth-title">Hearth &amp; Cairn</h2>
+          <p class="hero-tile__subline">Generous studio proportions for morning lattes, ceremonial tea, and long studio sessions.</p>
+          <p class="hero-tile__meta">Cairn 400 ml from €33 · Hearth 600 ml Mug from €46</p>
+          <div class="cta-pair">
+            <a class="btn-pill btn-pill--primary" href="#compare">Learn more</a>
+            <a class="btn-pill btn-pill--outline-light" href="customize.html?family=hearth&amp;size=600ml">Buy</a>
+          </div>
+        </div>
+
+        <div class="hero-tile__visual">
+          <svg viewBox="0 0 880 390" role="img" aria-label="Cairn 400 ml wide latte bowl cup and Hearth 600 ml extra-big handled mug">
+            <defs>
+              <linearGradient id="h3_sienna" x1="0%" y1="0%" x2="100%" y2="8%">
+                <stop offset="0%" stop-color="#df866c" />
+                <stop offset="32%" stop-color="#b85d43" />
+                <stop offset="80%" stop-color="#8f402a" />
+                <stop offset="100%" stop-color="#6e2d1b" />
+              </linearGradient>
+              <linearGradient id="h3_ochre" x1="0%" y1="0%" x2="100%" y2="8%">
+                <stop offset="0%" stop-color="#e8d0ad" />
+                <stop offset="35%" stop-color="#c8a97e" />
+                <stop offset="82%" stop-color="#a18259" />
+                <stop offset="100%" stop-color="#826641" />
+              </linearGradient>
+            </defs>
+
+            <!-- Cairn 400 ml Wide Studio Cup (left) -->
+            <g transform="translate(275, 0)">
+              <ellipse cx="0" cy="342" rx="102" ry="16" fill="#000000" opacity="0.1" />
+              <path d="M -98 148 L -62 324 Q 0 348 62 324 L 98 148 Z" fill="url(#h3_ochre)" />
+              <ellipse cx="0" cy="148" rx="98" ry="16" fill="#b5956b" />
+              <ellipse cx="0" cy="148" rx="90" ry="12.5" fill="#8c6f48" />
+              <path d="M -56 172 L -38 308" stroke="#ffffff" stroke-opacity="0.35" stroke-width="10" stroke-linecap="round" />
+            </g>
+
+            <!-- Hearth 600 ml Extra-Big Handled Mug (right) -->
+            <g transform="translate(565, 0)">
+              <ellipse cx="0" cy="344" rx="112" ry="18" fill="#000000" opacity="0.12" />
+              <!-- Forged stoneware handle -->
+              <path d="M 78 138 C 144 134, 144 292, 68 288" fill="none" stroke="url(#h3_sienna)" stroke-width="22" stroke-linecap="round" />
+              <path d="M -88 96 L -74 324 Q 0 350 74 324 L 88 96 Z" fill="url(#h3_sienna)" />
+              <ellipse cx="0" cy="96" rx="88" ry="15" fill="#9e4931" />
+              <ellipse cx="0" cy="96" rx="80" ry="11.5" fill="#75311e" />
+              <path d="M -52 122 L -44 308" stroke="#ffffff" stroke-opacity="0.32" stroke-width="12" stroke-linecap="round" />
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <!-- HERO TILE 4: Dark (#000000) — Terra Planter Pots (1 L, 3 L, 8 L with Drainage Saucer) -->
+      <section class="hero-tile hero-tile--dark" id="plant-pots" aria-labelledby="hero-terra-title">
+        <div class="hero-tile__copy">
+          <span class="hero-tile__eyebrow">Extra-Big Botanical Vessels · 1 L, 3 L &amp; 8 L</span>
+          <h2 class="hero-tile__headline" id="hero-terra-title">Terra Planter</h2>
+          <p class="hero-tile__subline">Extra-big fluted stoneware cups for plants, complete with precision drainage and a fitted saucer.</p>
+          <p class="hero-tile__meta">1 L Desk Pot €48 · 3 L Studio Pot €68 · 8 L Floor Vessel €112</p>
+          <div class="cta-pair">
+            <a class="btn-pill btn-pill--primary" href="#compare">Learn more</a>
+            <a class="btn-pill btn-pill--outline-dark" href="customize.html?family=terra&amp;size=3L">Buy</a>
+          </div>
+        </div>
+
+        <div class="hero-tile__visual">
+          <svg viewBox="0 0 920 400" role="img" aria-label="Terra Planter 1 L, 3 L, and 8 L ceramic plant pots with drainage saucers">
+            <defs>
+              <linearGradient id="pot_1l" x1="0%" y1="0%" x2="100%" y2="8%">
+                <stop offset="0%" stop-color="#ffffff" />
+                <stop offset="35%" stop-color="#e5e1d8" />
+                <stop offset="100%" stop-color="#aba598" />
+              </linearGradient>
+              <linearGradient id="pot_3l" x1="0%" y1="0%" x2="100%" y2="8%">
+                <stop offset="0%" stop-color="#da7f65" />
+                <stop offset="36%" stop-color="#b85d43" />
+                <stop offset="100%" stop-color="#70301e" />
+              </linearGradient>
+              <linearGradient id="pot_8l" x1="0%" y1="0%" x2="100%" y2="8%">
+                <stop offset="0%" stop-color="#b7c9bd" />
+                <stop offset="36%" stop-color="#8fa396" />
+                <stop offset="100%" stop-color="#4e6155" />
+              </linearGradient>
+            </defs>
+
+            <!-- 1 L Plant Pot (left) -->
+            <g transform="translate(205, 30)">
+              <path d="M0 156 C-12 115, -48 102, -52 132 C-54 152, -20 160, 0 156 Z" fill="#527d5c" />
+              <path d="M0 156 C12 110, 52 100, 56 132 C58 152, 20 160, 0 156 Z" fill="#6b9976" />
+              <path d="M -58 156 L -44 290 Q 0 306 44 290 L 58 156 Z" fill="url(#pot_1l)" />
+              <path d="M -66 286 L 66 286 L 58 304 Q 0 314 -58 304 Z" fill="#c9c4b8" />
+              <ellipse cx="0" cy="156" rx="58" ry="10" fill="#d4d0c5" />
+              <ellipse cx="0" cy="156" rx="52" ry="7.5" fill="#2c241d" />
+            </g>
+
+            <!-- 3 L Plant Pot (center) -->
+            <g transform="translate(450, 12)">
+              <path d="M0 112 C-18 58, -72 42, -78 82 C-82 108, -28 118, 0 112 Z" fill="#4c7856" />
+              <path d="M0 112 C18 52, 76 38, 82 82 C84 108, 30 118, 0 112 Z" fill="#689973" />
+              <path d="M0 114 C-6 36, 12 22, 24 62 C32 88, 12 112, 0 114 Z" fill="#3a5e43" />
+              <path d="M -82 114 L -62 302 Q 0 322 62 302 L 82 114 Z" fill="url(#pot_3l)" />
+              <path d="M -94 296 L 94 296 L 84 318 Q 0 332 -84 318 Z" fill="#9c4830" />
+              <ellipse cx="0" cy="114" rx="82" ry="13" fill="#9e4931" />
+              <ellipse cx="0" cy="114" rx="74" ry="10" fill="#291f18" />
+            </g>
+
+            <!-- 8 L Floor Plant Pot (right) -->
+            <g transform="translate(725, 0)">
+              <path d="M0 74 C-26 8, -92 -8, -98 40 C-102 72, -36 80, 0 74 Z" fill="#467050" />
+              <path d="M0 74 C26 2, 98 -10, 104 40 C106 72, 38 80, 0 74 Z" fill="#62916d" />
+              <path d="M0 76 C-8 -14, 16 -24, 30 22 C40 52, 16 74, 0 76 Z" fill="#35573d" />
+              <path d="M -104 76 L -78 310 Q 0 336 78 310 L 104 76 Z" fill="url(#pot_8l)" />
+              <!-- Drainage saucer -->
+              <path d="M -118 302 L 118 302 L 106 328 Q 0 344 -106 328 Z" fill="#6e8275" />
+              <ellipse cx="0" cy="76" rx="104" ry="16" fill="#778c7e" />
+              <ellipse cx="0" cy="76" rx="95" ry="12" fill="#231b15" />
+            </g>
+          </svg>
+        </div>
+      </section>
+    </div>
+
+    <!-- 2-Column Product Family Grid (6 Tiles, 12px white gutters) -->
+    <section class="promo-grid" aria-label="Product Families">
+      <!-- Tile 1: Pebble 90 (Small Espresso 90 ml) -->
+      <article class="grid-tile grid-tile--alt">
+        <div class="grid-tile__copy">
+          <h3 class="grid-tile__headline">Pebble 90</h3>
+          <p class="grid-tile__subline">Small 90 ml wide espresso cup.</p>
+          <p class="grid-tile__specs">58 mm tall · Thick thermal walls · From €18</p>
+          <div class="cta-pair">
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="#compare">Learn more</a>
+            <a class="btn-pill btn-pill--outline-light btn-pill--small" href="customize.html?family=pebble&amp;size=90ml">Buy</a>
+          </div>
+        </div>
+        <div class="grid-tile__visual">
+          <svg viewBox="0 0 360 250" role="img" aria-label="Pebble 90 ml espresso cup">
+            <ellipse cx="180" cy="216" rx="76" ry="14" fill="#000000" opacity="0.12" />
+            <path d="M 108 102 L 122 204 Q 180 222 238 204 L 252 102 Z" fill="#26262a" />
+            <ellipse cx="180" cy="102" rx="72" ry="13" fill="#3a3a40" />
+            <ellipse cx="180" cy="102" rx="65" ry="9.5" fill="#17171a" />
+          </svg>
+        </div>
+      </article>
+
+      <!-- Tile 2: Flute 250 (Medium Tall 250 ml) -->
+      <article class="grid-tile grid-tile--dark">
+        <div class="grid-tile__copy">
+          <h3 class="grid-tile__headline">Flute 250</h3>
+          <p class="grid-tile__subline">Medium 250 ml tall filter cup.</p>
+          <p class="grid-tile__specs">96 mm tall · Fluted stoneware grip · From €26</p>
+          <div class="cta-pair">
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="#compare">Learn more</a>
+            <a class="btn-pill btn-pill--outline-dark btn-pill--small" href="customize.html?family=flute&amp;size=250ml">Buy</a>
+          </div>
+        </div>
+        <div class="grid-tile__visual">
+          <svg viewBox="0 0 360 250" role="img" aria-label="Flute 250 ml tall ceramic cup">
+            <ellipse cx="180" cy="222" rx="72" ry="14" fill="#000000" opacity="0.5" />
+            <path d="M 118 48 L 132 208 Q 180 226 228 208 L 242 48 Z" fill="#eceae4" />
+            <ellipse cx="180" cy="48" rx="62" ry="12" fill="#dcd8ce" />
+            <ellipse cx="180" cy="48" rx="56" ry="9" fill="#c8c3b8" />
+          </svg>
+        </div>
+      </article>
+
+      <!-- Tile 3: Cairn 400 & Roam 400 (Big 400 ml Wide & Tumbler with Lid) -->
+      <article class="grid-tile grid-tile--light">
+        <div class="grid-tile__copy">
+          <h3 class="grid-tile__headline">Cairn &amp; Roam 400</h3>
+          <p class="grid-tile__subline">Big 400 ml wide bowl &amp; lidded tumbler.</p>
+          <p class="grid-tile__specs">400 ml capacity · Studio or commuter · From €33</p>
+          <div class="cta-pair">
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="#compare">Learn more</a>
+            <a class="btn-pill btn-pill--outline-light btn-pill--small" href="customize.html?family=cairn&amp;size=400ml">Buy</a>
+          </div>
+        </div>
+        <div class="grid-tile__visual">
+          <svg viewBox="0 0 360 250" role="img" aria-label="Cairn 400 ml wide cup and Roam 400 ml tumbler with lid">
+            <path d="M 52 96 L 74 206 Q 124 222 174 206 L 196 96 Z" fill="#8fa396" />
+            <ellipse cx="124" cy="96" rx="72" ry="12" fill="#7b8f82" />
+            <path d="M 192 68 L 206 208 Q 254 224 302 208 L 316 68 Z" fill="#b85d43" />
+            <path d="M 190 68 L 198 52 L 310 52 L 318 68 Z" fill="#2c2c2e" />
+          </svg>
+        </div>
+      </article>
+
+      <!-- Tile 4: Hearth 600 & Nomad 600 (Extra-Big 600 ml Mug & Travel Cup) -->
+      <article class="grid-tile grid-tile--alt">
+        <div class="grid-tile__copy">
+          <h3 class="grid-tile__headline">Hearth &amp; Nomad 600</h3>
+          <p class="grid-tile__subline">Extra-big 600 ml mug &amp; insulated travel cup.</p>
+          <p class="grid-tile__specs">600 ml (20 oz) · Forged handle or lock lid · From €46</p>
+          <div class="cta-pair">
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="#compare">Learn more</a>
+            <a class="btn-pill btn-pill--outline-light btn-pill--small" href="customize.html?family=nomad&amp;size=600ml">Buy</a>
+          </div>
+        </div>
+        <div class="grid-tile__visual">
+          <svg viewBox="0 0 360 250" role="img" aria-label="Hearth 600 ml handled mug and Nomad 600 ml travel cup">
+            <path d="M 164 102 C 204 100, 204 192, 158 190" fill="none" stroke="#3c5a78" stroke-width="14" stroke-linecap="round" />
+            <path d="M 58 72 L 68 208 Q 114 224 160 208 L 170 72 Z" fill="#3c5a78" />
+            <path d="M 214 54 L 228 210 Q 272 226 316 210 L 330 54 Z" fill="#232326" />
+            <path d="M 212 54 L 220 38 L 324 38 L 332 54 Z" fill="#3a3a3c" />
+          </svg>
+        </div>
+      </article>
+
+      <!-- Tile 5: Terra Planter 1 L / 3 L / 8 L -->
+      <article class="grid-tile grid-tile--dark">
+        <div class="grid-tile__copy">
+          <h3 class="grid-tile__headline">Terra Planter</h3>
+          <p class="grid-tile__subline">1 L, 3 L, and 8 L pots with drainage saucer.</p>
+          <p class="grid-tile__specs">Breathable stoneware · Fitted catch saucer · From €48</p>
+          <div class="cta-pair">
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="#compare">Learn more</a>
+            <a class="btn-pill btn-pill--outline-dark btn-pill--small" href="customize.html?family=terra&amp;size=1L">Buy</a>
+          </div>
+        </div>
+        <div class="grid-tile__visual">
+          <svg viewBox="0 0 360 250" role="img" aria-label="Terra Planter ceramic pot with fitted drainage saucer">
+            <path d="M180 76 C168 36, 128 26, 124 56 C122 74, 160 80, 180 76 Z" fill="#588764" />
+            <path d="M180 76 C192 32, 236 24, 240 56 C242 74, 200 80, 180 76 Z" fill="#70a37d" />
+            <path d="M 104 76 L 124 202 Q 180 218 236 202 L 256 76 Z" fill="#c8a97e" />
+            <path d="M 92 198 L 268 198 L 258 216 Q 180 228 102 216 Z" fill="#b09066" />
+            <ellipse cx="180" cy="76" rx="76" ry="12" fill="#b5956b" />
+          </svg>
+        </div>
+      </article>
+
+      <!-- Tile 6: Bespoke Configurator & Engraving -->
+      <article class="grid-tile grid-tile--alt">
+        <div class="grid-tile__copy">
+          <h3 class="grid-tile__headline">Kilnform Bespoke</h3>
+          <p class="grid-tile__subline">Choose glaze, matte or gloss, and laser engraving.</p>
+          <p class="grid-tile__specs">Live 360° preview · Six mineral glazes · Instant quote</p>
+          <div class="cta-pair">
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="customize.html">Customize yours</a>
+            <a class="btn-pill btn-pill--outline-light btn-pill--small" href="#compare">Compare specs</a>
+          </div>
+        </div>
+        <div class="grid-tile__visual">
+          <svg viewBox="0 0 360 250" role="img" aria-label="Six mineral glaze swatches and engraved cup preview">
+            <circle cx="88" cy="130" r="26" fill="#232326" />
+            <circle cx="125" cy="130" r="26" fill="#eceae4" stroke="#d2d2d7" />
+            <circle cx="162" cy="130" r="26" fill="#8fa396" />
+            <circle cx="199" cy="130" r="26" fill="#b85d43" />
+            <circle cx="236" cy="130" r="26" fill="#3c5a78" />
+            <circle cx="273" cy="130" r="26" fill="#c8a97e" />
+          </svg>
+        </div>
+      </article>
+    </section>
+
+    <!-- COMPARE CUPS SECTION (Apple Compare-Page Pattern) -->
+    <section class="compare-section" id="compare" aria-labelledby="compare-heading">
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-header__title" id="compare-heading">Compare the lineup.</h2>
+          <p class="section-header__subtitle">From a 90 ml morning espresso to an 8-litre architectural floor planter.</p>
+          <div class="compare-tabs" role="tablist" aria-label="Filter vessel category">
+            <button type="button" class="compare-tab" role="tab" aria-selected="true" data-filter="all">All Vessels</button>
+            <button type="button" class="compare-tab" role="tab" aria-selected="false" data-filter="cups">Cups &amp; Mugs (90–600 ml)</button>
+            <button type="button" class="compare-tab" role="tab" aria-selected="false" data-filter="pots">Plant Pots (1–8 L)</button>
+          </div>
+        </div>
+
+        <div class="compare-grid">
+          <!-- Column 1: Pebble 90 -->
+          <article class="compare-card" data-category="cups">
+            <div class="compare-card__visual">
+              <svg viewBox="0 0 160 150" width="120" height="120" aria-hidden="true">
+                <path d="M 38 68 L 48 134 Q 80 144 112 134 L 122 68 Z" fill="#232326" />
+                <ellipse cx="80" cy="68" rx="42" ry="8" fill="#3a3a40" />
+              </svg>
+            </div>
+            <div class="compare-card__swatches" aria-label="Available in 6 glazes">
+              <span class="swatch-dot" style="background:#232326"></span>
+              <span class="swatch-dot" style="background:#eceae4"></span>
+              <span class="swatch-dot" style="background:#8fa396"></span>
+              <span class="swatch-dot" style="background:#b85d43"></span>
+            </div>
+            <span class="compare-card__badge">Small Espresso</span>
+            <h3 class="compare-card__name">Pebble 90</h3>
+            <p class="compare-card__tagline">Wide low-profile cup for ristretto &amp; cortado.</p>
+            <p class="compare-card__price">From €18</p>
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="customize.html?family=pebble&amp;size=90ml">Customize</a>
+
+            <div class="compare-specs">
+              <div>
+                <div class="compare-spec__value">Small · Wide</div>
+                <div class="compare-spec__label">Size &amp; Shape</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">58 mm</div>
+                <div class="compare-spec__label">Height (Ø 64 mm)</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">90 ml (3 oz)</div>
+                <div class="compare-spec__label">Capacity</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Yes (Top &amp; Bottom)</div>
+                <div class="compare-spec__label">Dishwasher Safe</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Yes (Up to 240 °C)</div>
+                <div class="compare-spec__label">Microwave Safe</div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Column 2: Flute 250 -->
+          <article class="compare-card" data-category="cups">
+            <div class="compare-card__visual">
+              <svg viewBox="0 0 160 150" width="120" height="120" aria-hidden="true">
+                <path d="M 44 36 L 54 134 Q 80 144 106 134 L 116 36 Z" fill="#8fa396" />
+                <ellipse cx="80" cy="36" rx="36" ry="7" fill="#778c7e" />
+              </svg>
+            </div>
+            <div class="compare-card__swatches" aria-label="Available in 6 glazes">
+              <span class="swatch-dot" style="background:#232326"></span>
+              <span class="swatch-dot" style="background:#eceae4"></span>
+              <span class="swatch-dot" style="background:#8fa396"></span>
+              <span class="swatch-dot" style="background:#3c5a78"></span>
+            </div>
+            <span class="compare-card__badge">Bestseller</span>
+            <h3 class="compare-card__name">Flute 250</h3>
+            <p class="compare-card__tagline">Medium tall fluted cup for everyday filter coffee.</p>
+            <p class="compare-card__price">From €26</p>
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="customize.html?family=flute&amp;size=250ml">Customize</a>
+
+            <div class="compare-specs">
+              <div>
+                <div class="compare-spec__value">Medium · Tall</div>
+                <div class="compare-spec__label">Size &amp; Shape</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">96 mm</div>
+                <div class="compare-spec__label">Height (Ø 78 mm)</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">250 ml (8.5 oz)</div>
+                <div class="compare-spec__label">Capacity</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Yes (Top &amp; Bottom)</div>
+                <div class="compare-spec__label">Dishwasher Safe</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Yes (Up to 240 °C)</div>
+                <div class="compare-spec__label">Microwave Safe</div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Column 3: Cairn 400 -->
+          <article class="compare-card" data-category="cups">
+            <div class="compare-card__visual">
+              <svg viewBox="0 0 160 150" width="120" height="120" aria-hidden="true">
+                <path d="M 28 48 L 48 134 Q 80 144 112 134 L 132 48 Z" fill="#c8a97e" />
+                <ellipse cx="80" cy="48" rx="52" ry="9" fill="#b5956b" />
+              </svg>
+            </div>
+            <div class="compare-card__swatches" aria-label="Available in 6 glazes">
+              <span class="swatch-dot" style="background:#c8a97e"></span>
+              <span class="swatch-dot" style="background:#eceae4"></span>
+              <span class="swatch-dot" style="background:#b85d43"></span>
+              <span class="swatch-dot" style="background:#232326"></span>
+            </div>
+            <span class="compare-card__badge">Big Wide Bowl</span>
+            <h3 class="compare-card__name">Cairn 400</h3>
+            <p class="compare-card__tagline">Wide-mouth studio vessel for flat whites &amp; matcha.</p>
+            <p class="compare-card__price">From €33</p>
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="customize.html?family=cairn&amp;size=400ml">Customize</a>
+
+            <div class="compare-specs">
+              <div>
+                <div class="compare-spec__value">Big · Wide Bowl</div>
+                <div class="compare-spec__label">Size &amp; Shape</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">108 mm</div>
+                <div class="compare-spec__label">Height (Ø 92 mm)</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">400 ml (13.5 oz)</div>
+                <div class="compare-spec__label">Capacity</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Yes (Top &amp; Bottom)</div>
+                <div class="compare-spec__label">Dishwasher Safe</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Yes (Up to 240 °C)</div>
+                <div class="compare-spec__label">Microwave Safe</div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Column 4: Roam 400 -->
+          <article class="compare-card" data-category="cups">
+            <div class="compare-card__visual">
+              <svg viewBox="0 0 160 150" width="120" height="120" aria-hidden="true">
+                <path d="M 40 34 L 50 134 Q 80 144 110 134 L 120 34 Z" fill="#b85d43" />
+                <path d="M 38 34 L 44 22 L 116 22 L 122 34 Z" fill="#2c2c2e" />
+              </svg>
+            </div>
+            <div class="compare-card__swatches" aria-label="Available in 6 glazes">
+              <span class="swatch-dot" style="background:#b85d43"></span>
+              <span class="swatch-dot" style="background:#8fa396"></span>
+              <span class="swatch-dot" style="background:#3c5a78"></span>
+              <span class="swatch-dot" style="background:#232326"></span>
+            </div>
+            <span class="compare-card__badge">With Press-Fit Lid</span>
+            <h3 class="compare-card__name">Roam 400</h3>
+            <p class="compare-card__tagline">Big 400 ml stoneware tumbler with splash-proof sip lid.</p>
+            <p class="compare-card__price">From €38</p>
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="customize.html?family=roam&amp;size=400ml">Customize</a>
+
+            <div class="compare-specs">
+              <div>
+                <div class="compare-spec__value">Big · Tumbler + Lid</div>
+                <div class="compare-spec__label">Size &amp; Shape</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">126 mm</div>
+                <div class="compare-spec__label">Height (Ø 86 mm)</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">400 ml (13.5 oz)</div>
+                <div class="compare-spec__label">Capacity</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Yes (Cup &amp; Lid)</div>
+                <div class="compare-spec__label">Dishwasher Safe</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Yes (Without Lid)</div>
+                <div class="compare-spec__label">Microwave Safe</div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Column 5: Hearth 600 -->
+          <article class="compare-card" data-category="cups">
+            <div class="compare-card__visual">
+              <svg viewBox="0 0 160 150" width="120" height="120" aria-hidden="true">
+                <path d="M 116 48 C 146 48, 146 116, 112 114" fill="none" stroke="#3c5a78" stroke-width="10" stroke-linecap="round" />
+                <path d="M 34 30 L 44 134 Q 78 144 112 134 L 122 30 Z" fill="#3c5a78" />
+              </svg>
+            </div>
+            <div class="compare-card__swatches" aria-label="Available in 6 glazes">
+              <span class="swatch-dot" style="background:#3c5a78"></span>
+              <span class="swatch-dot" style="background:#232326"></span>
+              <span class="swatch-dot" style="background:#eceae4"></span>
+              <span class="swatch-dot" style="background:#b85d43"></span>
+            </div>
+            <span class="compare-card__badge">Extra-Big Mug</span>
+            <h3 class="compare-card__name">Hearth 600</h3>
+            <p class="compare-card__tagline">Extra-big 600 ml studio mug with forged handle.</p>
+            <p class="compare-card__price">From €46</p>
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="customize.html?family=hearth&amp;size=600ml">Customize</a>
+
+            <div class="compare-specs">
+              <div>
+                <div class="compare-spec__value">Extra-Big · Mug</div>
+                <div class="compare-spec__label">Size &amp; Shape</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">132 mm</div>
+                <div class="compare-spec__label">Height (Ø 96 mm)</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">600 ml (20 oz)</div>
+                <div class="compare-spec__label">Capacity</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Yes (Top &amp; Bottom)</div>
+                <div class="compare-spec__label">Dishwasher Safe</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Yes (Up to 240 °C)</div>
+                <div class="compare-spec__label">Microwave Safe</div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Column 6: Nomad 600 -->
+          <article class="compare-card" data-category="cups">
+            <div class="compare-card__visual">
+              <svg viewBox="0 0 160 150" width="120" height="120" aria-hidden="true">
+                <path d="M 38 24 L 50 136 Q 80 146 110 136 L 122 24 Z" fill="#232326" />
+                <path d="M 36 24 L 44 12 L 116 12 L 124 24 Z" fill="#3a3a3c" />
+              </svg>
+            </div>
+            <div class="compare-card__swatches" aria-label="Available in 6 glazes">
+              <span class="swatch-dot" style="background:#232326"></span>
+              <span class="swatch-dot" style="background:#3c5a78"></span>
+              <span class="swatch-dot" style="background:#8fa396"></span>
+              <span class="swatch-dot" style="background:#c8a97e"></span>
+            </div>
+            <span class="compare-card__badge">Travel Cup</span>
+            <h3 class="compare-card__name">Nomad 600</h3>
+            <p class="compare-card__tagline">Extra-big 600 ml double-wall travel cup with lock cap.</p>
+            <p class="compare-card__price">From €50</p>
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="customize.html?family=nomad&amp;size=600ml">Customize</a>
+
+            <div class="compare-specs">
+              <div>
+                <div class="compare-spec__value">Extra-Big · Travel Cup</div>
+                <div class="compare-spec__label">Size &amp; Shape</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">178 mm</div>
+                <div class="compare-spec__label">Height (Ø 90 mm)</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">600 ml (20 oz)</div>
+                <div class="compare-spec__label">Capacity</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Yes (Top Rack)</div>
+                <div class="compare-spec__label">Dishwasher Safe</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Yes (Without Cap)</div>
+                <div class="compare-spec__label">Microwave Safe</div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Column 7: Terra Planter 1 L & 3 L -->
+          <article class="compare-card" data-category="pots">
+            <div class="compare-card__visual">
+              <svg viewBox="0 0 160 150" width="120" height="120" aria-hidden="true">
+                <path d="M 32 42 L 46 126 Q 80 136 114 126 L 128 42 Z" fill="#b85d43" />
+                <path d="M 24 122 L 136 122 L 128 136 Q 80 144 32 136 Z" fill="#9c4830" />
+              </svg>
+            </div>
+            <div class="compare-card__swatches" aria-label="Available in 6 glazes">
+              <span class="swatch-dot" style="background:#b85d43"></span>
+              <span class="swatch-dot" style="background:#eceae4"></span>
+              <span class="swatch-dot" style="background:#8fa396"></span>
+              <span class="swatch-dot" style="background:#c8a97e"></span>
+            </div>
+            <span class="compare-card__badge">Desk &amp; Shelf Planter</span>
+            <h3 class="compare-card__name">Terra 1 L &amp; 3 L</h3>
+            <p class="compare-card__tagline">Fluted botanical pots with center drainage &amp; saucer.</p>
+            <p class="compare-card__price">€48 (1 L) · €68 (3 L)</p>
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="customize.html?family=terra&amp;size=3L">Customize</a>
+
+            <div class="compare-specs">
+              <div>
+                <div class="compare-spec__value">Planter + Saucer</div>
+                <div class="compare-spec__label">Size &amp; Shape</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">140 mm / 195 mm</div>
+                <div class="compare-spec__label">Height (1 L / 3 L)</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">1.0 L or 3.0 L</div>
+                <div class="compare-spec__label">Capacity</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Saucer Dishwasher Safe</div>
+                <div class="compare-spec__label">Dishwasher Safe</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Botanical Use Only</div>
+                <div class="compare-spec__label">Microwave Safe</div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Column 8: Terra Planter 8 L -->
+          <article class="compare-card" data-category="pots">
+            <div class="compare-card__visual">
+              <svg viewBox="0 0 160 150" width="120" height="120" aria-hidden="true">
+                <path d="M 20 26 L 38 126 Q 80 138 122 126 L 140 26 Z" fill="#8fa396" />
+                <path d="M 12 122 L 148 122 L 138 138 Q 80 146 22 138 Z" fill="#6e8275" />
+              </svg>
+            </div>
+            <div class="compare-card__swatches" aria-label="Available in 6 glazes">
+              <span class="swatch-dot" style="background:#8fa396"></span>
+              <span class="swatch-dot" style="background:#232326"></span>
+              <span class="swatch-dot" style="background:#eceae4"></span>
+              <span class="swatch-dot" style="background:#b85d43"></span>
+            </div>
+            <span class="compare-card__badge">Statement Floor Vessel</span>
+            <h3 class="compare-card__name">Terra 8 L</h3>
+            <p class="compare-card__tagline">Extra-big 8 L architectural pot with deep water saucer.</p>
+            <p class="compare-card__price">From €112</p>
+            <a class="btn-pill btn-pill--primary btn-pill--small" href="customize.html?family=terra&amp;size=8L">Customize</a>
+
+            <div class="compare-specs">
+              <div>
+                <div class="compare-spec__value">Extra-Big Floor Pot</div>
+                <div class="compare-spec__label">Size &amp; Shape</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">265 mm</div>
+                <div class="compare-spec__label">Height (Ø 250 mm)</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">8.0 Litres</div>
+                <div class="compare-spec__label">Capacity</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Saucer Dishwasher Safe</div>
+                <div class="compare-spec__label">Dishwasher Safe</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Botanical Use Only</div>
+                <div class="compare-spec__label">Microwave Safe</div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Apple-Pattern Footer (#f5f5f7, 12px/16px text, short link columns) -->
+  <footer class="site-footer" aria-labelledby="footer-heading">
+    <h2 class="visually-hidden" id="footer-heading">Kilnform Footer</h2>
+    <div class="site-footer__inner">
+      <div class="site-footer__notes">
+        <p>1. All Kilnform vessels are high-fired at 1,240 °C using lead-free mineral stoneware glazes. Capacities are measured to the interior rim.</p>
+        <p>2. Custom laser engraving is etched into the vitrified glaze band and is permanent across dishwasher cycles. Demo bag is stored locally in your browser.</p>
+      </div>
+
+      <div class="site-footer__columns">
+        <div>
+          <h3 class="footer-col__heading">Shop &amp; Vessels</h3>
+          <ul class="footer-col__list">
+            <li><a href="customize.html?family=pebble&amp;size=90ml">Pebble 90 ml Espresso</a></li>
+            <li><a href="customize.html?family=flute&amp;size=250ml">Flute 250 ml Tall Cup</a></li>
+            <li><a href="customize.html?family=cairn&amp;size=400ml">Cairn 400 ml Wide Bowl</a></li>
+            <li><a href="customize.html?family=roam&amp;size=400ml">Roam 400 ml Lidded Tumbler</a></li>
+            <li><a href="customize.html?family=hearth&amp;size=600ml">Hearth 600 ml Mug</a></li>
+            <li><a href="customize.html?family=nomad&amp;size=600ml">Nomad 600 ml Travel Cup</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-col__heading">Botanical Range</h3>
+          <ul class="footer-col__list">
+            <li><a href="customize.html?family=terra&amp;size=1L">Terra 1 L Desk Planter</a></li>
+            <li><a href="customize.html?family=terra&amp;size=3L">Terra 3 L Studio Planter</a></li>
+            <li><a href="customize.html?family=terra&amp;size=8L">Terra 8 L Floor Planter</a></li>
+            <li><a href="#plant-pots">Drainage Saucer System</a></li>
+            <li><a href="#compare">Botanical Care Guide</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-col__heading">Bespoke Studio</h3>
+          <ul class="footer-col__list">
+            <li><a href="customize.html">Online Configurator</a></li>
+            <li><a href="customize.html">Mineral Glaze Palette</a></li>
+            <li><a href="customize.html">Matte vs. Glossy Finish</a></li>
+            <li><a href="customize.html">Monogram Engraving</a></li>
+            <li><a href="#compare">Compare All Sizes</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-col__heading">Hospitality &amp; Trade</h3>
+          <ul class="footer-col__list">
+            <li><a href="customize.html">Specialty Coffee Roasters</a></li>
+            <li><a href="customize.html">Architectural Studios</a></li>
+            <li><a href="customize.html">Landscape &amp; Botanical Sets</a></li>
+            <li><a href="customize.html">Wholesale Editions</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-col__heading">About Kilnform</h3>
+          <ul class="footer-col__list">
+            <li><a href="#cups">Our Ceramic Philosophy</a></li>
+            <li><a href="#compare">Kiln Firing &amp; Durability</a></li>
+            <li><a href="#compare">Sustainability &amp; Clay Sourcing</a></li>
+            <li><a href="customize.html">Contact the Studio</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="site-footer__bottom">
+        <span>Copyright &copy; 2026 Kilnform Studio. All rights reserved. Original Applodian style study.</span>
+        <div class="site-footer__legal-links">
+          <a href="#compare">Privacy Policy</a>
+          <a href="#compare">Terms of Studio Sale</a>
+          <a href="#compare">Kiln Warranty</a>
+          <a href="customize.html">Site Map</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

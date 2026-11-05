@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customize Your Vessel — Kilnform Studio</title>
+  <meta name="description" content="Configure your custom Kilnform stoneware cup or Terra Planter pot: choose shape, capacity, mineral glaze colour, matte or glossy finish, and live engraving." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <!-- 44px Dark Global Navigation -->
+  <nav class="global-nav" aria-label="Global">
+    <div class="global-nav__inner">
+      <a class="global-nav__brand" href="index.html" aria-label="Kilnform Home">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+          <path d="M5 5h14l-2.2 12.2a3 3 0 0 1-2.95 2.47H10.15a3 3 0 0 1-2.95-2.47L5 5Z" stroke="currentColor" stroke-width="1.8" />
+          <ellipse cx="12" cy="5" rx="7" ry="2" fill="currentColor" opacity="0.35" />
+        </svg>
+        <span>Kilnform</span>
+      </a>
+
+      <ul class="global-nav__links" id="global-nav-links">
+        <li><a class="global-nav__link" href="index.html#cups">Cups</a></li>
+        <li><a class="global-nav__link" href="index.html#plant-pots">Plant Pots</a></li>
+        <li><a class="global-nav__link" href="customize.html" aria-current="page">Customize</a></li>
+        <li><a class="global-nav__link" href="#compare">Compare</a></li>
+      </ul>
+
+      <div class="global-nav__actions">
+        <button
+          type="button"
+          class="global-nav__bag-btn"
+          id="nav-bag-btn"
+          aria-label="Shopping Bag"
+          aria-expanded="false"
+          aria-controls="bag-drawer"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 8h12l-1 12H7L6 8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+            <path d="M9 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+          </svg>
+          <span class="bag-badge" id="bag-count-badge" hidden>0</span>
+        </button>
+
+        <button
+          type="button"
+          class="global-nav__menu-btn"
+          id="mobile-menu-btn"
+          aria-label="Toggle Menu"
+          aria-expanded="false"
+          aria-controls="global-nav-links"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 8h16M4 16h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Bag Drawer Popover -->
+  <aside class="bag-drawer" id="bag-drawer" role="dialog" aria-label="Your Shopping Bag">
+    <div class="bag-drawer__header">
+      <h2 class="bag-drawer__title">Your Bag</h2>
+      <button type="button" class="bag-drawer__close" id="bag-drawer-close" aria-label="Close Bag">&times;</button>
+    </div>
+    <p class="bag-drawer__empty" id="bag-drawer-empty">Your bag is empty. Configure a vessel below and click Add to Bag.</p>
+    <ul class="bag-drawer__list" id="bag-drawer-list"></ul>
+    <div class="bag-drawer__footer" id="bag-drawer-footer" hidden>
+      <div class="bag-drawer__total-row">
+        <span>Total</span>
+        <span id="bag-drawer-total">€0.00</span>
+      </div>
+      <button type="button" class="bag-item__remove" id="bag-clear-btn">Clear demo bag</button>
+    </div>
+  </aside>
+
+  <div class="store-ribbon">
+    Free kiln-safe protective packaging on every order · Custom laser engraving previewed live below.
+  </div>
+
+  <main id="main-content">
+    <section class="configurator" id="configurator-app" aria-labelledby="cfg-dynamic-title">
+      <div class="configurator__header">
+        <div>
+          <p class="configurator__eyebrow">Kilnform Bespoke Studio</p>
+          <h1 class="configurator__title" id="cfg-dynamic-title">Customize Flute (250 ml)</h1>
+        </div>
+        <div class="configurator__price-top" id="cfg-top-price" aria-live="polite">€26.00 each · Total €26.00</div>
+      </div>
+
+      <div class="configurator__layout">
+        <!-- Sticky Left Interactive SVG Preview Stage -->
+        <div class="preview-stage" aria-label="Live Vessel Preview">
+          <div class="preview-stage__canvas" id="cfg-preview-canvas">
+            <!-- Populated dynamically by app.js -->
+          </div>
+          <div class="preview-stage__caption">
+            <div class="preview-stage__badges" id="cfg-stage-badges"></div>
+            <span id="cfg-stage-care">Fine 2.5 mm drinking rim</span>
+          </div>
+        </div>
+
+        <!-- Right Configuration Form Steps -->
+        <form class="config-steps" id="cfg-form" onsubmit="return false;" aria-label="Vessel customization options">
+          <!-- Step 1: Pick Family -->
+          <fieldset class="config-step">
+            <legend class="config-step__title">1. Family &amp; Shape. <span>Choose your silhouette.</span></legend>
+            <p class="config-step__help">Select a drinking cup, lidded tumbler, travel vessel, or botanical plant pot with drainage saucer.</p>
+            <div class="family-grid" id="cfg-family-list" role="group" aria-label="Vessel family"></div>
+          </fieldset>
+
+          <!-- Step 2: Pick Size (Segmented Pills) -->
+          <fieldset class="config-step">
+            <legend class="config-step__title">2. Size &amp; Capacity. <span>How much it holds.</span></legend>
+            <p class="config-step__help">Cups range from 90 ml espresso to 600 ml extra-big mugs; Terra planters come in 1 L, 3 L, and 8 L.</p>
+            <div class="size-pills" id="cfg-size-list" role="group" aria-label="Vessel size"></div>
+          </fieldset>
+
+          <!-- Step 3: Pick Colour (Round Swatches) -->
+          <fieldset class="config-step">
+            <legend class="config-step__title">3. Mineral Glaze. <span id="cfg-color-name">Obsidian Basalt</span></legend>
+            <p class="config-step__help">Lead-free mineral pigments fired at 1,240 °C for lifetime colour stability.</p>
+            <div class="swatch-row" id="cfg-color-list" role="group" aria-label="Glaze colour"></div>
+          </fieldset>
+
+          <!-- Step 4: Pick Finish (Matte / Glossy) -->
+          <fieldset class="config-step">
+            <legend class="config-step__title">4. Surface Finish. <span>Tactile feel.</span></legend>
+            <p class="config-step__help">Choose raw micro-pebbled matte stoneware or luminous high-fire vitreous gloss.</p>
+            <div class="finish-grid" id="cfg-finish-list" role="group" aria-label="Surface finish"></div>
+          </fieldset>
+
+          <!-- Step 5: Engraving Text (Live Preview on Cup) -->
+          <div class="config-step">
+            <h2 class="config-step__title">5. Personal Engraving. <span>Live on the vessel (+€6).</span></h2>
+            <p class="config-step__help">Etch initials, a name, or studio coordinates directly onto the ceramic wall. Leave blank for no engraving.</p>
+            <div class="form-field">
+              <label class="form-field__label" for="cfg-engraving-input">
+                <span>Engraving text (up to 18 characters)</span>
+                <span class="form-field__counter" id="cfg-engraving-counter">0/18</span>
+              </label>
+              <input
+                type="text"
+                id="cfg-engraving-input"
+                class="text-input"
+                maxlength="18"
+                placeholder="e.g. STUDIO NORD or M. LAURENT"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+
+          <!-- Step 6: Quantity -->
+          <div class="config-step">
+            <h2 class="config-step__title">6. Quantity. <span>Order single vessels or studio sets.</span></h2>
+            <div class="form-field">
+              <label class="form-field__label" for="cfg-qty-input">Number of vessels</label>
+              <div class="qty-row">
+                <button type="button" class="qty-btn" id="cfg-qty-dec" aria-label="Decrease quantity">&minus;</button>
+                <input
+                  type="number"
+                  id="cfg-qty-input"
+                  class="qty-input"
+                  min="1"
+                  max="24"
+                  value="1"
+                />
+                <button type="button" class="qty-btn" id="cfg-qty-inc" aria-label="Increase quantity">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary Box & Primary Add to Bag CTA -->
+          <div class="summary-box" aria-live="polite">
+            <h2 class="summary-box__title" id="cfg-sum-title">Flute 250 ml in Obsidian Basalt</h2>
+            <ul class="summary-box__lines" id="cfg-sum-lines"></ul>
+            <div class="summary-box__total">
+              <span>Total</span>
+              <span id="cfg-sum-total">€26.00</span>
+            </div>
+            <button type="button" class="btn-pill btn-pill--primary" id="cfg-add-btn">Add to Bag</button>
+            <div class="toast-feedback" id="cfg-toast" role="status" aria-live="polite"></div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Compare Cups Reference Table on Customize Page -->
+    <section class="compare-section compare-section--alt" id="compare" aria-labelledby="compare-cfg-heading">
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-header__title" id="compare-cfg-heading">Compare cups &amp; pots.</h2>
+          <p class="section-header__subtitle">Every vessel size, height, capacity, and care specification at a glance.</p>
+        </div>
+
+        <div class="compare-grid">
+          <article class="compare-card">
+            <span class="compare-card__badge">Small Espresso</span>
+            <h3 class="compare-card__name">Pebble 90</h3>
+            <p class="compare-card__tagline">Wide short espresso cup</p>
+            <div class="compare-specs">
+              <div>
+                <div class="compare-spec__value">90 ml · 58 mm tall</div>
+                <div class="compare-spec__label">Capacity &amp; Height</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Dishwasher &amp; Microwave</div>
+                <div class="compare-spec__label">Care</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="compare-card">
+            <span class="compare-card__badge">Medium Everyday</span>
+            <h3 class="compare-card__name">Flute 250</h3>
+            <p class="compare-card__tagline">Tall fluted filter cup</p>
+            <div class="compare-specs">
+              <div>
+                <div class="compare-spec__value">250 ml · 96 mm tall</div>
+                <div class="compare-spec__label">Capacity &amp; Height</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Dishwasher &amp; Microwave</div>
+                <div class="compare-spec__label">Care</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="compare-card">
+            <span class="compare-card__badge">Big &amp; Extra-Big</span>
+            <h3 class="compare-card__name">Cairn, Roam, Hearth &amp; Nomad</h3>
+            <p class="compare-card__tagline">400 ml wide/tumbler &amp; 600 ml mug/travel</p>
+            <div class="compare-specs">
+              <div>
+                <div class="compare-spec__value">400 ml &amp; 600 ml (108–178 mm)</div>
+                <div class="compare-spec__label">Capacity &amp; Height</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Dishwasher &amp; Microwave*</div>
+                <div class="compare-spec__label">*Remove travel cap before microwave</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="compare-card">
+            <span class="compare-card__badge">Botanical Planters</span>
+            <h3 class="compare-card__name">Terra 1 L · 3 L · 8 L</h3>
+            <p class="compare-card__tagline">Plant pots with drainage saucer</p>
+            <div class="compare-specs">
+              <div>
+                <div class="compare-spec__value">1 L (140 mm) · 3 L (195 mm) · 8 L (265 mm)</div>
+                <div class="compare-spec__label">Capacity &amp; Height</div>
+              </div>
+              <div>
+                <div class="compare-spec__value">Center Hole + Saucer</div>
+                <div class="compare-spec__label">Botanical Drainage</div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Sticky Summary Buy Bar (Apple Store Pattern) -->
+  <aside class="sticky-buy-bar" aria-label="Configuration summary bar">
+    <div class="sticky-buy-bar__inner">
+      <div class="sticky-buy-bar__info">
+        <span class="sticky-buy-bar__title" id="sticky-summary-title">Flute · 250 ml · Obsidian Basalt</span>
+        <span class="sticky-buy-bar__sub" id="sticky-summary-sub">Matte Raw Stoneware · Qty 1 · Kiln-fired in 3–5 days</span>
+      </div>
+      <div class="sticky-buy-bar__actions">
+        <span class="sticky-buy-bar__price" id="sticky-summary-price" aria-live="polite">€26.00</span>
+        <button type="button" class="btn-pill btn-pill--primary btn-pill--small" id="sticky-add-btn">Add to Bag</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Apple-Pattern Footer (#f5f5f7, 12px/16px text) -->
+  <footer class="site-footer site-footer--with-sticky" aria-labelledby="footer-heading">
+    <h2 class="visually-hidden" id="footer-heading">Kilnform Footer</h2>
+    <div class="site-footer__inner">
+      <div class="site-footer__notes">
+        <p>1. Demo shopping bag persists in your browser via localStorage. No payment details or personal data leave your device.</p>
+      </div>
+
+      <div class="site-footer__columns">
+        <div>
+          <h3 class="footer-col__heading">Shop &amp; Vessels</h3>
+          <ul class="footer-col__list">
+            <li><a href="customize.html?family=pebble&amp;size=90ml">Pebble 90 ml</a></li>
+            <li><a href="customize.html?family=flute&amp;size=250ml">Flute 250 ml</a></li>
+            <li><a href="customize.html?family=cairn&amp;size=400ml">Cairn 400 ml</a></li>
+            <li><a href="customize.html?family=roam&amp;size=400ml">Roam 400 ml</a></li>
+            <li><a href="customize.html?family=hearth&amp;size=600ml">Hearth 600 ml</a></li>
+            <li><a href="customize.html?family=nomad&amp;size=600ml">Nomad 600 ml</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-col__heading">Plant Pots</h3>
+          <ul class="footer-col__list">
+            <li><a href="customize.html?family=terra&amp;size=1L">Terra 1 L Pot</a></li>
+            <li><a href="customize.html?family=terra&amp;size=3L">Terra 3 L Pot</a></li>
+            <li><a href="customize.html?family=terra&amp;size=8L">Terra 8 L Pot</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-col__heading">Bespoke Studio</h3>
+          <ul class="footer-col__list">
+            <li><a href="customize.html">Glaze Swatches</a></li>
+            <li><a href="customize.html">Live Engraving</a></li>
+            <li><a href="index.html#compare">Compare Specs</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-col__heading">Trade &amp; Cafés</h3>
+          <ul class="footer-col__list">
+            <li><a href="index.html#cups">Roaster Partnerships</a></li>
+            <li><a href="index.html#plant-pots">Interior Architects</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="footer-col__heading">Kilnform</h3>
+          <ul class="footer-col__list">
+            <li><a href="index.html">Home Showcase</a></li>
+            <li><a href="index.html#compare">Lineup Comparison</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="site-footer__bottom">
+        <span>Copyright &copy; 2026 Kilnform Studio. Original Applodian style study.</span>
+        <div class="site-footer__legal-links">
+          <a href="index.html#compare">Privacy</a>
+          <a href="index.html#compare">Terms</a>
+          <a href="index.html">Home</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

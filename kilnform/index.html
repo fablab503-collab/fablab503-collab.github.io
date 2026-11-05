@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kilnform &nbsp;·&nbsp; D-CREATIONS</title>
+<meta name="description" content="Kilnform: a demo shop of customizable cups and plant pots, built by one AI agent from a measured design profile of a big product website. Live demo and source.">
+<link rel="canonical" href="https://dcreations.fr/kilnform/">
+<style>
+  @font-face { font-family: "Overpass"; src: url("overpass.woff2") format("woff2-variations"); font-weight: 100 900; font-display: swap; }
+  :root { --bg: #ffffff; --card: #ffffff; --text: #000000; --text-2: #555555; --line: #dddddd; --accent: #000000; --accent-fg: #ffffff; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #000000; --card: #0d0d0d; --text: #ffffff; --text-2: #aaaaaa; --line: #2a2a2a; --accent: #ffffff; --accent-fg: #000000; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 "Overpass", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 14px; }
+  header a { color: var(--text-2); text-decoration: none; }
+  header a:hover { color: var(--text); }
+  .lang button { background: none; border: 1px solid var(--line); color: var(--text-2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
+  .hero { padding: 32px 0 24px; }
+  h1 { font-size: 48px; line-height: 1.05; margin: 8px 0 12px; letter-spacing: -0.02em; font-weight: 800; }
+  .lead { font-size: 19px; color: var(--text-2); margin: 0; max-width: 680px; }
+  .badge { display: inline-block; font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; margin-bottom: 14px; color: var(--text-2); }
+  .shot { margin: 28px 0 0; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; aspect-ratio: 16 / 10; background: var(--card); }
+  .shot iframe { width: 100%; height: 100%; border: 0; display: block; }
+  h2 { font-size: 22px; margin: 48px 0 16px; font-weight: 700; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .card h3 { margin: 0; font-size: 17px; }
+  .card p { margin: 0; color: var(--text-2); font-size: 15px; }
+  .card .foot { margin-top: auto; padding-top: 10px; font-size: 13px; color: var(--text-2); }
+  .btn { display: inline-block; align-self: flex-start; margin-top: 8px; background: var(--accent); color: var(--accent-fg); text-decoration: none; border-radius: 999px; padding: 9px 18px; font-weight: 700; font-size: 15px; }
+  .btn.ghost { background: none; color: var(--text); border: 1px solid var(--line); }
+  .btn:focus-visible, button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+  ul.facts { padding-left: 20px; color: var(--text-2); }
+  ul.facts li { margin: 6px 0; }
+  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; word-break: break-all; }
+  footer { margin: 64px 0 32px; font-size: 13px; color: var(--text-2); }
+  [data-l="fr"] { display: none; }
+  html[lang="fr"] [data-l="en"] { display: none; }
+  html[lang="fr"] [data-l="fr"] { display: revert; }
+  @media (max-width: 640px) { h1 { font-size: 36px; } .shot { aspect-ratio: 3 / 4; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="/" data-l="en">← D-CREATIONS</a><a href="/fr/projets/" data-l="fr">← D-CREATIONS</a>
+    <span class="lang"><button type="button" id="lang" aria-label="Changer de langue / Switch language">FR</button></span>
+  </header>
+
+  <section class="hero">
+    <span class="badge" data-l="en">Design study &nbsp;·&nbsp; demo shop &nbsp;·&nbsp; November 2026</span>
+    <span class="badge" data-l="fr">Étude de design &nbsp;·&nbsp; boutique de démo &nbsp;·&nbsp; novembre 2026</span>
+    <h1>Kilnform</h1>
+    <p class="lead" data-l="en">A shop of customizable stoneware cups and plant pots, from a 90 ml espresso cup to an 8 L planter. It was built in ten minutes by one AI agent that read a measured design profile of a big product website and applied its rules to a brand of its own.</p>
+    <p class="lead" data-l="fr">Une boutique de tasses en grès personnalisables et de pots pour plantes, de la tasse à expresso de 90 ml au pot de 8 L. Elle a été construite en dix minutes par un seul agent IA, qui a lu le profil de design mesuré d'un grand site produit et a appliqué ses règles à une marque inventée.</p>
+    <div class="shot"><iframe src="demo/index.html" title="Kilnform demo shop" loading="lazy"></iframe></div>
+  </section>
+
+  <h2 data-l="en">Try it and download</h2>
+  <h2 data-l="fr">Essayer et télécharger</h2>
+  <div class="grid">
+    <div class="card">
+      <h3 data-l="en">Live demo</h3><h3 data-l="fr">Démo en ligne</h3>
+      <p data-l="en">Seven cup families and a planter range, a compare table, and a configurator: size, colour, finish, live engraving preview, price and a demo bag. Nothing is sold; the bag stays in your browser.</p>
+      <p data-l="fr">Sept familles de tasses et une gamme de pots, un tableau comparatif et un configurateur : taille, couleur, finition, gravure en direct, prix et panier de démo. Rien n'est vendu ; le panier reste dans votre navigateur.</p>
+      <a class="btn" href="demo/index.html" data-l="en">Open the shop</a><a class="btn" href="demo/index.html" data-l="fr">Ouvrir la boutique</a>
+      <a class="btn ghost" href="demo/customize.html" data-l="en">Customize a cup</a><a class="btn ghost" href="demo/customize.html" data-l="fr">Personnaliser une tasse</a>
+    </div>
+    <div class="card">
+      <h3 data-l="en">Source code</h3><h3 data-l="fr">Code source</h3>
+      <p data-l="en">Plain HTML, CSS and JavaScript, no framework, no build step: unzip and open <code>index.html</code>. Every cup and pot is drawn in SVG.</p>
+      <p data-l="fr">HTML, CSS et JavaScript simples, sans framework ni compilation : décompressez et ouvrez <code>index.html</code>. Chaque tasse et chaque pot est dessiné en SVG.</p>
+      <a class="btn" href="downloads/kilnform-source.zip" download data-l="en">Download (30 KB)</a><a class="btn" href="downloads/kilnform-source.zip" download data-l="fr">Télécharger (30 Ko)</a>
+      <p class="foot">SHA-256 <code>40eda1e3e23551cbe5d667be03d08e0bd40ac912e10035d51ffe45677976081f</code></p>
+    </div>
+  </div>
+
+  <h2 data-l="en">The range</h2><h2 data-l="fr">La gamme</h2>
+  <ul class="facts" data-l="en">
+    <li><strong>Pebble</strong> small espresso cup, 90 ml &nbsp;·&nbsp; <strong>Flute</strong> tall cup, 250 ml &nbsp;·&nbsp; <strong>Cairn</strong> wide bowl cup, 400 ml</li>
+    <li><strong>Roam</strong> tumbler with lid, 400 ml &nbsp;·&nbsp; <strong>Hearth</strong> extra-big mug, 600 ml &nbsp;·&nbsp; <strong>Nomad</strong> travel cup, 600 ml</li>
+    <li><strong>Terra Planter</strong> plant pots of 1 L, 3 L and 8 L with a drainage saucer</li>
+  </ul>
+  <ul class="facts" data-l="fr">
+    <li><strong>Pebble</strong> petite tasse à expresso, 90 ml &nbsp;·&nbsp; <strong>Flute</strong> tasse haute, 250 ml &nbsp;·&nbsp; <strong>Cairn</strong> tasse bol, 400 ml</li>
+    <li><strong>Roam</strong> gobelet avec couvercle, 400 ml &nbsp;·&nbsp; <strong>Hearth</strong> très grand mug, 600 ml &nbsp;·&nbsp; <strong>Nomad</strong> tasse de voyage, 600 ml</li>
+    <li><strong>Terra Planter</strong> pots pour plantes de 1 L, 3 L et 8 L avec soucoupe</li>
+  </ul>
+
+  <h2 data-l="en">How it was made</h2><h2 data-l="fr">Comment elle a été faite</h2>
+  <ul class="facts" data-l="en">
+    <li><strong>Measure first.</strong> D-CREATIONS measured the public pages of the 100 most-visited websites with a headless browser: type scale, colours, corner radius, layout, images, motion, mobile breakpoints. Each site became a design profile with a playful nickname.</li>
+    <li><strong>One agent, one profile.</strong> A single Google Antigravity agent (Gemini 4 Argon) read the profile nicknamed “Applodian” and built this shop from its rules: full-width alternating tiles, large tight headlines, pill buttons, a sticky buy bar, a compare grid.</li>
+    <li><strong>Original, not a copy.</strong> The style is studied; the brand, the names, the text, the drawings and the code are new. No logo, photo, font file, text or code of any other company is used.</li>
+    <li><strong>Checked.</strong> Tested at desktop and phone width: no console errors, no sideways scrolling, the configurator and bag work.</li>
+  </ul>
+  <ul class="facts" data-l="fr">
+    <li><strong>Mesurer d'abord.</strong> D-CREATIONS a mesuré les pages publiques des 100 sites les plus visités avec un navigateur automatique : échelle typographique, couleurs, arrondis, mise en page, images, animations, points de rupture mobiles. Chaque site est devenu un profil de design avec un surnom ludique.</li>
+    <li><strong>Un agent, un profil.</strong> Un seul agent Google Antigravity (Gemini 4 Argon) a lu le profil surnommé « Applodian » et a construit cette boutique avec ses règles : grandes bandes alternées, gros titres serrés, boutons en pilule, barre d'achat fixe, grille comparative.</li>
+    <li><strong>Original, pas une copie.</strong> Le style est étudié ; la marque, les noms, les textes, les dessins et le code sont nouveaux. Aucun logo, photo, fichier de police, texte ou code d'une autre entreprise n'est utilisé.</li>
+    <li><strong>Vérifiée.</strong> Testée en largeur ordinateur et téléphone : aucune erreur, pas de défilement horizontal, le configurateur et le panier fonctionnent.</li>
+  </ul>
+
+  <footer>
+    <span data-l="en">Kilnform is a fictional brand made for a design study by Daniel Madac, D-CREATIONS, Montpellier. It is not a real shop and is not affiliated with any company whose website was measured.</span>
+    <span data-l="fr">Kilnform est une marque fictive créée pour une étude de design par Daniel Madac, D-CREATIONS, Montpellier. Ce n'est pas une vraie boutique et elle n'est liée à aucune des entreprises dont le site a été mesuré.</span>
+  </footer>
+</div>
+<script>
+  (function () {
+    var root = document.documentElement, btn = document.getElementById('lang');
+    var saved = null; try { saved = localStorage.getItem('kf-lang'); } catch (e) {}
+    var lang = saved || (/^fr/i.test(navigator.language) ? 'fr' : 'en');
+    function set(l) { root.lang = l; btn.textContent = l === 'fr' ? 'EN' : 'FR'; }
+    set(lang);
+    btn.addEventListener('click', function () { lang = lang === 'fr' ? 'en' : 'fr'; set(lang); try { localStorage.setItem('kf-lang', lang); } catch (e) {} });
+  })();
+</script>
+</body>
+</html>
