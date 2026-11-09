@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Source Iconography · D-CREATIONS</title>
+<meta name="description" content="Open Source Iconography: 474,699 icons from 280 sets, nearly all under open licenses, joined into one offline library, and a knowledge graph that links 995 shared icon concepts to Iconclass and 530 to the Chinese Iconography Thesaurus, with the art-history image tools Iconclass, AIKON, Panoptic, Tropy, Mirador and OpenSeadragon.">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="canonical" href="https://dcreations.fr/open-source-iconography/">
+<style>
+  :root { --bg: #f4f4f2; --card: #ffffff; --text: #111111; --text-2: #5a5a5a; --line: #e2e2de; --accent: #111111; --accent-fg: #ffffff; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #121212; --card: #1c1c1c; --text: #f2f2f2; --text-2: #a8a8a8; --line: #2c2c2c; --accent: #f2f2f2; --accent-fg: #111111; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 14px; }
+  header a { color: var(--text-2); text-decoration: none; }
+  header a:hover { color: var(--text); }
+  .lang button { background: none; border: 1px solid var(--line); color: var(--text-2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
+  .hero { display: grid; grid-template-columns: 180px 1fr; gap: 32px; align-items: center; padding: 32px 0 40px; }
+  .logo { width: 180px; height: 180px; border-radius: 50%; background: var(--card); display: grid; place-items: center; box-shadow: 0 12px 40px rgba(0,0,0,.10); }
+  .logo img { width: 124px; height: 124px; }
+  h1 { font-size: 44px; line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.02em; }
+  .lead { font-size: 19px; color: var(--text-2); margin: 0; }
+  .badge { display: inline-block; font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; margin-bottom: 14px; color: var(--text-2); }
+  h2 { font-size: 22px; margin: 48px 0 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .card h3 { margin: 0; font-size: 17px; }
+  .card p { margin: 0; color: var(--text-2); font-size: 15px; }
+  .num { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  ul.facts { padding-left: 20px; color: var(--text-2); }
+  ul.facts li { margin: 6px 0; }
+  ul.facts strong { color: var(--text); }
+  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+  .strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+  .strip figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 6px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .strip svg { width: 40px; height: 40px; color: var(--text); }
+  .strip figcaption { font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text-2); text-align: center; overflow-wrap: anywhere; }
+  .table { width: 100%; border-collapse: collapse; font-size: 15px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .table th, .table td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .table th { font-size: 13px; color: var(--text-2); font-weight: 600; }
+  .table tr:last-child td { border-bottom: 0; }
+  .table td.n { white-space: nowrap; font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .scroll { overflow-x: auto; }
+  .proj { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .proj a { color: var(--text); text-decoration: none; font-weight: 600; }
+  .proj a:hover { text-decoration: underline; }
+  .proj .card { gap: 4px; padding: 16px; }
+  .proj .meta { font-size: 13px; color: var(--text-2); }
+  footer { margin: 64px 0 32px; font-size: 13px; color: var(--text-2); }
+  footer p { margin: 0 0 10px; }
+  [data-l="fr"] { display: none; }
+  html[lang="fr"] [data-l="en"] { display: none; }
+  html[lang="fr"] [data-l="fr"] { display: revert; }
+  html[lang="fr"] .badge[data-l="fr"] { display: inline-block; }
+  @media (max-width: 640px) { .hero { grid-template-columns: 1fr; justify-items: start; } h1 { font-size: 34px; } .logo { width: 140px; height: 140px; } .logo img { width: 96px; height: 96px; } .table th, .table td { padding: 8px 10px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="/" data-l="en">← D-CREATIONS</a><a href="/fr/projets/" data-l="fr">← D-CREATIONS</a>
+    <span class="lang"><button type="button" id="lang" aria-label="FR: passer en français / switch to French">FR</button></span>
+  </header>
+
+  <section class="hero">
+    <div class="logo"><img id="logo" src="logo.svg" alt="Open Source Iconography logo: four icon tiles (star, heart, crown, lightning) linked to an eye" data-alt-fr="Logo d'Open Source Iconography : quatre tuiles d'icônes (étoile, cœur, couronne, éclair) reliées à un œil"></div>
+    <div>
+      <span class="badge" data-l="en">Working build · November 2026</span>
+      <span class="badge" data-l="fr">Version fonctionnelle · novembre 2026</span>
+      <h1>Open Source Iconography</h1>
+      <p class="lead" data-l="en">The icon sets of the world, nearly all under open licenses, and the tools that study images in art history, downloaded and joined into one library, then connected in one knowledge graph: from the lion icons of Noto, OpenMoji and Game Icons to the lion of Iconclass, 25F23(LION), and of the Chinese Iconography Thesaurus, <span lang="zh">獅</span>.</p>
+      <p class="lead" data-l="fr">Les jeux d'icônes du monde, presque tous sous licence ouverte, et les outils qui étudient les images en histoire de l'art, téléchargés et réunis en une seule bibliothèque, puis reliés dans un graphe de connaissances : des lions de Noto, OpenMoji et Game Icons au lion d'Iconclass, 25F23(LION), et du thésaurus d'iconographie chinoise, <span lang="zh">獅</span>.</p>
+    </div>
+  </section>
+
+  <h2 data-l="en">What is inside</h2><h2 data-l="fr">Ce qu'il contient</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="num"><span data-l="en">474,699</span><span data-l="fr">474 699</span></div>
+      <h3 data-l="en">Icons in one library</h3><h3 data-l="fr">Icônes dans une bibliothèque</h3>
+      <p data-l="en">One SVG file per icon, from 280 icon sets, with one id per icon, its tags, its author and its license, all searchable offline.</p>
+      <p data-l="fr">Un fichier SVG par icône, issu de 280 jeux d'icônes, avec un identifiant, ses mots-clés, son auteur et sa licence, le tout consultable hors ligne.</p>
+    </div>
+    <div class="card">
+      <div class="num">16</div>
+      <h3 data-l="en">Projects on GitHub</h3><h3 data-l="fr">Projets sur GitHub</h3>
+      <p data-l="en">Icon libraries (Lucide, Phosphor, Tabler, Material Design Icons, Iconify) and art-history tools (Iconclass, AIKON, Panoptic, Tropy, Mirador, OpenSeadragon).</p>
+      <p data-l="fr">Des bibliothèques d'icônes (Lucide, Phosphor, Tabler, Material Design Icons, Iconify) et des outils d'histoire de l'art (Iconclass, AIKON, Panoptic, Tropy, Mirador, OpenSeadragon).</p>
+    </div>
+    <div class="card">
+      <div class="num"><span data-l="en">4,972</span><span data-l="fr">4 972</span></div>
+      <h3 data-l="en">Points in the graph</h3><h3 data-l="fr">Points dans le graphe</h3>
+      <p data-l="en">Projects, icon sets, licenses, makers, topics and 1,875 icon concepts, joined by 17,208 connections; 995 concepts link to Iconclass and 530 to Chinese iconography.</p>
+      <p data-l="fr">Projets, jeux d'icônes, licences, auteurs, thèmes et 1 875 concepts d'icônes, reliés par 17 208 connexions ; 995 concepts sont reliés à Iconclass et 530 à l'iconographie chinoise.</p>
+    </div>
+  </div>
+
+  <h2 data-l="en">One concept, many icon sets</h2><h2 data-l="fr">Un concept, beaucoup de jeux d'icônes</h2>
+  <div class="strip" id="strip" role="group" aria-label="Anchor icons from several sets" data-label-fr="Icônes d&#x27;ancre de plusieurs jeux">
+    <figure><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v16"/><path d="m19 13 2-1a9 9 0 0 1-18 0l2 1"/><path d="M9 11h6"/><circle cx="12" cy="4" r="2"/></svg><figcaption>lucide:anchor</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,136a8,8,0,0,0-8,8c0,24.69-13.77,29.64-38.1,36.28-11.36,3.1-24.12,6.6-33.9,14.34V128h32a8,8,0,0,0,0-16H136V87a32,32,0,1,0-16,0v25H88a8,8,0,0,0,0,16h32v66.62c-9.78-7.74-22.54-11.24-33.9-14.34C61.77,173.64,48,168.69,48,144a8,8,0,0,0-16,0c0,38.11,27.67,45.66,49.9,51.72C106.23,202.36,120,207.31,120,232a8,8,0,0,0,16,0c0-24.69,13.77-29.64,38.1-36.28C196.33,189.66,224,182.11,224,144A8,8,0,0,0,216,136ZM112,56a16,16,0,1,1,16,16A16,16,0,0,1,112,56Z"/></svg><figcaption>ph:anchor</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v12m-8 -8a8 8 0 0 0 16 0m1 0h-2m-14 0h-2"/><path d="M9 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"/></svg><figcaption>tabler:anchor</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2A3 3 0 0 0 9 5A3 3 0 0 0 11 7.83V9H8V11H11V19.92C10.26 19.79 9.5 19.58 8.79 19.27C8.05 18.95 7.4 18.56 6.82 18.09C6.24 17.62 5.78 17.11 5.44 16.55L7 15L3 12V15C3 15.97 3.27 16.88 3.82 17.72C4.37 18.56 5.09 19.31 6 19.95C6.87 20.59 7.84 21.09 8.88 21.45C9.93 21.81 10.97 22 12 22C13.03 22 14.07 21.8 15.12 21.44C16.16 21.08 17.13 20.58 18 19.95C18.92 19.31 19.63 18.57 20.18 17.72C20.73 16.88 21 15.97 21 15V12L17 15L18.56 16.55C18.22 17.11 17.76 17.62 17.18 18.09C16.6 18.56 15.95 18.95 15.21 19.27C14.5 19.58 13.74 19.79 13 19.92V11H16V9H13V7.82A3 3 0 0 0 15 5A3 3 0 0 0 12 2M12 4A1 1 0 0 1 13 5A1 1 0 0 1 12 6A1 1 0 0 1 11 5A1 1 0 0 1 12 4Z"/></svg><figcaption>mdi:anchor</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path fill="currentColor" d="M8.875 21.45q-1.6-.55-2.9-1.5t-2.137-2.225T3 15v-3l4 3l-1.55 1.55q.725 1.275 2.3 2.2T11 19.925V11H8V9h3V7.825q-.875-.325-1.437-1.088T9 5q0-1.25.875-2.125T12 2t2.125.875T15 5q0 .975-.562 1.738T13 7.825V9h3v2h-3v8.925q1.675-.25 3.25-1.175t2.3-2.2L17 15l4-3v3q0 1.45-.837 2.725t-2.138 2.225t-2.9 1.5T12 22t-3.125-.55M12 6q.425 0 .713-.287T13 5t-.288-.712T12 4t-.712.288T11 5t.288.713T12 6"/></svg><figcaption>material-symbols:anchor</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path fill="currentColor" d="M13 9.874v10.054c3.619-.454 6.487-3.336 6.938-6.972H17L20.704 7A10.04 10.04 0 0 1 22 11.95C22 17.5 17.523 22 12 22S2 17.5 2 11.95c0-1.8.471-3.489 1.296-4.95L7 12.956H4.062c.451 3.636 3.32 6.518 6.938 6.972V9.874A4.002 4.002 0 0 1 12 2a4 4 0 0 1 1 7.874M12 8a2 2 0 1 0 0-4a2 2 0 0 0 0 4"/></svg><figcaption>ri:anchor-fill</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path fill="currentColor" d="M13.5 10.24v9.104c2.981-.643 5.201-2.863 5.844-5.844H18a1.6 1.6 0 0 1-.757-.205c-1.084-.634-.944-2.264.234-2.701c.192-.071.319-.085.523-.094h3c.358.016.688.118.966.353c.586.493.557 1.192.508 1.897a10.5 10.5 0 0 1-.603 2.839C20.369 19.72 16.394 22.5 12 22.5s-8.369-2.78-9.871-6.911a10.5 10.5 0 0 1-.603-2.839c-.049-.705-.078-1.404.508-1.897c.278-.235.607-.337.966-.353h3c.204.009.331.023.523.094c1.178.437 1.318 2.067.234 2.701A1.6 1.6 0 0 1 6 13.5H4.656c.643 2.981 2.863 5.201 5.844 5.844V10.24c-.414-.162-.797-.344-1.158-.608a4.54 4.54 0 0 1-1.613-5.054a4.53 4.53 0 0 1 1.613-2.21A4.5 4.5 0 0 1 12 1.5c.952 0 1.89.306 2.658.868a4.53 4.53 0 0 1 1.613 2.21a4.54 4.54 0 0 1-1.613 5.054c-.361.264-.744.446-1.158.608m-2.906-3.717a1.515 1.515 0 0 0 1.929.883a1.515 1.515 0 0 0 .883-1.929a1.515 1.515 0 0 0-1.929-.883a1.515 1.515 0 0 0-.883 1.929"/></svg><figcaption>mingcute:anchor-fill</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path fill="currentColor" d="m22 15l-3-4l-3 4h1.906c-.436 2.469-2.438 4.471-4.906 4.906V13h2v-2h-2V9.336c1.543-.459 2.714-1.923 2.714-3.621C15.714 3.666 14.048 2 12 2S8.286 3.666 8.286 5.715c0 1.698 1.171 3.162 2.714 3.621V11H9v2h2v6.906C8.531 19.471 6.529 17.469 6.094 15H8l-3-4l-3 4h2.073c.511 3.885 3.929 7 7.927 7s7.416-3.115 7.927-7zM10.286 5.715C10.286 4.77 11.055 4 12 4s1.714.77 1.714 1.715c0 .951-.801 1.785-1.714 1.785s-1.714-.834-1.714-1.785"/></svg><figcaption>bx:anchor</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><g fill="none"><circle cx="12" cy="4.56" r="2.81" fill="currentColor" opacity=".2"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 22.34V7.37"/><circle cx="12" cy="4.56" r="2.81" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.38 15.1c0 3.32-3.75 7.24-8.38 7.24s-8.38-3.92-8.38-7.23M15.83 12H8.17"/><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m5.68 15.7l-.72-.48c-.7-.46-1.04-.69-1.4-.64c-.38.05-.65.36-1.2.98l-.58.65m16.54-.51l.72-.48c.7-.46 1.04-.68 1.4-.64c.38.05.65.36 1.2.98l.58.65"/></g></svg><figcaption>andrsrxn:anchor</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1a2 2 0 0 1 1 3.73V5h2a1 1 0 1 1 0 2H9v5.898a5 5 0 0 0 3.33-2.398q.03-.054.068-.102L11 9h4v4l-1.153-1.153A7 7 0 0 1 8 15a7 7 0 0 1-5.848-3.153L1 13V9h4l-1.398 1.398a1 1 0 0 1 .068.102A5 5 0 0 0 7 12.898V7H5a1 1 0 0 1 0-2h2v-.27A2 2 0 0 1 8 1m0 1a1 1 0 1 0 0 2a1 1 0 0 0 0-2"/></svg><figcaption>at-icons:anchor</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path fill="currentColor" d="m19 11l-3 4h1.91c-.44 2.47-2.44 4.47-4.91 4.91V11h3V9h-3V7.81c1.15-.43 2-1.55 2-2.83c0-1.64-1.35-2.97-3-2.97S9 3.34 9 4.98c0 1.29.85 2.41 2 2.83V9H8v2h3v8.91c-2.47-.44-4.47-2.44-4.91-4.91H8l-3-4l-3 4h2.07C4.58 18.88 8 22 12 22s7.42-3.12 7.93-7H22zm-7-7c.54 0 1 .45 1 .97S12.53 6 12 6s-1-.48-1-1.03s.46-.97 1-.97"/></svg><figcaption>boxicons:anchor</figcaption></figure>
+    <figure><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="m8 5.75v8.25m-4.75-6.25h-1.5c0 4 2.5 6.5 6.25 6.5s6.25-2.5 6.25-6.5h-1.5"/><circle cx="8" cy="3.5" r="1.75"/></g></svg><figcaption>charm:anchor</figcaption></figure>
+  </div>
+
+  <h2 data-l="en">The library</h2><h2 data-l="fr">La bibliothèque</h2>
+  <ul class="facts" data-l="en">
+    <li><strong>Every icon, one format.</strong> Lucide, Phosphor (all six weights), Tabler (outline and filled) and Material Design Icons come straight from their own repositories with their tags and categories; the other sets come from Iconify's collection. Each icon gets an Iconify-style id such as <code>mdi:anchor</code> or <code>ph:acorn-bold</code>.</li>
+    <li><strong>Search everything offline.</strong> A single page finds any icon by name, tag or set and filters by license, colour, style and animation, straight from the files on the disk.</li>
+    <li><strong>Licenses checked.</strong> Every set's license is sorted into plain groups (free with no credit needed, credit the author, share-alike, non-commercial only, check the license). 18 labels from the upstream catalogue were corrected after reading each project's own license, and brand logos are marked as trademarks of their owners.</li>
+  </ul>
+  <ul class="facts" data-l="fr">
+    <li><strong>Chaque icône, un seul format.</strong> Lucide, Phosphor (ses six graisses), Tabler (contour et plein) et Material Design Icons viennent directement de leurs dépôts avec leurs mots-clés et catégories ; les autres jeux viennent de la collection Iconify. Chaque icône reçoit un identifiant au format Iconify, comme <code>mdi:anchor</code> ou <code>ph:acorn-bold</code>.</li>
+    <li><strong>Tout chercher hors ligne.</strong> Une seule page retrouve n'importe quelle icône par nom, mot-clé ou jeu, et filtre par licence, couleur, style et animation, directement depuis les fichiers du disque.</li>
+    <li><strong>Licences vérifiées.</strong> La licence de chaque jeu est rangée en groupes simples (libre sans mention, mention de l'auteur, partage à l'identique, usage non commercial, licence à vérifier). 18 indications du catalogue d'origine ont été corrigées après lecture de la licence de chaque projet, et les logos de marques sont signalés comme marques déposées.</li>
+  </ul>
+
+  <h2 data-l="en">The graph</h2><h2 data-l="fr">Le graphe</h2>
+  <ul class="facts" data-l="en">
+    <li><strong>Built with graphify.</strong> Projects, icon sets, licenses, makers, set categories, icon topics and the icon concepts that many sets share, grouped into communities.</li>
+    <li><strong>The art-history bridge.</strong> Where the same word exists, a shared icon concept is matched to its notation in Iconclass, the classification used by museums to describe what images show, and to its term in the Chinese Iconography Thesaurus, with their parent classes: 995 concepts in Iconclass, 530 in the thesaurus.</li>
+    <li><strong>Real code links.</strong> Found in the projects' own code: AIKON uses Mirador; Mirador uses OpenSeadragon; Mirador draws its icons with Google Material Icons; Panoptic draws its icons with Bootstrap Icons.</li>
+    <li><strong>Alternatives.</strong> Icon sets from different makers that draw the same concepts are linked as similar.</li>
+  </ul>
+  <ul class="facts" data-l="fr">
+    <li><strong>Construit avec graphify.</strong> Projets, jeux d'icônes, licences, auteurs, catégories, thèmes et les concepts d'icônes que beaucoup de jeux partagent, regroupés en communautés.</li>
+    <li><strong>Le pont vers l'histoire de l'art.</strong> Quand le même mot existe, un concept d'icône partagé est relié à sa notation Iconclass, la classification qu'utilisent les musées pour décrire ce que montrent les images, et à son terme dans le thésaurus d'iconographie chinoise, avec leurs classes parentes : 995 concepts dans Iconclass, 530 dans le thésaurus.</li>
+    <li><strong>De vrais liens dans le code.</strong> Trouvés dans le code des projets : AIKON utilise Mirador ; Mirador utilise OpenSeadragon ; Mirador dessine ses icônes avec Google Material Icons ; Panoptic dessine ses icônes avec Bootstrap Icons.</li>
+    <li><strong>Alternatives.</strong> Les jeux d'auteurs différents qui dessinent les mêmes concepts sont reliés comme similaires.</li>
+  </ul>
+
+  <div class="scroll">
+  <table class="table">
+    <thead><tr><th data-l="en">Icon concept</th><th data-l="fr">Concept d'icône</th><th data-l="en">Makers</th><th data-l="fr">Auteurs</th><th>Iconclass</th><th data-l="en">Chinese iconography</th><th data-l="fr">Iconographie chinoise</th></tr></thead>
+    <tbody>
+      <tr><td>lion</td><td class="n">8</td><td><code>25F23(LION)</code> beasts of prey, predatory animals: lion</td><td>lion <span lang="zh">獅</span></td></tr>
+      <tr><td>anchor</td><td class="n">57</td><td><code>46C215(ANCHOR)</code> parts of ship&#x27;s exterior: anchor</td><td>anchor <span lang="zh">錨</span></td></tr>
+      <tr><td>skull</td><td class="n">45</td><td><code>31A211</code> (human) skull</td><td>skull <span lang="zh">頭骨</span></td></tr>
+      <tr><td>dragon</td><td class="n">10</td><td><code>25FF411</code> dragon</td><td>dragon <span lang="zh">龍</span></td></tr>
+      <tr><td>crown</td><td class="n">51</td><td><code>44B191</code> crown (symbol of sovereignty)</td><td>–</td></tr>
+      <tr><td>key</td><td class="n">91</td><td><code>41A3281</code> key</td><td>–</td></tr>
+      <tr><td>ship</td><td class="n">32</td><td><code>46C21</code> ships (in general)</td><td>–</td></tr>
+      <tr><td>moon</td><td class="n">85</td><td><code>24B</code> moon as celestial body</td><td>moon <span lang="zh">月</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2 data-l="en">The projects</h2><h2 data-l="fr">Les projets</h2>
+  <div class="proj">
+    <div class="card"><a href="https://github.com/lucide-icons/lucide">Lucide</a><p data-l="en">Clean line icons, a fork of Feather.</p><p data-l="fr">Icônes au trait, dérivées de Feather.</p><span class="meta">ISC · <span data-l="en">25,464</span><span data-l="fr">25 464</span> ★</span></div>
+    <div class="card"><a href="https://github.com/phosphor-icons/core">Phosphor Icons</a><p data-l="en">Flexible icons in six weights.</p><p data-l="fr">Icônes flexibles en six graisses.</p><span class="meta">MIT · 395 ★</span></div>
+    <div class="card"><a href="https://github.com/tabler/tabler-icons">Tabler Icons</a><p data-l="en">Outline and filled icons for the web.</p><p data-l="fr">Icônes contour et pleines pour le web.</p><span class="meta">MIT · <span data-l="en">22,526</span><span data-l="fr">22 526</span> ★</span></div>
+    <div class="card"><a href="https://github.com/Templarian/MaterialDesign">Pictogrammers Material Design Icons</a><p data-l="en">Community Material Design Icons (Pictogrammers).</p><p data-l="fr">Les Material Design Icons de la communauté (Pictogrammers).</p><span class="meta">Apache-2.0 · <span data-l="en">11,317</span><span data-l="fr">11 317</span> ★</span></div>
+    <div class="card"><a href="https://github.com/Templarian/MaterialDesign-SVG">MDI SVG package</a><p data-l="en">The SVG package of Material Design Icons.</p><p data-l="fr">Le paquet SVG des Material Design Icons.</p><span class="meta">Apache-2.0 · 272 ★</span></div>
+    <div class="card"><a href="https://github.com/iconify/iconify">Iconify</a><p data-l="en">One framework for every icon set.</p><p data-l="fr">Un framework pour tous les jeux d&#x27;icônes.</p><span class="meta">MIT · <span data-l="en">6,383</span><span data-l="fr">6 383</span> ★</span></div>
+    <div class="card"><a href="https://github.com/iconify/icon-sets">Iconify icon sets</a><p data-l="en">Over 200 icon sets in one format.</p><p data-l="fr">Plus de 200 jeux d&#x27;icônes dans un seul format.</p><span class="meta">mixed (per set) · <span data-l="en">1,073</span><span data-l="fr">1 073</span> ★</span></div>
+    <div class="card"><a href="https://github.com/iconify/api">Iconify API</a><p data-l="en">Self-hosted icon search and SVG server.</p><p data-l="fr">Serveur auto-hébergé de recherche d&#x27;icônes et de SVG.</p><span class="meta">MIT · 192 ★</span></div>
+    <div class="card"><a href="https://github.com/iconclass/data">Iconclass data</a><p data-l="en">The classification of what images show, used by museums.</p><p data-l="fr">La classification de ce que montrent les images, utilisée par les musées.</p><span class="meta">CC0-1.0 · 19 ★</span></div>
+    <div class="card"><a href="https://github.com/iconclass/code">Iconclass code</a><p data-l="en">Software to use Iconclass.</p><p data-l="fr">Logiciels pour utiliser Iconclass.</p><span class="meta">CC0-1.0 · 3 ★</span></div>
+    <div class="card"><a href="https://github.com/iconclass/cit">Chinese Iconography Thesaurus (CIT)</a><p data-l="en">The first thesaurus of Chinese iconography.</p><p data-l="fr">Le premier thésaurus d&#x27;iconographie chinoise.</p><span class="meta">CC0-1.0 · 9 ★</span></div>
+    <div class="card"><a href="https://github.com/Aikon-platform/aikon">AIKON</a><p data-l="en">Computer vision to find motifs in historical documents.</p><p data-l="fr">Vision par ordinateur pour retrouver des motifs dans les documents anciens.</p><span class="meta"><span data-l="en">No licence stated (its annotations module is GPL-3.0-or-later)</span><span data-l="fr">Aucune licence indiquée (son module d&#x27;annotations est sous GPL-3.0-or-later)</span> · 30 ★</span></div>
+    <div class="card"><a href="https://github.com/CERES-Sorbonne/Panoptic">Panoptic</a><p data-l="en">Explore big image collections with CLIP clustering.</p><p data-l="fr">Explorer de grandes collections d&#x27;images grâce au regroupement CLIP.</p><span class="meta">GPL-3.0 · 30 ★</span></div>
+    <div class="card"><a href="https://github.com/tropy/tropy">Tropy</a><p data-l="en">Organise and describe research photos.</p><p data-l="fr">Organiser et décrire ses photos de recherche.</p><span class="meta">AGPL-3.0-or-later · <span data-l="en">1,163</span><span data-l="fr">1 163</span> ★</span></div>
+    <div class="card"><a href="https://github.com/ProjectMirador/mirador">Mirador</a><p data-l="en">Compare and annotate IIIF images side by side.</p><p data-l="fr">Comparer et annoter des images IIIF côte à côte.</p><span class="meta">Apache-2.0 · 622 ★</span></div>
+    <div class="card"><a href="https://github.com/openseadragon/openseadragon">OpenSeadragon</a><p data-l="en">Deep-zoom viewer for very large images.</p><p data-l="fr">Visionneuse à zoom profond pour les très grandes images.</p><span class="meta">BSD-3-Clause · <span data-l="en">3,532</span><span data-l="fr">3 532</span> ★</span></div>
+  </div>
+
+  <footer>
+    <p data-l="en">Designed and built by Daniel Madac, D-CREATIONS, Montpellier. Working build; not published yet. Made with a team of AIs: Claude wrote and rewrote the code, Antigravity drafted the first graph builder, and Claude reviewers checked the design.</p>
+    <p data-l="fr">Conçu et réalisé par Daniel Madac, D-CREATIONS, Montpellier. Version fonctionnelle, pas encore publiée. Fait avec une équipe d'IA : Claude a écrit puis réécrit le code, Antigravity a ébauché le premier constructeur du graphe, et des relecteurs Claude ont vérifié la conception.</p>
+    <p data-l="en">Icons shown above: Lucide (ISC), Phosphor (MIT), Tabler Icons (MIT), Material Design Icons (Apache-2.0), Material Symbols (Apache-2.0), Remix Icon (Apache-2.0), MingCute Icon (Apache-2.0), BoxIcons v2 (MIT), andrsrxn/icons (MIT), @icons (MIT), Boxicons (MIT), Charm Icons (MIT). Every icon set keeps its own license; brand logos remain trademarks of their owners. Iconclass and the Chinese Iconography Thesaurus are CC0.</p>
+    <p data-l="fr">Icônes ci-dessus : Lucide (ISC), Phosphor (MIT), Tabler Icons (MIT), Material Design Icons (Apache-2.0), Material Symbols (Apache-2.0), Remix Icon (Apache-2.0), MingCute Icon (Apache-2.0), BoxIcons v2 (MIT), andrsrxn/icons (MIT), @icons (MIT), Boxicons (MIT), Charm Icons (MIT). Chaque jeu d'icônes garde sa propre licence ; les logos de marques restent des marques déposées de leurs propriétaires. Iconclass et le thésaurus d'iconographie chinoise sont sous CC0.</p>
+  </footer>
+</div>
+<script>
+  (function () {
+    var root = document.documentElement, btn = document.getElementById('lang');
+    var saved = null; try { saved = localStorage.getItem('iconography-lang'); } catch (e) {}
+    var lang = saved || (/^fr/i.test(navigator.language) ? 'fr' : 'en');
+    var logo = document.getElementById('logo'), strip = document.getElementById('strip');
+    var text = { en: { alt: logo.alt, strip: strip.getAttribute('aria-label') },
+                 fr: { alt: logo.getAttribute('data-alt-fr'), strip: strip.getAttribute('data-label-fr') } };
+    function set(l) {
+      root.lang = l; btn.textContent = l === 'fr' ? 'EN' : 'FR';
+      btn.setAttribute('aria-label', l === 'fr' ? 'EN: switch to English / passer en anglais' : 'FR: passer en français / switch to French');
+      logo.alt = text[l].alt; strip.setAttribute('aria-label', text[l].strip);
+    }
+    set(lang);
+    btn.addEventListener('click', function () { lang = lang === 'fr' ? 'en' : 'fr'; set(lang); try { localStorage.setItem('iconography-lang', lang); } catch (e) {} });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Open Source Iconography">
+  <style>
+    .l { stroke: #111111; } .g { fill: #111111; } .t { fill: #ffffff; stroke: #111111; } .e { fill: none; stroke: #111111; }
+    @media (prefers-color-scheme: dark) { .l { stroke: #f2f2f2; } .g { fill: #f2f2f2; } .t { fill: #1c1c1c; stroke: #f2f2f2; } .e { stroke: #f2f2f2; } }
+  </style>
+  <g class="l" stroke-width="3" stroke-linecap="round" fill="none">
+    <path d="M60 60 L28 28 M60 60 L92 28 M60 60 L28 92 M60 60 L92 92 M28 28 L92 28 M28 92 L92 92 M28 28 L28 92"/>
+  </g>
+  <rect class="t" x="13" y="13" width="30" height="30" rx="8" stroke-width="3"/>
+  <rect class="t" x="77" y="13" width="30" height="30" rx="8" stroke-width="3"/>
+  <rect class="t" x="13" y="77" width="30" height="30" rx="8" stroke-width="3"/>
+  <rect class="t" x="77" y="77" width="30" height="30" rx="8" stroke-width="3"/>
+  <polygon class="g" points="28.0,18.0 30.5,24.5 37.5,24.9 32.1,29.3 33.9,36.1 28.0,32.3 22.1,36.1 23.9,29.3 18.5,24.9 25.5,24.5"/>
+  <path class="g" d="M92 37 C84 31 82.5 27.5 82.5 25 A4.8 4.8 0 0 1 92 23.6 A4.8 4.8 0 0 1 101.5 25 C101.5 27.5 100 31 92 37 Z"/>
+  <path class="g" d="M19.5 99 L21 86 L25 91 L28 84 L31 91 L35 86 L36.5 99 Z"/>
+  <path class="g" d="M95 83 L86 94 L91.5 94 L89 101 L98 90 L92.5 90 Z"/>
+  <path class="t" stroke-width="3.5" stroke-linejoin="round" d="M41 60 C47 49 53.5 45 60 45 C66.5 45 73 49 79 60 C73 71 66.5 75 60 75 C53.5 75 47 71 41 60 Z"/>
+  <circle class="g" cx="60" cy="60" r="6.5"/>
+</svg>
