@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- The preview frames inherit this policy: an https page may not load the http:// scripts and styles
+     of a previewed project (mixed content), so they are upgraded to https. It restricts nothing else. -->
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<title>Visualiser · D-CREATIONS</title>
+<meta name="description" content="Visualiser: paste a GitHub link and see the project running in your browser, files, code and README, without downloading or installing anything.">
+<link rel="canonical" href="https://dcreations.fr/visualiser/">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" integrity="sha384-eFTL69TLRZTkNfYZOLM+G04821K1qZao/4QLJbet1pP4tcF+fdXq/9CdqAbWRl/L" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" integrity="sha384-wH75j6z1lH97ZOpMOInqhgKzFkAInZPPSPlZpYKYTOqsaizPvhQZmAtLcPKXpLyH" crossorigin="anonymous" media="(prefers-color-scheme: dark)">
+<style>
+  :root { --bg: #f4f4f2; --card: #ffffff; --text: #111111; --text-2: #5a5a5a; --line: #e2e2de; --accent: #111111; --accent-text: #ffffff; --hover: #eeeeea; --warn-bg: #ececea; --warn-line: #b9b9b4; --err: #111111; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #121212; --card: #1c1c1c; --text: #f2f2f2; --text-2: #a8a8a8; --line: #2c2c2c; --accent: #f2f2f2; --accent-text: #111111; --hover: #262626; --warn-bg: #262626; --warn-line: #555555; --err: #f2f2f2; }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; }
+  a { color: inherit; }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--text-2); outline-offset: 2px; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+
+  header.top { display: flex; align-items: center; gap: 16px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--card); }
+  header.top .home { color: var(--text-2); text-decoration: none; font-size: 14px; white-space: nowrap; }
+  header.top .home:hover { color: var(--text); }
+  header.top .brand { font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
+  header.top form { flex: 1; display: flex; gap: 8px; min-width: 0; }
+  header.top form input { flex: 1; min-width: 0; }
+  .pill { background: none; border: 1px solid var(--line); color: var(--text-2); border-radius: 999px; padding: 4px 12px; cursor: pointer; white-space: nowrap; text-decoration: none; }
+  .pill:hover, .pill[aria-pressed="true"] { color: var(--text); border-color: var(--text-2); }
+  input.field { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 8px 12px; outline: none; }
+  input.field:focus { border-color: var(--text-2); }
+  .go { background: var(--accent); color: var(--accent-text); border: 0; border-radius: 10px; padding: 8px 16px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+
+  /* Landing */
+  .landing { max-width: 760px; margin: 0 auto; padding: 64px 16px 32px; width: 100%; }
+  .landing h1 { font-size: 46px; line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.02em; }
+  .landing .lead { font-size: 19px; color: var(--text-2); margin: 0 0 28px; }
+  .landing form { display: flex; gap: 8px; }
+  .landing form input { flex: 1; min-width: 0; font-size: 17px; padding: 12px 16px; }
+  .landing form .go { font-size: 17px; padding: 12px 22px; }
+  .form-err { color: var(--err); font-weight: 600; margin: 10px 0 0; min-height: 1.5em; font-size: 14px; }
+  .examples { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--text-2); font-size: 14px; }
+  .how { margin-top: 48px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .how div { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .how b { display: block; margin-bottom: 4px; }
+  .how p { margin: 0; color: var(--text-2); font-size: 14px; }
+  .note { margin-top: 32px; font-size: 13px; color: var(--text-2); }
+
+  /* Workspace */
+  .ws { flex: 1; display: none; flex-direction: column; min-height: 0; }
+  body.has-repo .ws { display: flex; }
+  body.has-repo .landing { display: none; }
+  body:not(.has-repo) header.top form { display: none; }
+  .repo-bar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .repo-bar .name { font-weight: 700; font-size: 17px; }
+  .repo-bar .desc { color: var(--text-2); font-size: 14px; flex: 1; min-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .repo-bar select { border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 4px 8px; max-width: 200px; }
+  .meta { color: var(--text-2); font-size: 13px; white-space: nowrap; }
+  .body { flex: 1; display: grid; grid-template-columns: 280px 1fr; min-height: 0; }
+  aside { border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; background: var(--card); }
+  aside .filter { padding: 10px; border-bottom: 1px solid var(--line); }
+  aside .filter input { width: 100%; padding: 6px 10px; }
+  .tree { overflow: auto; flex: 1; padding: 6px 0 16px; font-size: 13.5px; }
+  .tree details > summary { list-style: none; }
+  .tree details > summary::-webkit-details-marker { display: none; }
+  .row { display: flex; align-items: center; gap: 6px; width: calc(100% - 8px); padding: 2px 10px; margin: 0 4px; cursor: pointer; white-space: nowrap; border-radius: 6px; user-select: none; background: none; border: 0; text-align: left; }
+  .row:hover { background: var(--hover); }
+  .row.active { background: var(--accent); color: var(--accent-text); }
+  .row .ic { width: 14px; text-align: center; color: var(--text-2); flex: none; font-size: 11px; }
+  .row.active .ic { color: inherit; }
+  .row .nm { overflow: hidden; text-overflow: ellipsis; }
+  .row .tag { margin-left: auto; font-size: 10px; border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; opacity: .7; }
+  details[open] > summary .ic::before { content: "▾"; }
+  details:not([open]) > summary .ic::before { content: "▸"; }
+  .kids { padding-left: 14px; }
+  .tree .banner { margin: 4px 8px 8px; }
+
+  main { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+  .tabs { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--line); align-items: center; flex-wrap: wrap; }
+  .tab { background: none; border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; color: var(--text-2); font-weight: 600; }
+  .tab[aria-selected="true"] { background: var(--hover); color: var(--text); }
+  .tabs .spacer { flex: 1; }
+  .tabs .where { color: var(--text-2); max-width: 40ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  body:not(.on-preview) .preview-only { visibility: hidden; }
+  .panel { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+  .panel[hidden] { display: none; }
+  .banner { margin: 10px 12px 0; padding: 10px 14px; border: 1px solid var(--warn-line); background: var(--warn-bg); border-radius: 10px; font-size: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .banner[hidden] { display: none; }
+  .caution { margin: 8px 12px 0; font-size: 12px; color: var(--text-2); }
+  .stage { flex: 1; display: flex; justify-content: center; padding: 12px; min-height: 0; }
+  .stage iframe { border: 1px solid var(--line); border-radius: 10px; background: #fff; width: 100%; height: 100%; min-height: 360px; transition: width .2s; }
+  .stage.tablet iframe { width: 820px; max-width: 100%; }
+  .stage.phone iframe { width: 390px; max-width: 100%; }
+  .empty { margin: auto; text-align: center; color: var(--text-2); padding: 40px 20px; max-width: 520px; }
+  .empty b { display: block; color: var(--text); font-size: 18px; margin-bottom: 6px; }
+  .empty.err, .empty.err b { color: var(--err); }
+  .empty.err { font-weight: 600; border: 1px solid var(--warn-line); border-radius: 10px; }
+  .code-head { padding: 8px 16px; color: var(--text-2); border-bottom: 1px solid var(--line); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .code-head .spacer { flex: 1; }
+  pre.code { margin: 0; padding: 12px 0; }
+  pre.code code { display: block; background: none !important; padding: 0 !important; }
+  pre.code .ln { display: block; padding-right: 16px; white-space: pre; counter-increment: ln; }
+  pre.code .ln::before { content: counter(ln); display: inline-block; width: 4.5em; padding-right: 1em; text-align: right; color: var(--text-2); opacity: .6; user-select: none; }
+  .img-view { padding: 24px; display: flex; justify-content: center; }
+  .img-view img { max-width: 100%; background: repeating-conic-gradient(#ddd 0 25%, #fff 0 50%) 0 0 / 16px 16px; border-radius: 8px; }
+  .readme-frame { flex: 1; border: 0; width: 100%; min-height: 400px; background: var(--card); }
+  .loading { position: fixed; top: 0; left: 0; height: 3px; background: var(--text); width: 0; transition: width .3s; z-index: 9; }
+
+  /* Specificity 0,2,1: must beat rules such as .how b { display: block } */
+  html:not([lang="fr"]) [data-l="fr"], html[lang="fr"] [data-l="en"] { display: none; }
+
+  @media (max-width: 1200px) { .tabs .where { display: none; } }
+  @media (max-width: 800px) {
+    .body { grid-template-columns: 1fr; grid-template-rows: 220px 1fr; }
+    aside { border-right: 0; border-bottom: 1px solid var(--line); }
+    .how { grid-template-columns: 1fr; }
+    .landing { padding-top: 40px; }
+    .landing h1 { font-size: 36px; }
+    header.top { gap: 8px; }
+    header.top .brand, body.has-repo header.top .home, .tabs .where { display: none; }
+  }
+  @media (max-width: 520px) { .landing form { flex-direction: column; } .devices { display: none; } }
+</style>
+</head>
+<body class="on-preview">
+<div class="loading" id="loading"></div>
+<header class="top">
+  <a class="home" href="/" data-l="en">← D-CREATIONS</a><a class="home" href="/fr/projets/" data-l="fr">← D-CREATIONS</a>
+  <span class="brand">Visualiser</span>
+  <form id="topForm" autocomplete="off">
+    <input class="field" name="q" placeholder="github.com/owner/repo" data-t-aria="urlLabel" aria-label="GitHub URL">
+    <button class="go" type="submit" data-t="open">Open</button>
+  </form>
+  <button class="pill" type="button" id="lang" aria-label="Changer de langue / Switch language">FR</button>
+</header>
+
+<section class="landing">
+  <h1>Visualiser</h1>
+  <p class="lead" data-l="en">Paste a GitHub link and see the project as if you had downloaded it: the page running live, every file, the code and the README. Nothing is downloaded or installed on your computer.</p>
+  <p class="lead" data-l="fr">Collez un lien GitHub et voyez le projet comme si vous l'aviez téléchargé : la page qui tourne en direct, tous les fichiers, le code et le README. Rien n'est téléchargé ni installé sur votre ordinateur.</p>
+  <form id="mainForm" autocomplete="off">
+    <input class="field" name="q" placeholder="https://github.com/owner/repo" data-t-aria="urlLabel" aria-label="GitHub URL" aria-describedby="landErr" autofocus>
+    <button class="go" type="submit" data-t="visualise">Visualise</button>
+  </form>
+  <p class="form-err" id="landErr" role="alert"></p>
+  <div class="examples">
+    <span data-l="en">Try:</span><span data-l="fr">Essayez :</span>
+    <button class="pill" type="button" data-ex="jakesgordon/javascript-tiny-platformer">tiny platformer</button>
+    <button class="pill" type="button" data-ex="mdn/beginner-html-site-styled">MDN beginner site</button>
+    <button class="pill" type="button" data-ex="bradtraversy/50projects50days">50 projects 50 days</button>
+  </div>
+  <div class="how">
+    <div><b data-l="en">1. Paste a link</b><b data-l="fr">1. Collez un lien</b>
+      <p data-l="en">Any public repository: github.com/owner/repo, a branch, a folder or a single file.</p>
+      <p data-l="fr">N'importe quel dépôt public : github.com/owner/repo, une branche, un dossier ou un fichier.</p></div>
+    <div><b data-l="en">2. See it run</b><b data-l="fr">2. Voyez-le tourner</b>
+      <p data-l="en">HTML, CSS and JavaScript projects open live, in a sealed sandbox, on desktop, tablet or phone size.</p>
+      <p data-l="fr">Les projets HTML, CSS et JavaScript s'ouvrent en direct, dans un bac à sable isolé, en taille ordinateur, tablette ou téléphone.</p></div>
+    <div><b data-l="en">3. Read the code</b><b data-l="fr">3. Lisez le code</b>
+      <p data-l="en">Browse the file tree, open any file with syntax colours, and read the README.</p>
+      <p data-l="fr">Parcourez l'arborescence, ouvrez n'importe quel fichier avec la coloration du code, et lisez le README.</p></div>
+  </div>
+  <p class="note" data-l="en">Projects that must be built first (React with Vite, Next.js, Python, apps) cannot run in a browser as they are; Visualiser then shows their files and README, and their gh-pages branch when there is one. Public repositories only, about 20 projects per hour (GitHub limit without an account).</p>
+  <p class="note" data-l="fr">Les projets qui doivent d'abord être compilés (React avec Vite, Next.js, Python, applications) ne peuvent pas tourner tels quels dans un navigateur ; Visualiser montre alors leurs fichiers et leur README, et leur branche gh-pages s'il y en a une. Dépôts publics uniquement, environ 20 projets par heure (limite GitHub sans compte).</p>
+</section>
+
+<section class="ws">
+  <div class="repo-bar">
+    <a class="name" id="repoName" target="_blank" rel="noopener"></a>
+    <select id="branch" data-t-aria="branch" aria-label="Branch"></select>
+    <span class="desc" id="repoDesc"></span>
+    <span class="meta" id="repoMeta"></span>
+  </div>
+  <div class="body">
+    <aside>
+      <div class="filter"><input class="field" id="filter" data-t-placeholder="filter" data-t-aria="filter" aria-label="Filter files"></div>
+      <nav class="tree" id="tree" data-t-aria="files" aria-label="Files" aria-live="polite"></nav>
+    </aside>
+    <main>
+      <div class="tabs">
+        <div role="tablist" id="tablist">
+          <button class="tab" role="tab" id="t-preview" aria-controls="p-preview" aria-selected="true" data-tab="preview" data-t="preview">Preview</button>
+          <button class="tab" role="tab" id="t-code" aria-controls="p-code" aria-selected="false" tabindex="-1" data-tab="code" data-t="code">Code</button>
+          <button class="tab" role="tab" id="t-readme" aria-controls="p-readme" aria-selected="false" tabindex="-1" data-tab="readme">README</button>
+        </div>
+        <span class="spacer"></span>
+        <span class="where mono" id="where"></span>
+        <span class="devices preview-only">
+          <button class="pill" type="button" data-dev="desktop" aria-pressed="true" data-t="desktop">Desktop</button>
+          <button class="pill" type="button" data-dev="tablet" aria-pressed="false" data-t="tablet">Tablet</button>
+          <button class="pill" type="button" data-dev="phone" aria-pressed="false" data-t="phone">Phone</button>
+        </span>
+        <button class="pill preview-only" type="button" id="viewSource" data-t="viewSource">View source</button>
+        <button class="pill preview-only" type="button" id="reload" data-t="reload">Reload</button>
+      </div>
+      <div class="panel" id="p-preview" role="tabpanel" aria-labelledby="t-preview">
+        <div class="banner" id="banner" hidden></div>
+        <p class="caution" data-t="caution">The page below comes from GitHub, not from D-CREATIONS: never type a password or personal details in it.</p>
+        <div class="stage" id="stage" aria-live="polite"></div>
+      </div>
+      <div class="panel" id="p-code" role="tabpanel" aria-labelledby="t-code" aria-live="polite" hidden></div>
+      <div class="panel" id="p-readme" role="tabpanel" aria-labelledby="t-readme" hidden></div>
+    </main>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js" integrity="sha384-/TQbtLCAerC3jgaim+N78RZSDYV7ryeoBCVqTuzRrFec2akfBkHS7ACQ3PQhvMVi" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha384-F/bZzf7p3Joyp5psL90p/p89AZJsndkSoGwRpXcZhleCWhd8SnRuoYo4d0yirjJp" crossorigin="anonymous"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ============ Language ============
+  // Every visible text carries data-t (text) or data-t-placeholder; setLang() rewrites them all,
+  // including messages created later, so switching language never leaves stale text.
+  var T = {
+    en: { open: 'Open', visualise: 'Visualise', preview: 'Preview', code: 'Code', desktop: 'Desktop', tablet: 'Tablet', phone: 'Phone', reload: 'Reload',
+      loading: 'Loading…', filter: 'Filter files', notFound: 'Repository not found. Check the link; only public repositories can be shown.',
+      empty: 'This repository is empty.', branchGone: 'This branch does not exist (any more).',
+      rate: 'GitHub limit reached (60 requests per hour without an account). Try again after {0}.', ghError: 'GitHub did not answer ({0}). Try again in a moment.',
+      network: 'No connection to GitHub. Check your internet connection.',
+      badLink: 'This does not look like a GitHub link. Example: github.com/owner/repo',
+      noHtml: 'No web page in this project', noHtmlSub: 'This project has no HTML file to run in a browser. Its files are on the left and its README is in the README tab.',
+      needsBuild: 'This project must be built (npm install, then build) before it can run, so the page below may stay blank.',
+      ghPages: 'Show the built site (gh-pages branch)', pickFile: 'Pick a file on the left.', binary: 'Binary file, not shown as text.',
+      tooBig: 'File too large to show here.', openGh: 'Open on GitHub', noReadme: 'This project has no README.',
+      truncated: 'Very large repository: GitHub only sent part of the file list.', runThis: 'Run this page', viewSource: 'View source', fail: 'Could not load this file.',
+      urlLabel: 'GitHub link', branch: 'Branch', files: 'Files', caution: 'The page below comes from GitHub, not from D-CREATIONS: never type a password or personal details in it.' },
+    fr: { open: 'Ouvrir', visualise: 'Visualiser', preview: 'Aperçu', code: 'Code', desktop: 'Ordinateur', tablet: 'Tablette', phone: 'Téléphone', reload: 'Recharger',
+      loading: 'Chargement…', filter: 'Filtrer les fichiers', notFound: 'Dépôt introuvable. Vérifiez le lien ; seuls les dépôts publics peuvent être affichés.',
+      empty: 'Ce dépôt est vide.', branchGone: "Cette branche n'existe pas (ou plus).",
+      rate: 'Limite GitHub atteinte (60 requêtes par heure sans compte). Réessayez après {0}.', ghError: "GitHub n'a pas répondu ({0}). Réessayez dans un instant.",
+      network: 'Pas de connexion à GitHub. Vérifiez votre connexion internet.',
+      badLink: "Ce n'est pas un lien GitHub. Exemple : github.com/owner/repo",
+      noHtml: 'Pas de page web dans ce projet', noHtmlSub: "Ce projet n'a pas de fichier HTML à lancer dans un navigateur. Ses fichiers sont à gauche et son README dans l'onglet README.",
+      needsBuild: 'Ce projet doit être compilé (npm install, puis build) avant de pouvoir tourner : la page ci-dessous peut rester blanche.',
+      ghPages: 'Voir le site compilé (branche gh-pages)', pickFile: 'Choisissez un fichier à gauche.', binary: 'Fichier binaire, non affiché en texte.',
+      tooBig: 'Fichier trop gros pour être affiché ici.', openGh: 'Ouvrir sur GitHub', noReadme: "Ce projet n'a pas de README.",
+      truncated: "Dépôt très volumineux : GitHub n'a envoyé qu'une partie de la liste des fichiers.", runThis: 'Lancer cette page', viewSource: 'Voir le code source', fail: 'Impossible de charger ce fichier.',
+      urlLabel: 'Lien GitHub', branch: 'Branche', files: 'Fichiers', caution: "La page ci-dessous vient de GitHub, pas de D-CREATIONS : n'y tapez jamais de mot de passe ni d'informations personnelles." }
+  };
+  var root = document.documentElement, langBtn = document.getElementById('lang');
+  var lang = null; try { lang = localStorage.getItem('visualiser-lang'); } catch (e) {}
+  lang = lang === 'fr' || lang === 'en' ? lang : (/^fr/i.test(navigator.language) ? 'fr' : 'en');
+
+  function t(key, arg) { return (T[lang][key] || key).replace('{0}', arg == null ? '' : arg); }
+  function translate(scope) {
+    (scope || document).querySelectorAll('[data-t]').forEach(function (el) { el.textContent = t(el.dataset.t, el.dataset.arg); });
+    (scope || document).querySelectorAll('[data-t-placeholder]').forEach(function (el) { el.placeholder = t(el.dataset.tPlaceholder); });
+    (scope || document).querySelectorAll('[data-t-aria]').forEach(function (el) { el.setAttribute('aria-label', t(el.dataset.tAria)); });
+  }
+  function setLang(l) { lang = l; root.lang = l; langBtn.textContent = l === 'fr' ? 'EN' : 'FR'; translate(); }
+  setLang(lang);
+  langBtn.addEventListener('click', function () { setLang(lang === 'fr' ? 'en' : 'fr'); try { localStorage.setItem('visualiser-lang', lang); } catch (e) {} });
+
+  // ============ Helpers ============
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function ext(p) { var m = /\.([^./]+)$/.exec(p); return m ? m[1].toLowerCase() : ''; }
+  function dirOf(p) { var i = p.lastIndexOf('/'); return i < 0 ? '' : p.slice(0, i + 1); }
+  function isHtml(p) { return /^html?$/.test(ext(p)); }
+  function encodePath(p) { return p.split('/').map(encodeURIComponent).join('/'); }
+  // A translatable message: <span data-t="key" data-arg="…">, so setLang() can re-translate it later
+  function msg(key, arg) { return '<span data-t="' + key + '"' + (arg != null ? ' data-arg="' + esc(arg) + '"' : '') + '>' + esc(t(key, arg)) + '</span>'; }
+  function emptyBox(key, cls, sub) { return '<div class="empty' + (cls ? ' ' + cls : '') + '" role="status"><b>' + msg(key) + '</b>' + (sub ? msg(sub) : '') + '</div>'; }
+  function errorBox(err) { return '<div class="empty err" role="alert">' + msg(err.key || 'ghError', err.arg != null ? err.arg : err.message) + '</div>'; }
+
+  var loadingBar = $('loading'), busy = 0;
+  function loading(on) {
+    busy = Math.max(0, busy + (on ? 1 : -1));
+    loadingBar.style.width = busy ? '70%' : '100%';
+    if (!busy) setTimeout(function () { if (!busy) loadingBar.style.width = '0'; }, 300);
+  }
+
+  var IMG = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico', 'bmp', 'avif'];
+  var BIN = ['zip', 'gz', 'tar', 'pdf', 'mp3', 'mp4', 'wav', 'ogg', 'mov', 'webm', 'woff', 'woff2', 'ttf', 'otf', 'eot', 'exe', 'dll', 'so', 'dylib', 'bin', 'jar', 'class', 'pyc', 'psd', 'blend', 'glb', 'fbx', 'dmg', 'apk', 'ipa', '7z', 'rar'];
+  var HL_ALIAS = { htm: 'html', mjs: 'javascript', cjs: 'javascript', jsx: 'javascript', tsx: 'typescript', yml: 'yaml', md: 'markdown', sh: 'bash', h: 'c', hpp: 'cpp', vue: 'html', svelte: 'html', astro: 'html' };
+
+  // ============ GitHub API ============
+  // Errors carry a translation key so they can be shown (and re-translated) without an alert().
+  function fail(key, arg) { var e = new Error(key); e.key = key; e.arg = arg; return e; }
+  async function gh(path, notFoundKey) {
+    var r;
+    try { r = await fetch('https://api.github.com' + path, { headers: { Accept: 'application/vnd.github+json' } }); }
+    catch (e) { throw fail('network'); }
+    if (r.ok) return r.json();
+    if (r.status === 404 || (r.status === 422 && notFoundKey)) throw fail(notFoundKey || 'notFound');
+    if (r.status === 409) throw fail('empty');
+    if ((r.status === 403 || r.status === 429) && r.headers.get('x-ratelimit-remaining') === '0') {
+      var reset = Number(r.headers.get('x-ratelimit-reset'));
+      throw fail('rate', reset ? new Date(reset * 1000).toLocaleTimeString() : '1 h');
+    }
+    throw fail('ghError', r.status);
+  }
+
+  // Accepts owner/repo, github.com/owner/repo, …/tree/<branch>/<path> and …/blob/<branch>/<file>
+  function parse(input) {
+    var s = String(input || '').trim().replace(/^git\+/, '').replace(/[?#].*$/, '').replace(/\.git\/?$/, '');
+    s = s.replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '').replace(/^\/+|\/+$/g, '');
+    var seg = s.split('/');
+    if (seg.length < 2 || !/^[\w.-]+$/.test(seg[0]) || !/^[\w.-]+$/.test(seg[1])) return null;
+    return { owner: seg[0], repo: seg[1], rest: (seg[2] === 'tree' || seg[2] === 'blob') ? safeDecode(seg.slice(3).join('/')) : '' };
+  }
+  function safeDecode(s) { try { return decodeURIComponent(s); } catch (e) { return s; }
+  }
+
+  // ============ State ============
+  // gen increases on every repo/branch load; async work started for an older gen drops its result,
+  // so a slow answer can never paint over a newer repository or branch.
+  var S = { gen: 0, owner: '', repo: '', info: null, branch: '', sha: '', shas: {}, branches: [], files: [], set: {}, cdn: '', truncated: false, page: '', file: '' };
+
+  async function openRepo(input, opts) {
+    opts = opts || {};
+    var p = parse(input);
+    if (!p) {
+      if (document.body.classList.contains('has-repo')) { $('stage').innerHTML = errorBox(fail('badLink')); tab('preview'); }
+      else $('landErr').innerHTML = msg('badLink');
+      return;
+    }
+    $('landErr').innerHTML = '';
+    var gen = ++S.gen;
+    resetRepo();
+    document.body.classList.add('has-repo');
+    document.querySelectorAll('form input[name=q]').forEach(function (i) { i.value = 'github.com/' + p.owner + '/' + p.repo; });
+    resetPanels(emptyBox('loading'));
+    loading(true);
+    try {
+      var both = await Promise.all([
+        gh('/repos/' + p.owner + '/' + p.repo),
+        gh('/repos/' + p.owner + '/' + p.repo + '/branches?per_page=100')
+      ]);
+      if (gen !== S.gen) return;
+      var info = both[0];
+      S.info = info; S.owner = info.owner.login; S.repo = info.name;
+      S.branches = both[1].map(function (b) { return b.name; });
+      S.shas = {}; both[1].forEach(function (b) { S.shas[b.name] = b.commit.sha; });
+
+      // Branch names may contain "/", so pick the longest known branch that starts the /tree/ part
+      var branch = opts.branch || info.default_branch, sub = opts.file || '';
+      if (p.rest && !opts.branch) {
+        var match = S.branches.filter(function (b) { return p.rest === b || p.rest.indexOf(b + '/') === 0; })
+          .sort(function (a, b) { return b.length - a.length; })[0];
+        if (match) { branch = match; sub = p.rest.slice(match.length + 1); }
+        // Not a listed branch: a tag, a commit SHA or a branch past the first 100. Try its first segment.
+        else { var cut = p.rest.indexOf('/'); branch = cut < 0 ? p.rest : p.rest.slice(0, cut); sub = cut < 0 ? '' : p.rest.slice(cut + 1); }
+      }
+      renderRepoBar();
+      await openBranch(branch, sub, gen);
+    } catch (e) {
+      if (gen === S.gen) resetPanels(errorBox(e));
+    } finally { loading(false); }
+  }
+
+  // Forget everything about the previous repository, so an error never shows next to its leftovers
+  function resetRepo() {
+    S.info = null; S.owner = S.repo = S.branch = S.sha = S.cdn = S.page = S.file = '';
+    S.shas = {}; S.branches = []; S.files = []; S.set = {}; S.truncated = false;
+    $('repoName').textContent = ''; $('repoName').removeAttribute('href');
+    $('repoDesc').textContent = $('repoMeta').textContent = ''; $('branch').innerHTML = '';
+  }
+  function resetPanels(html) {
+    $('tree').innerHTML = html; $('stage').innerHTML = html;
+    $('banner').hidden = true; $('p-code').innerHTML = ''; $('p-readme').innerHTML = '';
+    $('where').textContent = '';
+  }
+
+  function renderRepoBar() {
+    var i = S.info, n = $('repoName');
+    n.textContent = i.full_name; n.href = i.html_url;
+    $('repoDesc').textContent = $('repoDesc').title = i.description || '';
+    $('repoMeta').textContent = '★ ' + i.stargazers_count.toLocaleString() + (i.language ? ' · ' + i.language : '');
+    var sel = $('branch'); sel.innerHTML = '';
+    S.branches.forEach(function (b) { var o = document.createElement('option'); o.value = o.textContent = b; sel.appendChild(o); });
+  }
+
+  async function openBranch(branch, want, gen) {
+    gen = gen || ++S.gen;
+    loading(true);
+    try {
+      var sha = S.shas[branch] || (await gh('/repos/' + S.owner + '/' + S.repo + '/commits/' + encodeURIComponent(branch), 'branchGone')).sha;
+      // The tree is read at the commit SHA, so the file list and the files served by the CDN always match
+      var tree = await gh('/repos/' + S.owner + '/' + S.repo + '/git/trees/' + sha + '?recursive=1');
+      var files = tree.tree.filter(function (x) { return x.type === 'blob'; }).map(function (x) { return { path: x.path, size: x.size || 0 }; });
+      var cdn = await pickCdn(sha, files);
+      if (gen !== S.gen) return;
+      // Everything is known: commit it in one go, so state and screen never disagree
+      S.branch = branch; S.sha = sha; S.shas[branch] = sha; S.truncated = !!tree.truncated; S.cdn = cdn;
+      S.files = files; S.set = {}; files.forEach(function (f) { S.set[f.path] = f; });
+      S.page = S.file = '';
+      // A tag, SHA or branch past the first 100 is not in the selector yet
+      if (S.branches.indexOf(branch) < 0) {
+        S.branches.push(branch);
+        var o = document.createElement('option'); o.value = o.textContent = branch; $('branch').appendChild(o);
+      }
+      $('branch').value = branch;
+
+      $('filter').value = '';
+      renderTree();
+      loadReadme(gen);
+
+      var entry = findEntry();
+      want = (want || '').replace(/\/$/, '');
+      if (want && S.set[want] && isHtml(want)) showPage(want);
+      else if (want && S.set[want]) { showPage(entry); openFile(want); }
+      else if (want && S.set[want + '/index.html']) showPage(want + '/index.html');
+      else showPage(entry);
+      revealInTree(current());
+    } catch (e) {
+      if (gen === S.gen) {
+        $('stage').innerHTML = errorBox(e);
+        if (S.branch) $('branch').value = S.branch; // the old branch is still the one shown
+        else $('tree').innerHTML = errorBox(e);
+      }
+    } finally { loading(false); }
+  }
+
+  // jsDelivr serves files with their real types and CORS, pinned to the commit; it refuses repos over
+  // its size limit, so rawcdn.githack.com is the fallback.
+  async function pickCdn(sha, files) {
+    var bases = [
+      'https://cdn.jsdelivr.net/gh/' + S.owner + '/' + S.repo + '@' + sha + '/',
+      'https://rawcdn.githack.com/' + S.owner + '/' + S.repo + '/' + sha + '/'
+    ];
+    var probe = files.find(function (f) { return f.size < 200000; });
+    if (!probe) return bases[0];
+    for (var i = 0; i < bases.length; i++) {
+      try { var r = await fetch(bases[i] + encodePath(probe.path), { method: 'HEAD' }); if (r.ok) return bases[i]; } catch (e) {}
+    }
+    return bases[0];
+  }
+  function rawUrl(p) { return S.cdn + encodePath(p); }
+
+  function findEntry() {
+    var pref = ['index.html', 'docs/index.html', 'public/index.html', 'dist/index.html', 'build/index.html', 'site/index.html', 'www/index.html', 'src/index.html', 'index.htm'];
+    for (var i = 0; i < pref.length; i++) if (S.set[pref[i]]) return pref[i];
+    var html = S.files.filter(function (f) { return isHtml(f.path) && !/(^|\/)(node_modules|tests?|vendor|\.github)\//.test(f.path); })
+      .sort(function (a, b) { return a.path.split('/').length - b.path.split('/').length || a.path.length - b.path.length; });
+    return html.length ? html[0].path : '';
+  }
+
+  // ============ File tree ============
+  // Folders render their children only when opened, so a 10,000-file repository stays fast.
+  function buildNested() {
+    var top = { dirs: {}, files: [] };
+    S.files.forEach(function (f) {
+      var parts = f.path.split('/'), node = top;
+      for (var i = 0; i < parts.length - 1; i++) node = node.dirs[parts[i]] || (node.dirs[parts[i]] = { dirs: {}, files: [] });
+      node.files.push(f);
+    });
+    return top;
+  }
+  function fileRow(f, label) {
+    var b = document.createElement('button'), html = isHtml(f.path);
+    b.type = 'button'; b.className = 'row'; b.dataset.path = f.path; b.title = f.path;
+    b.innerHTML = '<span class="ic" aria-hidden="true">' + (html ? '◆' : '·') + '</span><span class="nm">' + esc(label) + '</span>' + (html ? '<span class="tag">HTML</span>' : '');
+    return b;
+  }
+  function renderDir(node, container, prefix) {
+    Object.keys(node.dirs).sort(function (a, b) { return a.localeCompare(b); }).forEach(function (name) {
+      var det = document.createElement('details'), kids = document.createElement('div');
+      det.dataset.dir = prefix + name + '/'; kids.className = 'kids';
+      det.innerHTML = '<summary class="row"><span class="ic" aria-hidden="true"></span><span class="nm">' + esc(name) + '</span></summary>';
+      det.appendChild(kids);
+      det.addEventListener('toggle', function () {
+        if (det.open && !kids.childElementCount) { renderDir(node.dirs[name], kids, prefix + name + '/'); markActive(); }
+      });
+      container.appendChild(det);
+    });
+    node.files.slice().sort(function (a, b) { return a.path.localeCompare(b.path); })
+      .forEach(function (f) { container.appendChild(fileRow(f, f.path.slice(prefix.length))); });
+  }
+  function renderTree() {
+    var el = $('tree'); el.innerHTML = S.truncated ? '<div class="banner">' + msg('truncated') + '</div>' : '';
+    renderDir(buildNested(), el, '');
+  }
+  function revealInTree(path) {
+    if (!path) return;
+    var parts = path.split('/'), acc = '';
+    for (var i = 0; i < parts.length - 1; i++) {
+      acc += parts[i] + '/';
+      var det = $('tree').querySelector('details[data-dir="' + CSS.escape(acc) + '"]');
+      if (det && !det.open) {
+        det.open = true;
+        var kids = det.querySelector('.kids');
+        if (!kids.childElementCount) det.dispatchEvent(new Event('toggle')); // render now: the toggle event is async
+      }
+    }
+    markActive();
+    var row = $('tree').querySelector('.row[data-path="' + CSS.escape(path) + '"]');
+    if (row) row.scrollIntoView({ block: 'nearest' });
+  }
+  // The highlighted file and the ?file= in the address follow the open tab
+  function current() { return document.body.classList.contains('on-code') ? S.file : S.page; }
+  function markActive() {
+    var cur = current();
+    $('tree').querySelectorAll('.row[data-path]').forEach(function (r) {
+      var on = r.dataset.path === cur;
+      r.classList.toggle('active', on);
+      if (on) r.setAttribute('aria-current', 'true'); else r.removeAttribute('aria-current');
+    });
+  }
+  $('tree').addEventListener('click', function (e) {
+    var row = e.target.closest('.row[data-path]'); if (!row) return;
+    var p = row.dataset.path;
+    // HTML runs in the preview, unless the Code tab is open: then its source is shown
+    if (isHtml(p) && !document.body.classList.contains('on-code')) { showPage(p); tab('preview'); } else openFile(p);
+  });
+  $('filter').addEventListener('input', function () {
+    var q = this.value.trim().toLowerCase(), el = $('tree');
+    if (!q) { renderTree(); revealInTree(current()); return; }
+    el.innerHTML = '';
+    S.files.filter(function (f) { return f.path.toLowerCase().indexOf(q) >= 0; }).slice(0, 400)
+      .forEach(function (f) { el.appendChild(fileRow(f, f.path)); });
+    markActive();
+  });
+
+  // ============ Live preview ============
+  // The project runs in a srcdoc iframe sandboxed WITHOUT allow-same-origin: it gets an opaque origin,
+  // cannot read this page, cookies or storage, and only talks to us through postMessage.
+  // A <base> pointing at the CDN makes its relative files load; SHIM (first script in its <head>)
+  // patches what an opaque srcdoc page breaks.
+  var SHIM = '(' + function (cdn, prefix) {
+    // "/x" means the repository root, not the CDN host; GitHub Pages builds also prefix "/<repo>/"
+    function fixUrl(u) {
+      if (typeof u !== 'string' || u.charAt(0) !== '/' || u.charAt(1) === '/') return u;
+      var p = u.slice(1); if (p.toLowerCase().indexOf(prefix) === 0) p = p.slice(prefix.length);
+      return cdn + p;
+    }
+    function fixSrcset(v) { return v.split(',').map(function (c) { var t = c.trim().split(/\s+/); t[0] = fixUrl(t[0]); return t.join(' '); }).join(', '); }
+    function fixEl(el) {
+      if (!el.getAttribute) return;
+      ['src', 'href', 'poster', 'data'].forEach(function (a) { var v = el.getAttribute(a), f = fixUrl(v); if (v && f !== v) el.setAttribute(a, f); });
+      var s = el.getAttribute('srcset'); if (s && /(^|,)\s*\/(?!\/)/.test(s)) el.setAttribute('srcset', fixSrcset(s));
+    }
+    new MutationObserver(function (list) {
+      list.forEach(function (m) {
+        if (m.type === 'attributes') fixEl(m.target);
+        else m.addedNodes.forEach(function (n) { if (n.nodeType === 1) { fixEl(n); n.querySelectorAll('[src],[href],[srcset],[poster],[data]').forEach(fixEl); } });
+      });
+    }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['src', 'href', 'srcset', 'poster', 'data'] });
+
+    // Scripts that load "/data.json" by fetch or XHR
+    var f0 = window.fetch; if (f0) window.fetch = function (u, o) { return f0.call(window, fixUrl(u), o); };
+    var x0 = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function (m, u) { var a = [].slice.call(arguments); a[1] = fixUrl(u); return x0.apply(this, a); };
+
+    // Storage and cookies throw in an opaque origin: give the page a memory-only version instead of a crash
+    function mem() { var d = {}; return { getItem: function (k) { return Object.prototype.hasOwnProperty.call(d, k) ? d[k] : null; }, setItem: function (k, v) { d[k] = String(v); }, removeItem: function (k) { delete d[k]; }, clear: function () { d = {}; }, key: function (i) { return Object.keys(d)[i] || null; }, get length() { return Object.keys(d).length; } }; }
+    ['localStorage', 'sessionStorage'].forEach(function (n) { try { window[n].getItem('x'); } catch (e) { try { Object.defineProperty(window, n, { value: mem(), configurable: true }); } catch (e2) {} } });
+    try { document.cookie; } catch (e) {
+      var jar = {};
+      try { Object.defineProperty(document, 'cookie', { configurable: true, get: function () { return Object.keys(jar).map(function (k) { return k + '=' + jar[k]; }).join('; '); }, set: function (v) { var kv = String(v).split(';')[0], i = kv.indexOf('='); if (i > 0) jar[kv.slice(0, i).trim()] = kv.slice(i + 1); } }); } catch (e2) {}
+    }
+    // Single-page apps call pushState with paths that are cross-origin from about:srcdoc: ignore instead of crashing
+    ['pushState', 'replaceState'].forEach(function (n) { var h0 = history[n]; history[n] = function () { try { return h0.apply(history, arguments); } catch (e) {} }; });
+
+    // Links: other pages of the project open in the visualiser, outside links in a new tab, #anchors scroll
+    // Bubble phase on window: the page's own handlers (single-page-app routers) run first and win
+    window.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href], a[*|href]'); if (!a || e.defaultPrevented) return;
+      var raw = a.getAttribute('href') || a.getAttribute('xlink:href') || '';
+      // "#x" would resolve against <base> and leave the page: change only the hash, so hashchange routers work
+      if (raw.charAt(0) === '#') { e.preventDefault(); try { location.hash = raw; } catch (err) {} if (raw === '#' || raw === '#top') scrollTo(0, 0); return; }
+      if (/^(javascript|mailto|tel|data|blob):/i.test(raw)) return;
+      var url; try { url = new URL(raw, document.baseURI).href; } catch (err) { return; }
+      if (url.indexOf(cdn) === 0) {
+        e.preventDefault();
+        var path = url.slice(cdn.length).split(/[?#]/)[0]; try { path = decodeURIComponent(path); } catch (err) {}
+        parent.postMessage({ visNav: path }, '*');
+      } else if (/^https?:/i.test(url)) { e.preventDefault(); window.open(url, '_blank', 'noopener'); }
+    });
+    // new Worker('w.js') would load cross-origin from the CDN and fail: start it from a blob that imports the file
+    if (window.Worker) {
+      var W0 = window.Worker;
+      window.Worker = function (u, o) {
+        if (typeof u === 'string' && !/^(blob|data):/.test(u) && !(o && o.type === 'module')) {
+          try { var abs = new URL(fixUrl(u), document.baseURI).href; u = URL.createObjectURL(new Blob(['importScripts(' + JSON.stringify(abs) + ')'], { type: 'text/javascript' })); } catch (err) {}
+        }
+        return new W0(u, o);
+      };
+      window.Worker.prototype = W0.prototype;
+    }
+  } + ')';
+
+  function rootRelative(v) { return v && v.charAt(0) === '/' && v.charAt(1) !== '/'; }
+  // Same rule as fixUrl() in SHIM, but able to check the file list first
+  function toCdn(v) {
+    var p = v.slice(1), clean = p.split(/[?#]/)[0], prefix = S.repo.toLowerCase() + '/';
+    if (!S.set[clean] && clean.toLowerCase().indexOf(prefix) === 0) p = p.slice(prefix.length);
+    return S.cdn + p;
+  }
+  function fixCss(css) { return css.replace(/url\(\s*(['"]?)\/(?!\/)/g, function (m, q) { return 'url(' + q + S.cdn; }); }
+
+  async function showPage(path) {
+    var gen = S.gen;
+    S.page = path; syncUrl(); markActive();
+    var stage = $('stage'), banner = $('banner');
+    $('where').textContent = path || '';
+    banner.hidden = true; banner.innerHTML = '';
+    if (!path) { stage.innerHTML = emptyBox('noHtml', '', 'noHtmlSub'); offerGhPages(); return; }
+    stage.innerHTML = emptyBox('loading');
+    loading(true);
+    try {
+      var r = await fetch(rawUrl(path));
+      if (!r.ok) throw fail('fail');
+      var html = await r.text();
+      if (gen !== S.gen || S.page !== path) return;
+
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      doc.querySelectorAll('[src],[href],[poster]').forEach(function (el) {
+        ['src', 'href', 'poster'].forEach(function (a) { var v = el.getAttribute(a); if (rootRelative(v)) el.setAttribute(a, toCdn(v)); });
+      });
+      doc.querySelectorAll('[srcset]').forEach(function (el) {
+        el.setAttribute('srcset', el.getAttribute('srcset').split(',').map(function (c) {
+          var t = c.trim().split(/\s+/); if (rootRelative(t[0])) t[0] = toCdn(t[0]); return t.join(' ');
+        }).join(', '));
+      });
+      doc.querySelectorAll('style').forEach(function (s) { s.textContent = fixCss(s.textContent); });
+      doc.querySelectorAll('[style]').forEach(function (el) { el.setAttribute('style', fixCss(el.getAttribute('style'))); });
+      doc.querySelectorAll('base').forEach(function (b) { b.remove(); });
+
+      var head = doc.head || doc.documentElement.insertBefore(doc.createElement('head'), doc.body);
+      var base = doc.createElement('base'); base.href = S.cdn + encodePath(dirOf(path));
+      var shim = doc.createElement('script');
+      shim.textContent = SHIM + '(' + JSON.stringify(S.cdn) + ',' + JSON.stringify(S.repo.toLowerCase() + '/') + ');';
+      head.insertBefore(shim, head.firstChild); head.insertBefore(base, head.firstChild);
+      var doctype = /^\s*(<!--[\s\S]*?-->\s*)*<!doctype/i.test(html) ? '<!DOCTYPE html>' : '';
+
+      if (needsBuild(html)) { banner.innerHTML = msg('needsBuild'); banner.hidden = false; offerGhPages(); }
+      var f = document.createElement('iframe');
+      f.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-pointer-lock');
+      f.setAttribute('allow', 'fullscreen; autoplay; gamepad');
+      f.title = path;
+      f.srcdoc = doctype + doc.documentElement.outerHTML;
+      stage.innerHTML = ''; stage.appendChild(f);
+    } catch (e) {
+      if (gen === S.gen && S.page === path) stage.innerHTML = errorBox(e.key ? e : fail('fail'));
+    } finally { loading(false); }
+  }
+  function needsBuild(html) {
+    return !!S.set['package.json'] && (
+      /<script[^>]+src=["'][^"']*\.(jsx|tsx|ts|vue|svelte)["']/i.test(html) ||
+      /<script[^>]+type=["']module["'][^>]+src=["']\/?src\//i.test(html) ||
+      /%PUBLIC_URL%/.test(html));
+  }
+  function offerGhPages() {
+    if (S.branch === 'gh-pages' || S.branches.indexOf('gh-pages') < 0) return;
+    var banner = $('banner'), b = document.createElement('button');
+    b.className = 'go'; b.type = 'button'; b.dataset.t = 'ghPages'; b.textContent = t('ghPages');
+    b.onclick = function () { openBranch('gh-pages', ''); };
+    banner.appendChild(b); banner.hidden = false;
+  }
+  // Only the current preview iframe may ask to navigate, and only to files of this repository
+  window.addEventListener('message', function (e) {
+    var f = $('stage').querySelector('iframe');
+    if (!f || e.source !== f.contentWindow || !e.data || typeof e.data.visNav !== 'string') return;
+    var p = e.data.visNav.replace(/^\/+/, '');
+    if (p === '' || /\/$/.test(p)) p += 'index.html';
+    if (S.set[p]) { if (isHtml(p)) { showPage(p); tab('preview'); } else openFile(p); revealInTree(p); }
+    else if (S.set[p + '/index.html']) { showPage(p + '/index.html'); tab('preview'); revealInTree(p + '/index.html'); }
+  });
+
+  // ============ Code view ============
+  async function openFile(path) {
+    var gen = S.gen, f = S.set[path], pane = $('p-code'), e = ext(path);
+    if (!f) return;
+    S.file = path; syncUrl(); markActive(); tab('code');
+    $('where').textContent = path;
+    var head = '<div class="code-head mono"><span>' + esc(path) + '</span><span>' + (f.size / 1024).toFixed(1) + ' KB</span><span class="spacer"></span>' +
+      (isHtml(path) ? '<button class="pill" type="button" id="runThis">' + msg('runThis') + '</button>' : '') +
+      '<a class="pill" target="_blank" rel="noopener" href="' + esc(S.info.html_url + '/blob/' + S.sha + '/' + encodePath(path)) + '">' + msg('openGh') + '</a></div>';
+    function show(body) {
+      pane.innerHTML = head + body;
+      var run = $('runThis'); if (run) run.onclick = function () { showPage(path); tab('preview'); };
+    }
+    if (IMG.indexOf(e) >= 0) return show('<div class="img-view"><img alt="" src="' + esc(rawUrl(path)) + '"></div>');
+    if (BIN.indexOf(e) >= 0) return show(emptyBox('binary'));
+    if (f.size > 1500000) return show(emptyBox('tooBig'));
+    show(emptyBox('loading'));
+    loading(true);
+    try {
+      var r = await fetch(rawUrl(path)); if (!r.ok) throw fail('fail');
+      var text = await r.text();
+      if (gen !== S.gen || S.file !== path) return;
+      var language = hljs.getLanguage(e) ? e : HL_ALIAS[e];
+      var out = (text.length < 300000 && language && hljs.getLanguage(language))
+        ? hljs.highlight(text, { language: language, ignoreIllegals: true }).value : esc(text);
+      show('<pre class="code mono"><code class="hljs">' + splitLines(out) + '</code></pre>');
+    } catch (err) {
+      if (gen === S.gen && S.file === path) show(emptyBox('fail', 'err'));
+    } finally { loading(false); }
+  }
+  // One <span class="ln"> per line (for line numbers). highlight.js spans can cross line breaks,
+  // so each line closes the spans still open and the next line reopens them.
+  function splitLines(html) {
+    var open = [];
+    return html.split('\n').map(function (line) {
+      var start = open.join(''), re = /<span[^>]*>|<\/span>/g, m;
+      while ((m = re.exec(line))) { if (m[0] === '</span>') open.pop(); else open.push(m[0]); }
+      return '<span class="ln">' + start + line + '</span>'.repeat(open.length) + '</span>';
+    }).join('');
+  }
+
+  // ============ README ============
+  // Rendered in an iframe sandboxed with no scripts at all: raw HTML inside a README cannot run.
+  // Its own CSS follows the visitor's light/dark setting.
+  async function loadReadme(gen) {
+    var pane = $('p-readme');
+    var file = S.files.find(function (f) { return /^readme(\.(md|markdown|txt|rst))?$/i.test(f.path); });
+    if (!file) { pane.innerHTML = emptyBox('noReadme'); return; }
+    pane.innerHTML = emptyBox('loading');
+    try {
+      var r = await fetch(rawUrl(file.path)); if (!r.ok) throw fail('fail');
+      var text = await r.text();
+      if (gen !== S.gen) return;
+      var body = /\.(md|markdown)$/i.test(file.path) ? marked.parse(text) : '<pre>' + esc(text) + '</pre>';
+      var css = ':root{color-scheme:light dark;--bg:#fff;--fg:#111;--soft:#eeeeea;--line:#e2e2de}' +
+        '@media (prefers-color-scheme:dark){:root{--bg:#1c1c1c;--fg:#f2f2f2;--soft:#262626;--line:#2c2c2c}}' +
+        'body{margin:0;padding:24px 32px;max-width:860px;font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--fg)}' +
+        'img{max-width:100%}pre{overflow:auto;padding:12px;border-radius:8px;background:var(--soft)}code{font-family:ui-monospace,Menlo,monospace;font-size:13px}' +
+        'a{color:inherit}table{border-collapse:collapse}td,th{border:1px solid var(--line);padding:4px 8px}h1,h2{border-bottom:1px solid var(--line);padding-bottom:.3em}';
+      var f = document.createElement('iframe');
+      f.className = 'readme-frame'; f.title = 'README';
+      f.setAttribute('sandbox', 'allow-popups allow-popups-to-escape-sandbox');
+      f.srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"><base href="' + esc(S.cdn + encodePath(dirOf(file.path))) + '" target="_blank"><style>' + css + '</style></head><body>' + body + '</body></html>';
+      pane.innerHTML = ''; pane.appendChild(f);
+    } catch (e) { if (gen === S.gen) pane.innerHTML = emptyBox('fail', 'err'); }
+  }
+
+  // ============ Tabs, devices, URL ============
+  function tab(name) {
+    document.body.classList.toggle('on-code', name === 'code');
+    document.querySelectorAll('.tab').forEach(function (b) { var on = b.dataset.tab === name; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+    document.querySelectorAll('.panel').forEach(function (p) { p.hidden = p.id !== 'p-' + name; });
+    document.body.classList.toggle('on-preview', name === 'preview');
+    if (name === 'code' && !S.file) $('p-code').innerHTML = emptyBox('pickFile');
+    $('where').textContent = name === 'code' ? S.file : name === 'preview' ? S.page : '';
+    if (S.repo) { syncUrl(); markActive(); }
+  }
+  document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { tab(b.dataset.tab); }); });
+  $('tablist').addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    var tabs = [].slice.call(this.querySelectorAll('.tab')), i = tabs.indexOf(document.activeElement);
+    var next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+    tab(next.dataset.tab); next.focus();
+  });
+  document.querySelectorAll('[data-dev]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('[data-dev]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      $('stage').className = 'stage ' + b.dataset.dev;
+    });
+  });
+  $('reload').addEventListener('click', function () { if (S.page) showPage(S.page); });
+  $('viewSource').addEventListener('click', function () { if (S.page) openFile(S.page); });
+  $('branch').addEventListener('change', function () { openBranch(this.value, ''); });
+
+  // The address bar always describes what is shown, so a link can be shared
+  function syncUrl() {
+    var q = new URLSearchParams();
+    q.set('repo', S.owner + '/' + S.repo);
+    if (S.info && S.branch !== S.info.default_branch) q.set('branch', S.branch);
+    var f = current(); if (f) q.set('file', f);
+    history.replaceState(null, '', '?' + q.toString());
+  }
+
+  function submit(e) { e.preventDefault(); var v = e.target.q.value; if (v.trim()) openRepo(v); }
+  $('mainForm').addEventListener('submit', submit);
+  $('topForm').addEventListener('submit', submit);
+  document.querySelectorAll('[data-ex]').forEach(function (b) { b.addEventListener('click', function () { openRepo(b.dataset.ex); }); });
+
+  var q = new URLSearchParams(location.search);
+  if (q.get('repo')) openRepo(q.get('repo'), { branch: q.get('branch') || '', file: q.get('file') || '' });
+})();
+</script>
+</body>
+</html>
