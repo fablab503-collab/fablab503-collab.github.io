@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; upgrade-insecure-requests">
+<title>Lava · D-CREATIONS</title>
+<meta name="description" content="Écran de veille Lava de D-CREATIONS : bulles noires et blanches en plein écran. / D-CREATIONS Lava screensaver, full screen.">
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="https://dcreations.fr/library/lava/">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<style>
+  /* Screensaver: the site's lava (public/lava/lava.js) alone on a black or white screen.
+     Click or press F for full screen; the cursor hides after 2 s without moving. */
+  :root { --bg: #000; color-scheme: dark; }
+  :root[data-theme="light"] { --bg: #fff; color-scheme: light; }
+  html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
+  .lava-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; mix-blend-mode: difference; }
+  .hint { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); font: 500 14px/1.4 -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #fff; mix-blend-mode: difference; opacity: .7; transition: opacity .6s; pointer-events: none; text-align: center; padding: 0 16px; }
+  .idle, .idle * { cursor: none; }
+  .idle .hint { opacity: 0; }
+</style>
+</head>
+<body>
+<canvas class="lava-canvas" data-lava aria-hidden="true"></canvas>
+<p class="hint">F : plein écran · L : clair / sombre — F: full screen · L: light / dark</p>
+<script src="/lava/lava.js" defer></script>
+<script>
+  (function () {
+    var d = document.documentElement, t;
+    function wake() { d.classList.remove('idle'); clearTimeout(t); t = setTimeout(function () { d.classList.add('idle'); }, 2000); }
+    function full() { if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(function () {}); else if (document.exitFullscreen) document.exitFullscreen(); }
+    addEventListener('mousemove', wake); addEventListener('keydown', function (e) {
+      if (e.key === 'f' || e.key === 'F') full();
+      if (e.key === 'l' || e.key === 'L') d.dataset.theme = d.dataset.theme === 'light' ? '' : 'light';
+      wake();
+    });
+    addEventListener('dblclick', full);
+    wake();
+  })();
+</script>
+</body>
+</html>
