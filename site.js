@@ -77,6 +77,27 @@
     closeMenus(inside);
   });
 
+  // Privacy page: "don't count my visits" switch for the visit counter (hit.js reads dc-nostats).
+  var ns = document.querySelector('button[data-nostats]');
+  if (ns) {
+    var nsStatus = document.querySelector('[data-nostats-status]');
+    var nsShow = function () {
+      var off = false; try { off = localStorage.getItem('dc-nostats') === '1'; } catch (e) {}
+      ns.textContent = ns.getAttribute(off ? 'data-on' : 'data-off');
+      ns.setAttribute('aria-pressed', off ? 'true' : 'false');
+      if (nsStatus) nsStatus.textContent = off ? ' ' + nsStatus.getAttribute('data-done') : '';
+    };
+    ns.hidden = false;
+    nsShow();
+    ns.addEventListener('click', function () {
+      try {
+        if (localStorage.getItem('dc-nostats') === '1') localStorage.removeItem('dc-nostats');
+        else localStorage.setItem('dc-nostats', '1');
+      } catch (e) {}
+      nsShow();
+    });
+  }
+
   var btns = document.querySelectorAll('button[data-copy]');
   for (var j = 0; j < btns.length; j++) btns[j].hidden = false;
 

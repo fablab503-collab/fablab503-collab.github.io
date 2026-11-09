@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self' http://127.0.0.1:8788; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Visit Stats · D-CREATIONS</title>
+<link rel="canonical" href="https://dcreations.fr/stats/">
+<style>
+  /* Private dashboard for the visit counter (Worker dcreations-visit-stats, visit-stats/README.md).
+     The data needs the STATS_TOKEN; the page itself holds nothing. */
+  :root { --bg: #f4f4f2; --card: #ffffff; --text: #111111; --text-2: #5a5a5a; --line: #e2e2de; --accent: #111111; --accent-fg: #ffffff;
+          --bar: #2a6df4; --bar-2: #b9cdfb; --good: #127a3a; --bad: #b3261e; --track: #ececea; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #121212; --card: #1c1c1c; --text: #f2f2f2; --text-2: #a8a8a8; --line: #2c2c2c; --accent: #f2f2f2; --accent-fg: #111111;
+          --bar: #6d9bff; --bar-2: #2f4472; --good: #5cc98a; --bad: #ff8a80; --track: #262626; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 20px 0 8px; font-size: 14px; flex-wrap: wrap; }
+  header a { color: var(--text-2); text-decoration: none; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 12px 0 4px; letter-spacing: -0.02em; }
+  .sub { color: var(--text-2); margin: 0 0 20px; font-size: 14px; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+  .tabs button, .ghost { background: var(--card); border: 1px solid var(--line); color: var(--text); border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; cursor: pointer; }
+  .tabs button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; min-width: 0; }
+  .kpi .label { color: var(--text-2); font-size: 13px; }
+  .kpi .value { font-size: 30px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .kpi .delta { font-size: 13px; color: var(--text-2); }
+  .delta.up { color: var(--good); } .delta.down { color: var(--bad); }
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 6px; vertical-align: 1px; }
+  .chart { margin-bottom: 12px; }
+  .chart h2, .panel h2 { font-size: 15px; margin: 0 0 12px; display: flex; justify-content: space-between; gap: 8px; }
+  .chart h2 span, .panel h2 span { color: var(--text-2); font-weight: 400; font-size: 13px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin: 0 4px 0 12px; vertical-align: -1px; }
+  svg.bars { width: 100%; height: 220px; display: block; overflow: visible; }
+  svg.bars text { fill: var(--text-2); font-size: 11px; }
+  svg.bars .grid { stroke: var(--line); }
+  svg.bars rect.v { fill: var(--bar-2); } svg.bars rect.u { fill: var(--bar); }
+  svg.bars g.col:hover rect { opacity: .8; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
+  ol.list { list-style: none; margin: 0; padding: 0; }
+  ol.list li { position: relative; display: flex; justify-content: space-between; gap: 10px; padding: 5px 8px; margin: 2px 0; font-size: 14px; border-radius: 6px; overflow: hidden; }
+  ol.list li .fill { position: absolute; inset: 0 auto 0 0; background: var(--track); z-index: 0; border-radius: 6px; }
+  ol.list li > span { position: relative; z-index: 1; }
+  ol.list li .k { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  ol.list li .n { font-variant-numeric: tabular-nums; color: var(--text-2); flex: none; }
+  ol.list li .n b { color: var(--text); font-weight: 600; }
+  .empty { color: var(--text-2); font-size: 14px; padding: 6px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--text-2); font-weight: 500; }
+  td.path { max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+  .tablewrap { overflow-x: auto; }
+  .login { max-width: 420px; margin: 40px auto; }
+  .login input { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); margin: 10px 0; }
+  .btn { background: var(--accent); color: var(--accent-fg); border: 0; border-radius: 999px; padding: 9px 18px; font: inherit; font-weight: 600; cursor: pointer; }
+  .err { color: var(--bad); font-size: 14px; min-height: 1.5em; }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  footer { margin: 32px 0; font-size: 13px; color: var(--text-2); }
+  [hidden] { display: none !important; }
+  @media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, 1fr); } .grid3 { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .grid2, .grid3 { grid-template-columns: 1fr; } .kpi .value { font-size: 26px; } h1 { font-size: 26px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="/">← D-CREATIONS</a>
+    <span class="tools" id="tools" hidden>
+      <button type="button" class="ghost" id="refresh">Refresh</button>
+      <button type="button" class="ghost" id="counting" aria-pressed="true">Counter: on</button>
+      <button type="button" class="ghost" id="nostats" aria-pressed="false">Count my visits: on</button>
+      <button type="button" class="ghost" id="logout">Log out</button>
+    </span>
+  </header>
+
+  <section id="login" class="card login" hidden>
+    <h1>Visit Stats</h1>
+    <p class="sub">Private. Enter the stats token (Keychain item <code>dcreations-visit-stats</code>).</p>
+    <form id="loginForm">
+      <label for="token" class="sub">Token</label>
+      <input id="token" type="password" autocomplete="current-password" required>
+      <div class="err" id="loginErr" role="alert"></div>
+      <button class="btn" type="submit">Open</button>
+    </form>
+  </section>
+
+  <main id="dash" hidden>
+    <h1>Visit Stats</h1>
+    <p class="sub" id="range">…</p>
+    <div class="tabs" role="group" aria-label="Period">
+      <button type="button" data-days="1">Today</button>
+      <button type="button" data-days="7">7 days</button>
+      <button type="button" data-days="30">30 days</button>
+      <button type="button" data-days="90">90 days</button>
+      <button type="button" data-days="365">12 months</button>
+    </div>
+
+    <div class="kpis">
+      <div class="card kpi"><div class="label">Visitors</div><div class="value" id="kVisitors">–</div><div class="delta" id="dVisitors"></div></div>
+      <div class="card kpi"><div class="label">Page views</div><div class="value" id="kViews">–</div><div class="delta" id="dViews"></div></div>
+      <div class="card kpi"><div class="label">Pages per visitor</div><div class="value" id="kPpv">–</div><div class="delta">&nbsp;</div></div>
+      <div class="card kpi"><div class="label"><span class="live-dot"></span>Live (last 5 min)</div><div class="value" id="kLive">–</div><div class="delta">&nbsp;</div></div>
+    </div>
+
+    <section class="card chart">
+      <h2 id="chartTitle">Per day <span class="legend"><i style="background:var(--bar)"></i>visitors<i style="background:var(--bar-2)"></i>page views</span></h2>
+      <svg class="bars" id="chart" role="img" aria-label="Visits over time"></svg>
+    </section>
+
+    <div class="grid2">
+      <section class="card panel"><h2>Pages <span>visitors · views</span></h2><ol class="list" id="pages"></ol></section>
+      <section class="card panel"><h2>Countries <span>visitors</span></h2><ol class="list" id="countries"></ol></section>
+      <section class="card panel"><h2>Cities <span>visitors</span></h2><ol class="list" id="cities"></ol></section>
+      <section class="card panel"><h2>Came from <span>visitors</span></h2><ol class="list" id="referrers"></ol></section>
+    </div>
+    <div class="grid3">
+      <section class="card panel"><h2>Devices</h2><ol class="list" id="devices"></ol></section>
+      <section class="card panel"><h2>Browsers</h2><ol class="list" id="browsers"></ol></section>
+      <section class="card panel"><h2>Systems</h2><ol class="list" id="os"></ol></section>
+    </div>
+    <div class="grid2">
+      <section class="card panel"><h2>Languages <span>browser setting</span></h2><ol class="list" id="langs"></ol></section>
+      <section class="card panel"><h2>About these numbers</h2>
+        <p class="sub" style="margin:0">Cookieless. A visitor is one browser on one network on one day: the code changes every day, so "visitors" over 30 days counts a person who came on 3 days 3 times, and a phone moving from Wi-Fi to 4G can count twice. Bots, scripts and browsers that ask not to be tracked (GPC / Do Not Track) are left out. Country and city are Cloudflare's estimate. Single page views exist for today only; finished days are kept as daily totals for 400 days. Changes compare with the same number of days just before; today is still running, so it pulls the change down until evening. No change is shown for Today, or when the days before are no longer kept.</p>
+      </section>
+    </div>
+
+    <section class="card panel">
+      <h2>Today's latest page views <span>auto-refresh every minute</span></h2>
+      <div class="tablewrap"><table><thead><tr><th>Time</th><th>Page</th><th>From</th><th>Where</th><th>Device</th></tr></thead><tbody id="recent"></tbody></table></div>
+    </section>
+    <footer>Counter: Worker <code>dcreations-visit-stats</code> · <span id="updated"></span></footer>
+  </main>
+</div>
+<script src="stats.js"></script>
+</body>
+</html>
