@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Word Frequency Chart · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/064-word-frequency-chart/">
+  <meta name="description" content="Count every word in the input and render a horizontal bar chart of the top-20 most frequent terms.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 0.5rem;
+      background-color: var(--card);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      resize: vertical;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: var(--card);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: var(--line);
+    }
+    .chart {
+      margin-top: 2rem;
+    }
+    .bar-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .word {
+      width: 120px;
+      font-size: 0.9rem;
+      color: var(--text-2);
+    }
+    .bar {
+      height: 20px;
+      background-color: var(--line);
+      border-radius: 3px;
+      margin-left: 1rem;
+      position: relative;
+      flex-grow: 1;
+    }
+    .fill {
+      height: 100%;
+      background-color: var(--text);
+      border-radius: 3px;
+      width: 0;
+    }
+    .count {
+      margin-left: 1rem;
+      font-size: 0.9rem;
+      color: var(--text-2);
+      min-width: 40px;
+      text-align: right;
+    }
+    .footer {
+      margin-top: 3rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-2);
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/503/">← Project 503</a>
+    <h1>Word Frequency Chart</h1>
+    <textarea id="input" placeholder="Enter your text here..."></textarea>
+    <button id="analyze">Analyze Words</button>
+    <div class="chart" id="chart"></div>
+    <div class="footer">
+      Project #64 of 503 · Daniel Madac, D-CREATIONS
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const analyzeBtn = document.getElementById('analyze');
+    const chart = document.getElementById('chart');
+
+    function getWordFrequency(text) {
+      const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+      const freq = {};
+      for (const word of words) {
+        freq[word] = (freq[word] || 0) + 1;
+      }
+      return Object.entries(freq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 20);
+    }
+
+    function renderChart(data) {
+      chart.innerHTML = '';
+      if (data.length === 0) {
+        chart.textContent = 'No words found.';
+        return;
+      }
+      const maxCount = data[0][1];
+      for (const [word, count] of data) {
+        const container = document.createElement('div');
+        container.className = 'bar-container';
+        const wordEl = document.createElement('div');
+        wordEl.className = 'word';
+        wordEl.textContent = word;
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        const fill = document.createElement('div');
+        fill.className = 'fill';
+        fill.style.width = `${(count / maxCount) * 100}%`;
+        bar.appendChild(fill);
+        const countEl = document.createElement('div');
+        countEl.className = 'count';
+        countEl.textContent = count;
+        container.appendChild(wordEl);
+        container.appendChild(bar);
+        container.appendChild(countEl);
+        chart.appendChild(container);
+      }
+    }
+
+    function saveToStorage(text) {
+      try {
+        localStorage.setItem('wordFrequencyText', text);
+      } catch (e) {}
+    }
+
+    function loadFromStorage() {
+      try {
+        const saved = localStorage.getItem('wordFrequencyText');
+        if (saved) input.value = saved;
+      } catch (e) {}
+    }
+
+    analyzeBtn.addEventListener('click', () => {
+      const text = input.value;
+      saveToStorage(text);
+      const freqData = getWordFrequency(text);
+      renderChart(freqData);
+    });
+
+    loadFromStorage();
+  </script>
+</body>
+</html>

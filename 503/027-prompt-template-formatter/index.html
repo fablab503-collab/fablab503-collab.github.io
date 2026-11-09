@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Turn a multi-turn conversation into a ChatML, Llama-3 or Alpaca prompt and count its special control tokens, fully offline in your browser.">
+<link rel="canonical" href="https://dcreations.fr/503/027-prompt-template-formatter/">
+<title>Prompt Template Formatter · Project 503 · D-CREATIONS</title>
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --card: #fff;
+    --text: #111;
+    --text-2: #5a5a5a;
+    --line: #e2e2de;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --card: #1c1c1c;
+      --text: #f2f2f2;
+      --text-2: #a8a8a8;
+      --line: #2c2c2c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .toplink {
+    display: inline-block;
+    padding: 14px 16px 0;
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .toplink:hover { color: var(--text); text-decoration: underline; }
+  main { max-width: 760px; margin: 0 auto; padding: 0 16px 8px; }
+  h1 { font-size: 24px; margin: 10px 0 4px; }
+  .lede { color: var(--text-2); margin: 0 0 20px; max-width: 62ch; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--text-2);
+    margin: 0 0 12px;
+  }
+  .templates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tpl {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+  .tpl:hover { border-color: var(--text-2); }
+  .tpl.sel { border-color: var(--text); box-shadow: 0 0 0 1px var(--text); }
+  .tpl input { margin-right: 6px; }
+  .tpl strong { font-size: 14px; }
+  .tpl-desc { display: block; color: var(--text-2); font-size: 12px; margin: 2px 0 6px; }
+  .tpl-hint {
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--text-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14px; color: var(--text-2); }
+  .msg { border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+  .msg-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  select {
+    font: inherit;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 5px 8px;
+  }
+  .msg-actions { display: flex; gap: 6px; }
+  textarea {
+    width: 100%;
+    font: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    resize: vertical;
+  }
+  textarea:focus, select:focus, button:focus-visible, input:focus-visible { outline: 2px solid var(--text-2); outline-offset: 1px; }
+  #output {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  button {
+    font: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--text-2); }
+  button.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+  button.mini { font-size: 12px; padding: 3px 9px; }
+  .muted { color: var(--text-2); font-size: 13px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .chip code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--text);
+  }
+  .chip.zero { opacity: .55; }
+  #tokenSummary { font-size: 15px; margin: 0; }
+  footer {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 16px 28px;
+    color: var(--text-2);
+    font-size: 13px;
+  }
+  @media (max-width: 560px) {
+    .templates { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<a class="toplink" href="/503/">← Project 503</a>
+<main>
+  <h1>Prompt Template Formatter</h1>
+  <p class="lede">Pick a template, type a conversation, and get the exact prompt string a model expects, with a count of its special control tokens. Everything runs locally in your browser; nothing is sent anywhere.</p>
+
+  <section class="card">
+    <h2>1 · Template</h2>
+    <div class="templates" id="templates">
+      <label class="tpl sel" data-t="chatml">
+        <input type="radio" name="tpl" value="chatml" checked>
+        <strong>ChatML</strong>
+        <span class="tpl-desc">Qwen, Hermes and many open models</span>
+        <code class="tpl-hint">&lt;|im_start|&gt;user …&lt;|im_end|&gt;</code>
+      </label>
+      <label class="tpl" data-t="llama3">
+        <input type="radio" name="tpl" value="llama3">
+        <strong>Llama-3</strong>
+        <span class="tpl-desc">Meta Llama 3 and 3.1 instruct</span>
+        <code class="tpl-hint">&lt;|start_header_id|&gt;user&lt;|end_header_id|&gt;</code>
+      </label>
+      <label class="tpl" data-t="alpaca">
+        <input type="radio" name="tpl" value="alpaca">
+        <strong>Alpaca</strong>
+        <span class="tpl-desc">Classic instruction format, turns as Human / Assistant</span>
+        <code class="tpl-hint">### Human: … ### Assistant:</code>
+      </label>
+    </div>
+    <label class="check"><input type="checkbox" id="genPrompt" checked> End with the assistant opening, ready for the model to answer</label>
+  </section>
+
+  <section class="card">
+    <h2>2 · Conversation</h2>
+    <div id="messages"></div>
+    <div class="row">
+      <button id="addMsg" class="primary" type="button">Add message</button>
+      <button id="loadExample" type="button">Load example</button>
+      <button id="clearAll" type="button">Clear all</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>3 · Formatted prompt</h2>
+    <textarea id="output" rows="12" readonly spellcheck="false" placeholder="The formatted prompt appears here."></textarea>
+    <div class="row">
+      <button id="copyBtn" class="primary" type="button">Copy</button>
+      <span id="copyState" class="muted"></span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>4 · Control tokens</h2>
+    <p id="tokenSummary"></p>
+    <div class="chips" id="tokenChips"></div>
+    <p class="muted" id="approx"></p>
+  </section>
+</main>
+<footer>Project #27 of 503 · Daniel Madac, D-CREATIONS</footer>
+<script>
+(function () {
+  'use strict';
+
+  var TEMPLATES = {
+    chatml: {
+      name: 'ChatML',
+      tokens: ['<|im_start|>', '<|im_end|>'],
+      render: function (msgs, gen) {
+        var out = '';
+        for (var i = 0; i < msgs.length; i++) {
+          out += '<|im_start|>' + msgs[i].role + '\n' + msgs[i].content + '<|im_end|>\n';
+        }
+        if (gen && msgs.length && msgs[msgs.length - 1].role === 'user') {
+          out += '<|im_start|>assistant\n';
+        }
+        return out;
+      }
+    },
+    llama3: {
+      name: 'Llama-3',
+      tokens: ['<|begin_of_text|>', '<|start_header_id|>', '<|end_header_id|>', '<|eot_id|>'],
+      render: function (msgs, gen) {
+        var out = '<|begin_of_text|>';
+        for (var i = 0; i < msgs.length; i++) {
+          out += '<|start_header_id|>' + msgs[i].role + '<|end_header_id|>\n\n' + msgs[i].content + '<|eot_id|>';
+        }
+        if (gen && msgs.length && msgs[msgs.length - 1].role === 'user') {
+          out += '<|start_header_id|>assistant<|end_header_id|>\n\n';
+        }
+        return out;
+      }
+    },
+    alpaca: {
+      name: 'Alpaca',
+      tokens: ['### Instruction:', '### Human:', '### Assistant:'],
+      render: function (msgs, gen) {
+        var sysParts = [];
+        var turns = [];
+        for (var i = 0; i < msgs.length; i++) {
+          if (msgs[i].role === 'system') sysParts.push(msgs[i].content);
+          else turns.push(msgs[i]);
+        }
+        var out = 'Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n### Instruction:\n' + (sysParts.join('\n\n') || 'Answer the user below.');
+        for (var j = 0; j < turns.length; j++) {
+          out += '\n\n### ' + (turns[j].role === 'user' ? 'Human' : 'Assistant') + ':\n' + turns[j].content;
+        }
+        if (gen && turns.length && turns[turns.length - 1].role === 'user') {
+          out += '\n\n### Assistant:\n';
+        }
+        return out;
+      }
+    }
+  };
+
+  var DEFAULT_MESSAGES = [
+    { role: 'system', content: 'You are a helpful assistant.' },
+    { role: 'user', content: 'What is a control token?' }
+  ];
+  var EXAMPLE = [
+    { role: 'system', content: 'You are a concise assistant. Answer in one sentence.' },
+    { role: 'user', content: 'What is a prompt template?' },
+    { role: 'assistant', content: 'A prompt template is the fixed wrapper text and markers that tell the model which role each part of the conversation comes from.' },
+    { role: 'user', content: 'Name one special control token.' }
+  ];
+
+  var state = { template: 'chatml', gen: true, messages: clone(DEFAULT_MESSAGES) };
+
+  function clone(msgs) {
+    var out = [];
+    for (var i = 0; i < msgs.length; i++) out.push({ role: msgs[i].role, content: msgs[i].content });
+    return out;
+  }
+  function normRole(r) {
+    return (r === 'system' || r === 'user' || r === 'assistant') ? r : 'user';
+  }
+
+  function storeGet(k) {
+    try { return window.localStorage.getItem(k); } catch (e) { return null; }
+  }
+  function storeSet(k, v) {
+    try { window.localStorage.setItem(k, v); } catch (e) {}
+  }
+
+  function load() {
+    var t = storeGet('p503f27.template');
+    if (t && TEMPLATES[t]) state.template = t;
+    var g = storeGet('p503f27.gen');
+    if (g === '0' || g === '1') state.gen = (g === '1');
+    var raw = storeGet('p503f27.messages');
+    if (raw) {
+      try {
+        var arr = JSON.parse(raw);
+        if (Object.prototype.toString.call(arr) === '[object Array]' && arr.length) {
+          var msgs = [];
+          for (var i = 0; i < arr.length; i++) {
+            var m = arr[i] || {};
+            msgs.push({ role: normRole(m.role), content: String(m.content == null ? '' : m.content) });
+          }
+          state.messages = msgs;
+        }
+      } catch (e) {}
+    }
+  }
+  function save() {
+    storeSet('p503f27.template', state.template);
+    storeSet('p503f27.gen', state.gen ? '1' : '0');
+    storeSet('p503f27.messages', JSON.stringify(state.messages));
+  }
+
+  var msgsEl = document.getElementById('messages');
+  var outEl = document.getElementById('output');
+  var sumEl = document.getElementById('tokenSummary');
+  var chipsEl = document.getElementById('tokenChips');
+  var approxEl = document.getElementById('approx');
+  var copyBtn = document.getElementById('copyBtn');
+  var copyState = document.getElementById('copyState');
+  var genEl = document.getElementById('genPrompt');
+  var tplEl = document.getElementById('templates');
+
+  function miniBtn(label, fn) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mini';
+    b.textContent = label;
+    b.addEventListener('click', fn);
+    return b;
+  }
+
+  function buildRow(i) {
+    var m = state.messages[i];
+    var box = document.createElement('div');
+    box.className = 'msg';
+
+    var head = document.createElement('div');
+    head.className = 'msg-head';
+
+    var sel = document.createElement('select');
+    sel.setAttribute('aria-label', 'Role of message ' + (i + 1));
+    var roles = ['system', 'user', 'assistant'];
+    for (var r = 0; r < roles.length; r++) {
+      var o = document.createElement('option');
+      o.value = roles[r];
+      o.textContent = roles[r].charAt(0).toUpperCase() + roles[r].slice(1);
+      if (roles[r] === m.role) o.selected = true;
+      sel.appendChild(o);
+    }
+    sel.addEventListener('change', function () {
+      state.messages[i].role = normRole(sel.value);
+      renderOutput();
+    });
+    head.appendChild(sel);
+
+    var actions = document.createElement('div');
+    actions.className = 'msg-actions';
+    actions.appendChild(miniBtn('Up', function () {
+      if (i > 0) {
+        var t = state.messages[i - 1];
+        state.messages[i - 1] = state.messages[i];
+        state.messages[i] = t;
+        renderRows();
+        renderOutput();
+      }
+    }));
+    actions.appendChild(miniBtn('Down', function () {
+      if (i < state.messages.length - 1) {
+        var t2 = state.messages[i + 1];
+        state.messages[i + 1] = state.messages[i];
+        state.messages[i] = t2;
+        renderRows();
+        renderOutput();
+      }
+    }));
+    actions.appendChild(miniBtn('Delete', function () {
+      state.messages.splice(i, 1);
+      renderRows();
+      renderOutput();
+    }));
+    head.appendChild(actions);
+    box.appendChild(head);
+
+    var ta = document.createElement('textarea');
+    ta.rows = 3;
+    ta.placeholder = 'Message text';
+    ta.setAttribute('aria-label', 'Text of message ' + (i + 1));
+    ta.value = m.content;
+    (function (idx, el) {
+      el.addEventListener('input', function () {
+        state.messages[idx].content = el.value;
+        renderOutput();
+      });
+    })(i, ta);
+    box.appendChild(ta);
+
+    return box;
+  }
+
+  function renderRows() {
+    msgsEl.innerHTML = '';
+    for (var i = 0; i < state.messages.length; i++) {
+      msgsEl.appendChild(buildRow(i));
+    }
+    if (!state.messages.length) {
+      var p = document.createElement('p');
+      p.className = 'muted';
+      p.textContent = 'No messages yet. Add one below.';
+      msgsEl.appendChild(p);
+    }
+  }
+
+  function countOccurrences(text, tok) {
+    if (!tok) return 0;
+    return text.split(tok).length - 1;
+  }
+
+  function renderOutput() {
+    var tpl = TEMPLATES[state.template];
+    var text = tpl.render(state.messages, state.gen);
+    outEl.value = text;
+    outEl.style.height = 'auto';
+    outEl.style.height = Math.min(420, outEl.scrollHeight) + 'px';
+
+    var total = 0;
+    var counts = [];
+    for (var i = 0; i < tpl.tokens.length; i++) {
+      var c = countOccurrences(text, tpl.tokens[i]);
+      counts.push({ tok: tpl.tokens[i], n: c });
+      total += c;
+    }
+    sumEl.textContent = total + ' special control token' + (total === 1 ? '' : 's') + ' in this ' + tpl.name + ' prompt';
+    chipsEl.innerHTML = '';
+    for (var j = 0; j < counts.length; j++) {
+      var chip = document.createElement('span');
+      chip.className = 'chip' + (counts[j].n === 0 ? ' zero' : '');
+      var code = document.createElement('code');
+      code.textContent = counts[j].tok;
+      chip.appendChild(code);
+      chip.appendChild(document.createTextNode(' x ' + counts[j].n));
+      chipsEl.appendChild(chip);
+    }
+    approxEl.textContent = 'Rough size: about ' + Math.ceil(text.length / 4) + ' tokens and ' + text.length + ' characters (rough estimate: 1 token is about 4 characters).';
+    save();
+  }
+
+  tplEl.addEventListener('change', function (e) {
+    var v = e.target && e.target.value;
+    if (v && TEMPLATES[v]) {
+      state.template = v;
+      var labels = tplEl.querySelectorAll('.tpl');
+      for (var i = 0; i < labels.length; i++) {
+        if (labels[i].getAttribute('data-t') === v) labels[i].classList.add('sel');
+        else labels[i].classList.remove('sel');
+      }
+      renderOutput();
+    }
+  });
+
+  genEl.addEventListener('change', function () {
+    state.gen = genEl.checked;
+    renderOutput();
+  });
+
+  document.getElementById('addMsg').addEventListener('click', function () {
+    state.messages.push({ role: 'user', content: '' });
+    renderRows();
+    renderOutput();
+    var areas = msgsEl.querySelectorAll('textarea');
+    if (areas.length) areas[areas.length - 1].focus();
+  });
+
+  document.getElementById('loadExample').addEventListener('click', function () {
+    state.messages = clone(EXAMPLE);
+    renderRows();
+    renderOutput();
+  });
+
+  document.getElementById('clearAll').addEventListener('click', function () {
+    if (state.messages.length && window.confirm('Delete all messages?')) {
+      state.messages = [];
+      renderRows();
+      renderOutput();
+    }
+  });
+
+  copyBtn.addEventListener('click', function () {
+    var text = outEl.value;
+    function done(ok) {
+      copyState.textContent = ok ? 'Copied to clipboard.' : 'Copy failed. Select the text manually.';
+      window.setTimeout(function () { copyState.textContent = ''; }, 2000);
+    }
+    function fallback() {
+      try {
+        outEl.focus();
+        outEl.select();
+        done(document.execCommand('copy'));
+      } catch (e) { done(false); }
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+      } else {
+        fallback();
+      }
+    } catch (e) { fallback(); }
+  });
+
+  load();
+
+  var radios = tplEl.querySelectorAll('input[name="tpl"]');
+  for (var i = 0; i < radios.length; i++) {
+    var on = radios[i].value === state.template;
+    radios[i].checked = on;
+    var lab = radios[i].closest('.tpl');
+    if (lab) {
+      if (on) lab.classList.add('sel');
+      else lab.classList.remove('sel');
+    }
+  }
+  genEl.checked = state.gen;
+
+  renderRows();
+  renderOutput();
+})();
+</script>
+</body>
+</html>

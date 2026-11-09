@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CPU Only Fallback · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/054-cpu-only-fallback/">
+  <meta name="description" content="Automatic fallback to CPU rendering when GPU is unavailable or incompatible.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --shadow: rgba(0,0,0,.05);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 1rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { margin-bottom: 2rem; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card { background-color: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px var(--shadow); }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    p { margin-bottom: 1rem; }
+    .status { padding: 0.5rem; border-radius: 4px; margin: 1rem 0; }
+    .gpu { background-color: #e8f5e9; color: #2e7d32; }
+    .cpu { background-color: #fff3e0; color: #ef6c00; }
+    .fallback { background-color: #e3f2fd; color: #1565c0; }
+    button { background-color: var(--text); color: var(--card); border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    button:hover { opacity: 0.9; }
+    footer { text-align: center; margin-top: 2rem; color: var(--text-2); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/" class="back-link">← Project 503</a>
+    </header>
+
+    <main>
+      <div class="card">
+        <h1>CPU Only Fallback</h1>
+        <p>This page demonstrates automatic fallback to CPU rendering when GPU is unavailable or incompatible.</p>
+        
+        <div id="status" class="status gpu">GPU Rendering Active</div>
+        
+        <button id="simulate-fallback">Simulate GPU Failure</button>
+        <button id="reset">Reset Simulation</button>
+      </div>
+
+      <div class="card">
+        <h2>How It Works</h2>
+        <p>This implementation detects GPU availability using WebGL. When GPU rendering fails, it automatically switches to CPU-based rendering.</p>
+        <p>For demonstration purposes, you can simulate a GPU failure below.</p>
+      </div>
+    </main>
+
+    <footer>
+      Project #54 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const fallbackBtn = document.getElementById('simulate-fallback');
+    const resetBtn = document.getElementById('reset');
+
+    function checkGPU() {
+      try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        return !!gl;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function setFallbackMode(active) {
+      if (active) {
+        statusEl.textContent = 'CPU Rendering Active';
+        statusEl.className = 'status cpu';
+        try {
+          localStorage.setItem('cpuFallback', 'true');
+        } catch (e) {}
+      } else {
+        statusEl.textContent = 'GPU Rendering Active';
+        statusEl.className = 'status gpu';
+        try {
+          localStorage.removeItem('cpuFallback');
+        } catch (e) {}
+      }
+    }
+
+    function init() {
+      try {
+        const saved = localStorage.getItem('cpuFallback');
+        if (saved === 'true') {
+          setFallbackMode(true);
+        } else if (!checkGPU()) {
+          setFallbackMode(true);
+        }
+      } catch (e) {}
+    }
+
+    fallbackBtn.addEventListener('click', () => {
+      setFallbackMode(true);
+    });
+
+    resetBtn.addEventListener('click', () => {
+      setFallbackMode(false);
+    });
+
+    init();
+  </script>
+</body>
+</html>

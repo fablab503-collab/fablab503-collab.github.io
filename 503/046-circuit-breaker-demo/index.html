@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Circuit Breaker Demo · Project 503 · D-CREATIONS</title>
+  <meta name="description" content="A demonstration of a circuit breaker that stops sending jobs after N failures and resumes after a cooldown.">
+  <link rel="canonical" href="https://dcreations.fr/503/046-circuit-breaker-demo/">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --success: #4caf50;
+      --error: #f44336;
+      --warning: #ff9800;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 1rem; line-height: 1.5; }
+    .container { max-width: 375px; margin: 0 auto; }
+    header { margin-bottom: 2rem; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card { background-color: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .status { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+    .indicator { width: 12px; height: 12px; border-radius: 50%; }
+    .open { background-color: var(--error); }
+    .closed { background-color: var(--success); }
+    .half-open { background-color: var(--warning); }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .stat { text-align: center; }
+    .stat-value { font-size: 1.25rem; font-weight: bold; }
+    .stat-label { font-size: 0.875rem; color: var(--text-2); }
+    .controls { display: flex; flex-direction: column; gap: 0.75rem; }
+    button { padding: 0.75rem; border: none; border-radius: 4px; background-color: var(--text); color: var(--card); cursor: pointer; font-weight: bold; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .log { max-height: 200px; overflow-y: auto; padding: 1rem; background-color: var(--bg); border: 1px solid var(--line); border-radius: 4px; margin-top: 1rem; font-family: monospace; font-size: 0.875rem; }
+    footer { text-align: center; color: var(--text-2); font-size: 0.875rem; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+
+    <main>
+      <div class="card">
+        <h1>Circuit Breaker Demo</h1>
+        <div class="status">
+          <span class="indicator" id="indicator"></span>
+          <span id="status-text">Closed</span>
+        </div>
+        
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="failure-count">0</div>
+            <div class="stat-label">Failures</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="cooldown-time">0s</div>
+            <div class="stat-label">Cooldown</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="send-job">Send Job</button>
+          <button id="reset-circuit">Reset Circuit</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Log</h2>
+        <div class="log" id="log"></div>
+      </div>
+    </main>
+
+    <footer>
+      Project #46 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const circuitBreaker = {
+      maxFailures: 3,
+      cooldownSeconds: 5,
+      state: 'closed',
+      failureCount: 0,
+      lastFailureTime: 0,
+      cooldownTimer: null,
+      
+      init() {
+        try {
+          const saved = localStorage.getItem('circuitBreakerState');
+          if (saved) {
+            const data = JSON.parse(saved);
+            this.state = data.state;
+            this.failureCount = data.failureCount;
+            this.lastFailureTime = data.lastFailureTime;
+          }
+        } catch (e) {}
+        
+        this.updateUI();
+        this.setupEventListeners();
+      },
+      
+      setupEventListeners() {
+        document.getElementById('send-job').addEventListener('click', () => this.sendJob());
+        document.getElementById('reset-circuit').addEventListener('click', () => this.resetCircuit());
+      },
+      
+      sendJob() {
+        if (this.state === 'open') {
+          this.log('Job rejected - circuit is open');
+          return;
+        }
+        
+        const success = Math.random() > 0.3; // 70% success rate
+        
+        if (success) {
+          this.handleSuccess();
+        } else {
+          this.handleFailure();
+        }
+      },
+      
+      handleSuccess() {
+        this.failureCount = 0;
+        this.lastFailureTime = 0;
+        
+        if (this.state === 'half-open') {
+          this.state = 'closed';
+        }
+        
+        this.log('Job succeeded');
+        this.updateUI();
+      },
+      
+      handleFailure() {
+        this.failureCount++;
+        this.lastFailureTime = Date.now();
+        
+        if (this.failureCount >= this.maxFailures) {
+          this.state = 'open';
+          this.startCooldown();
+        } else if (this.state === 'closed') {
+          this.state = 'half-open';
+        }
+        
+        this.log('Job failed');
+        this.updateUI();
+      },
+      
+      startCooldown() {
+        this.cooldownTimer = setInterval(() => {
+          const elapsed = Math.floor((Date.now() - this.lastFailureTime) / 1000);
+          const remaining = this.cooldownSeconds - elapsed;
+          
+          if (remaining <= 0) {
+            clearInterval(this.cooldownTimer);
+            this.state = 'half-open';
+            this.updateUI();
+          }
+        }, 1000);
+      },
+      
+      resetCircuit() {
+        this.state = 'closed';
+        this.failureCount = 0;
+        this.lastFailureTime = 0;
+        
+        if (this.cooldownTimer) {
+          clearInterval(this.cooldownTimer);
+        }
+        
+        this.log('Circuit reset');
+        this.updateUI();
+      },
+      
+      updateUI() {
+        const indicator = document.getElementById('indicator');
+        const statusText = document.getElementById('status-text');
+        const failureCount = document.getElementById('failure-count');
+        const cooldownTime = document.getElementById('cooldown-time');
+        
+        // Update indicator
+        indicator.className = 'indicator';
+        if (this.state === 'open') {
+          indicator.classList.add('open');
+          statusText.textContent = 'Open - Circuit Broken';
+        } else if (this.state === 'closed') {
+          indicator.classList.add('closed');
+          statusText.textContent = 'Closed - Normal Operation';
+        } else {
+          indicator.classList.add('half-open');
+          statusText.textContent = 'Half-Open - Testing Recovery';
+        }
+        
+        // Update stats
+        failureCount.textContent = this.failureCount;
+        
+        if (this.state === 'open') {
+          const elapsed = Math.floor((Date.now() - this.lastFailureTime) / 1000);
+          const remaining = Math.max(0, this.cooldownSeconds - elapsed);
+          cooldownTime.textContent = `${remaining}s`;
+        } else {
+          cooldownTime.textContent = '0s';
+        }
+        
+        // Save state
+        try {
+          localStorage.setItem('circuitBreakerState', JSON.stringify({
+            state: this.state,
+            failureCount: this.failureCount,
+            lastFailureTime: this.lastFailureTime
+          }));
+        } catch (e) {}
+      },
+      
+      log(message) {
+        const log = document.getElementById('log');
+        const timestamp = new Date().toLocaleTimeString();
+        log.innerHTML += `[${timestamp}] ${message}\n`;
+        log.scrollTop = log.scrollHeight;
+      }
+    };
+    
+    circuitBreaker.init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="See how sink tokens and a rolling 512-token attention window keep a simulated model coherent across a long token stream without its memory overflowing.">
+  <link rel="canonical" href="https://dcreations.fr/503/023-sliding-window-attention-demo/">
+  <title>Sliding Window Attention Demo · Project 503 · D-CREATIONS</title>
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --accent: #1a56db;
+      --accent-soft: #e3ecfd;
+      --sink: #0e9f6e;
+      --sink-soft: #dcf3ea;
+      --warn: #b45309;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+        --accent: #8ab0ff;
+        --accent-soft: #26344d;
+        --sink: #34d399;
+        --sink-soft: #173a2c;
+        --warn: #fbbf24;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+    main { max-width: 960px; margin: 0 auto; padding: 20px; }
+    .nav { margin-bottom: 16px; }
+    .nav a { font-size: 16px; display: inline-flex; align-items: center; gap: 6px; }
+    h1 { font-size: 24px; font-weight: 600; margin: 0 0 12px; }
+    .lede { margin: 0 0 24px; max-width: 72ch; color: var(--text-2); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+    .row-between {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 4px 16px;
+      margin-bottom: 12px;
+    }
+    .row-between .card-title { margin-bottom: 0; }
+    .code-word { font-size: 14px; color: var(--text-2); }
+    .strip {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      overflow-x: auto;
+      padding: 12px 8px;
+      height: 76px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+    .tok {
+      flex: 0 0 12px;
+      height: 50px;
+      border-radius: 3px;
+      background: var(--accent-soft);
+      position: relative;
+      overflow: hidden;
+    }
+    .tok i {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 0;
+      background: var(--accent);
+      transition: height 0.12s linear;
+    }
+    .tok.sink { background: var(--sink-soft); box-shadow: inset 0 0 0 1px var(--sink); }
+    .tok.sink i { background: var(--sink); }
+    .tok.out { background: var(--line); opacity: 0.45; }
+    .tok.out i { height: 0 !important; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 16px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--text-2);
+    }
+    .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+    .sink-sw { background: var(--sink); }
+    .win-sw { background: var(--accent); }
+    .out-sw { background: var(--line); border: 1px solid var(--text-2); }
+    .legend-note { margin-left: auto; }
+    .log {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      max-height: 150px;
+      overflow-y: auto;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      word-break: break-word;
+    }
+    .log .q { font-weight: 600; }
+    .log .bad { color: var(--warn); }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+    .stat b { display: block; font-size: 22px; font-weight: 600; }
+    .stat span { font-size: 13px; color: var(--text-2); }
+    .buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    button {
+      padding: 10px 16px;
+      font-size: 15px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--text-2); }
+    .field { margin-bottom: 16px; }
+    .field:last-of-type { margin-bottom: 8px; }
+    .field-label { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .field-name { font-size: 15px; font-weight: 500; }
+    .field-value { font-size: 15px; color: var(--text-2); }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    .hint { font-size: 13px; color: var(--text-2); margin: 8px 0 0; }
+    .note { font-size: 13px; color: var(--text-2); margin: 18px 0 0; }
+    .footer {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-2);
+      padding: 24px 20px;
+      border-top: 1px solid var(--line);
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="nav"><a href="/503/">← Project 503</a></div>
+    <h1>Sliding Window Attention</h1>
+    <p class="lede">A long token stream flows through the model. The first <strong>sink tokens</strong> are pinned in the cache forever, a rolling <strong>window</strong> follows the newest tokens, and everything older is evicted. Every 40 tokens the model is asked to repeat the <strong>code word</strong> from token #3 — watch whether it still can.</p>
+
+    <section class="card">
+      <div class="row-between">
+        <div class="card-title">Token stream · attention of the newest token</div>
+        <div class="code-word">Code word: <strong id="codeWord">AMBER</strong> (token #3)</div>
+      </div>
+      <div class="strip" id="strip"></div>
+      <div class="legend">
+        <span><i class="sw sink-sw"></i>sink (always cached)</span>
+        <span><i class="sw win-sw"></i>in window</span>
+        <span><i class="sw out-sw"></i>evicted from cache</span>
+        <span class="legend-note">bar height = attention weight</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">Generated text (local simulation)</div>
+      <div class="log" id="log"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">Cache &amp; coherence</div>
+      <div class="stats">
+        <div class="stat"><b id="stGen">0</b><span>tokens generated</span></div>
+        <div class="stat"><b id="stCache">0</b><span>in KV cache (sinks + window)</span></div>
+        <div class="stat"><b id="stEvict">0</b><span>evicted from cache</span></div>
+        <div class="stat"><b id="stMem">0.0 MB</b><span>KV cache memory (≈16 KB/token)</span></div>
+        <div class="stat"><b id="stCoh">—</b><span>code-word recall (coherence)</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">Controls</div>
+      <div class="buttons">
+        <button id="bPlay" type="button">Pause</button>
+        <button id="bStep" type="button">+10 tokens</button>
+        <button id="bReset" type="button">Reset</button>
+      </div>
+      <div class="field">
+        <div class="field-label"><span class="field-name">Speed</span><span class="field-value"><span id="vSpeed">8</span> tokens/s</span></div>
+        <input type="range" id="rSpeed" min="1" max="60" step="1" value="8">
+      </div>
+      <div class="field">
+        <div class="field-label"><span class="field-name">Attention window</span><span class="field-value" id="vWin">512 tokens</span></div>
+        <input type="range" id="rWin" min="64" max="1024" step="64" value="512">
+      </div>
+      <div class="field">
+        <div class="field-label"><span class="field-name">Sink tokens</span><span class="field-value" id="vSinks">4 tokens</span></div>
+        <input type="range" id="rSinks" min="0" max="8" step="1" value="4">
+      </div>
+      <p class="hint">Try sinks = 0: once token #3 scrolls out of the window, recall collapses. KV memory assumes 8 layers × 8 heads × 64 dims, K+V, fp16 (≈16 KB per token).</p>
+    </section>
+
+    <p class="note">This page is a local simulation: no network calls, no keys, no tracking. Slider settings are stored only in this browser's localStorage.</p>
+  </main>
+  <div class="footer">Project #23 of 503 · Daniel Madac, D-CREATIONS</div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var S = { speed: 8, win: 512, sinks: 4, playing: true };
+      var BYTES_PER_TOKEN = 8 * 8 * 64 * 2 * 2; // 8 layers x 8 heads x 64 dims, K+V, fp16 = 16 KB
+      var CAP = 100000;       // stop generating at this many tokens
+      var MAX_CELLS = 1500;   // max token cells kept in the DOM
+      var Q_EVERY = 40;       // ask the code-word question every 40 tokens
+      var CODE_IDX = 3;       // token index of the code word
+      var CODES = ['AMBER', 'CORAL', 'ONYX', 'ZEPHYR', 'QUARTZ'];
+      var FILLER = [
+        'the stream flows on token by token',
+        'a long document keeps growing in the background',
+        'older tokens fade once they leave the window',
+        'the model reads only what fits in its cache',
+        'memory stays flat while the text keeps growing',
+        'each new token pushes the oldest one out',
+        'attention sinks keep the opening pinned in place',
+        'coherence survives because the start never leaves'
+      ];
+
+      var tokens = [];
+      var code = CODES[0];
+      var asked = 0, correct = 0;
+      var gQueue = [], gWords = [], gFiller = 0, sinceQ = 0;
+      var lineEl = null;
+
+      var strip = document.getElementById('strip');
+      var logEl = document.getElementById('log');
+      var codeEl = document.getElementById('codeWord');
+      var elGen = document.getElementById('stGen');
+      var elCache = document.getElementById('stCache');
+      var elEvict = document.getElementById('stEvict');
+      var elMem = document.getElementById('stMem');
+      var elCoh = document.getElementById('stCoh');
+      var bPlay = document.getElementById('bPlay');
+      var bStep = document.getElementById('bStep');
+      var bReset = document.getElementById('bReset');
+      var rSpeed = document.getElementById('rSpeed');
+      var rWin = document.getElementById('rWin');
+      var rSinks = document.getElementById('rSinks');
+      var vSpeed = document.getElementById('vSpeed');
+      var vWin = document.getElementById('vWin');
+      var vSinks = document.getElementById('vSinks');
+
+      function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+      function visible(i, L) { return i < S.sinks || i >= L - S.win; }
+      function visibleCount(L) {
+        return Math.min(S.sinks, L) + Math.max(0, L - Math.max(S.sinks, L - S.win));
+      }
+
+      function resetGenerator() {
+        gQueue = ['Code', 'word', ':', code, '.'];
+        gWords = [];
+        gFiller = 0;
+        sinceQ = 0;
+      }
+
+      function nextWord() {
+        if (gQueue.length) return gQueue.shift();
+        if (sinceQ >= Q_EVERY) {
+          sinceQ = 0;
+          var recall = visible(CODE_IDX, tokens.length);
+          asked++;
+          if (recall) correct++;
+          gQueue = ['Q', ':', 'code', 'word', '?', 'A', ':', recall ? code : 'unknown', '.'];
+          return gQueue.shift();
+        }
+        if (!gWords.length) {
+          gWords = FILLER[gFiller % FILLER.length].split(' ');
+          gFiller++;
+        }
+        sinceQ++;
+        return gWords.shift();
+      }
+
+      function logWord(w) {
+        if (!lineEl) {
+          lineEl = document.createElement('div');
+          logEl.appendChild(lineEl);
+        }
+        lineEl.textContent += (lineEl.textContent && w !== '.' ? ' ' : '') + w;
+        if (w === '.') {
+          if (/^Q\b/.test(lineEl.textContent)) lineEl.className = 'q';
+          if (lineEl.textContent.indexOf('unknown') !== -1) lineEl.classList.add('bad');
+          lineEl = null;
+        }
+        while (logEl.childElementCount > 80) logEl.removeChild(logEl.firstChild);
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      function addToken() {
+        if (tokens.length >= CAP) {
+          S.playing = false;
+          bPlay.textContent = 'Play';
+          return;
+        }
+        var w = nextWord();
+        var i = tokens.length;
+        tokens.push(w);
+        logWord(w);
+        var cell = document.createElement('div');
+        cell.className = 'tok';
+        cell.dataset.i = i;
+        cell.title = '#' + i + ' · ' + w;
+        cell.appendChild(document.createElement('i'));
+        strip.appendChild(cell);
+        if (strip.childElementCount > MAX_CELLS) strip.removeChild(strip.firstChild);
+        strip.scrollLeft = strip.scrollWidth;
+      }
+
+      function updateRoles() {
+        var L = tokens.length;
+        var cells = strip.children;
+        for (var k = 0; k < cells.length; k++) {
+          var i = +cells[k].dataset.i;
+          cells[k].classList.toggle('sink', i < S.sinks);
+          cells[k].classList.toggle('out', !visible(i, L));
+        }
+      }
+
+      function updateBars() {
+        var L = tokens.length;
+        if (!L) return;
+        var idxs = [];
+        for (var i = 0; i < L; i++) if (visible(i, L)) idxs.push(i);
+        var max = -Infinity;
+        var sc = [];
+        for (var k = 0; k < idxs.length; k++) {
+          var i = idxs[k];
+          var s = (i < S.sinks ? 2.2 : 0) +
+                  (i >= L - S.win ? (i - (L - S.win)) / S.win : 0) * 1.2 +
+                  Math.random() * 0.2;
+          if (s > max) max = s;
+          sc.push(s);
+        }
+        var sum = 0, w = [];
+        for (var m = 0; m < sc.length; m++) { var e = Math.exp(sc[m] - max); w.push(e); sum += e; }
+        var wMap = {};
+        for (var n = 0; n < idxs.length; n++) wMap[idxs[n]] = w[n] / sum;
+        var cells = strip.children;
+        for (var c = 0; c < cells.length; c++) {
+          var idx = +cells[c].dataset.i;
+          var val = wMap[idx] !== undefined ? wMap[idx] * 100 : 0;
+          cells[c].firstChild.style.height = val.toFixed(2) + '%';
+        }
+      }
+
+      function updateStats() {
+        var L = tokens.length;
+        var c = visibleCount(L);
+        elGen.textContent = L.toLocaleString('en-US');
+        elCache.textContent = c.toLocaleString('en-US');
+        elEvict.textContent = (L - c).toLocaleString('en-US');
+        elMem.textContent = (c * BYTES_PER_TOKEN / 1048576).toFixed(1) + ' MB';
+        elCoh.textContent = asked ? Math.round(100 * correct / asked) + '% (' + correct + '/' + asked + ')' : '—';
+      }
+
+      function save() {
+        try {
+          localStorage.setItem('p503-023-swa', JSON.stringify({ speed: S.speed, win: S.win, sinks: S.sinks }));
+        } catch (e) { /* ignore */ }
+      }
+
+      function load() {
+        try {
+          var s = JSON.parse(localStorage.getItem('p503-023-swa') || 'null');
+          if (!s) return;
+          if (s.speed) S.speed = clamp(+s.speed, 1, 60);
+          if (s.win) S.win = clamp(+s.win, 64, 1024);
+          if (s.sinks != null) S.sinks = clamp(+s.sinks, 0, 8);
+        } catch (e) { /* ignore */ }
+      }
+
+      function reset() {
+        tokens = [];
+        strip.innerHTML = '';
+        logEl.innerHTML = '';
+        lineEl = null;
+        asked = 0;
+        correct = 0;
+        code = CODES[(Math.random() * CODES.length) | 0];
+        codeEl.textContent = code;
+        resetGenerator();
+        for (var k = 0; k < 5; k++) addToken();
+      }
+
+      bPlay.addEventListener('click', function () {
+        S.playing = !S.playing;
+        bPlay.textContent = S.playing ? 'Pause' : 'Play';
+      });
+      bStep.addEventListener('click', function () {
+        for (var k = 0; k < 10; k++) addToken();
+        updateRoles(); updateBars(); updateStats();
+      });
+      bReset.addEventListener('click', function () {
+        reset();
+        updateRoles(); updateBars(); updateStats();
+      });
+      rSpeed.addEventListener('input', function () {
+        S.speed = +rSpeed.value; vSpeed.textContent = rSpeed.value; save();
+      });
+      rWin.addEventListener('input', function () {
+        S.win = +rWin.value; vWin.textContent = rWin.value + ' tokens'; save();
+      });
+      rSinks.addEventListener('input', function () {
+        S.sinks = +rSinks.value; vSinks.textContent = rSinks.value + ' tokens'; save();
+      });
+
+      load();
+      rSpeed.value = S.speed; vSpeed.textContent = S.speed;
+      rWin.value = S.win; vWin.textContent = S.win + ' tokens';
+      rSinks.value = S.sinks; vSinks.textContent = S.sinks + ' tokens';
+      reset();
+      bPlay.textContent = S.playing ? 'Pause' : 'Play';
+
+      var acc = 0, last = performance.now();
+      setInterval(function () {
+        var now = performance.now();
+        var dt = (now - last) / 1000;
+        last = now;
+        if (S.playing) {
+          acc += S.speed * dt;
+          var n = Math.floor(acc);
+          acc -= n;
+          while (n-- > 0) addToken();
+        }
+        updateRoles();
+        updateBars();
+        updateStats();
+      }, 50);
+
+      updateRoles();
+      updateBars();
+      updateStats();
+    })();
+  </script>
+</body>
+</html>

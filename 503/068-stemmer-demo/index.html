@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stemmer Demo · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/068-stemmer-demo/">
+  <meta name="description" content="Apply a simple Porter stemmer to every word and display the stemmed forms in a side-by-side table.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.5;
+    }
+    h1, h2 {
+      margin-top: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      background-color: var(--card);
+      color: var(--text);
+      border: 1px solid var(--line);
+      padding: 0.5rem;
+      font-family: var(--font);
+      resize: vertical;
+    }
+    button {
+      background-color: var(--card);
+      color: var(--text);
+      border: 1px solid var(--line);
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      font-family: var(--font);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .link-back {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      color: var(--text-2);
+      text-decoration: none;
+    }
+    .footer {
+      margin-top: 2rem;
+      text-align: center;
+      color: var(--text-2);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <a href="/503/" class="link-back">← Project 503</a>
+  <div class="container">
+    <h1>Stemmer Demo</h1>
+    <p>Enter text below to see stemmed words in the table.</p>
+    <textarea id="inputText" placeholder="Enter your text here..."></textarea>
+    <button id="stemButton">Stem Words</button>
+    <table id="resultTable">
+      <thead>
+        <tr>
+          <th>Original</th>
+          <th>Stemmed</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="footer">
+    Project #68 of 503 · Daniel Madac, D-CREATIONS
+  </div>
+
+  <script>
+    // Simple Porter Stemmer Implementation
+    function stem(word) {
+      word = word.toLowerCase();
+      if (word.length < 3) return word;
+
+      // Step 1a
+      if (word.endsWith("sses")) word = word.slice(0, -2);
+      else if (word.endsWith("ied") || word.endsWith("ies")) word = word.slice(0, -2) + (word.endsWith("ies") ? "y" : "");
+      else if (word.endsWith("s") && !word.endsWith("us") && !word.endsWith("ss")) word = word.slice(0, -1);
+
+      // Step 1b
+      if (word.endsWith("eed")) word = word.slice(0, -1);
+      else if (word.endsWith("ed") || word.endsWith("ing")) {
+        const stem = word.slice(0, -2);
+        if (/[aeiou]/.test(stem)) word = stem;
+        else if (word.endsWith("ing")) word = word.slice(0, -3);
+      }
+
+      // Step 1c
+      if (word.endsWith("y") && /[aeiou]/.test(word.slice(0, -1))) word = word.slice(0, -1) + "i";
+
+      // Step 2
+      const step2 = {
+        "ational": "ate",
+        "tional": "tion",
+        "enci": "ence",
+        "anci": "ance",
+        "izer": "ize",
+        "abli": "able",
+        "alli": "al",
+        "entli": "ent",
+        "eli": "e",
+        "ousli": "ous",
+        "ization": "ize",
+        "ation": "ate",
+        "ator": "ate",
+        "alism": "al",
+        "iveness": "ive",
+        "fulness": "ful",
+        "ousness": "ous",
+        "aliti": "al",
+        "iviti": "ive",
+        "biliti": "ble"
+      };
+      for (const [key, value] of Object.entries(step2)) {
+        if (word.endsWith(key)) {
+          word = word.slice(0, -key.length) + value;
+          break;
+        }
+      }
+
+      // Step 3
+      const step3 = {
+        "icate": "ic",
+        "ative": "",
+        "alize": "al",
+        "iciti": "ic",
+        "ical": "ic",
+        "ful": "",
+        "ness": ""
+      };
+      for (const [key, value] of Object.entries(step3)) {
+        if (word.endsWith(key)) {
+          word = word.slice(0, -key.length) + value;
+          break;
+        }
+      }
+
+      // Step 4
+      const step4 = [
+        "al", "ance", "ence", "er", "ic", "able", "ible", "ant", "ement", "ment", "ent",
+        "ou", "ism", "ate", "iti", "ous", "ive", "ize"
+      ];
+      for (const suffix of step4) {
+        if (word.endsWith(suffix)) {
+          word = word.slice(0, -suffix.length);
+          break;
+        }
+      }
+
+      // Step 5a
+      if (word.endsWith("e")) {
+        const stem = word.slice(0, -1);
+        if (/[aeiou]/.test(stem) || (stem.length > 2 && /[aeiou]/.test(stem.slice(-2)))) word = stem;
+      }
+
+      // Step 5b
+      if (word.endsWith("ll") && word.length > 4) word = word.slice(0, -1);
+
+      return word;
+    }
+
+    const inputText = document.getElementById('inputText');
+    const stemButton = document.getElementById('stemButton');
+    const resultTable = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
+
+    function processText() {
+      const text = inputText.value.trim();
+      if (!text) return;
+
+      const words = text.match(/\b\w+\b/g);
+      if (!words) return;
+
+      resultTable.innerHTML = '';
+      const seen = new Set();
+
+      for (const word of words) {
+        const stemmed = stem(word);
+        if (!seen.has(word)) {
+          const row = resultTable.insertRow();
+          const cell1 = row.insertCell(0);
+          const cell2 = row.insertCell(1);
+          cell1.textContent = word;
+          cell2.textContent = stemmed;
+          seen.add(word);
+        }
+      }
+
+      try {
+        localStorage.setItem('stemmerDemoInput', text);
+      } catch (e) {}
+    }
+
+    stemButton.addEventListener('click', processText);
+
+    try {
+      const savedInput = localStorage.getItem('stemmerDemoInput');
+      if (savedInput) inputText.value = savedInput;
+    } catch (e) {}
+
+    // Initialize with sample text
+    inputText.value = "Running quickly through the beautiful gardens, the children were playing happily.";
+    processText();
+  </script>
+</body>
+</html>

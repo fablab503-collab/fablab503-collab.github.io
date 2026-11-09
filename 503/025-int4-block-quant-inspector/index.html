@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive workbench that packs 32 float weights into 4-bit nibbles with a shared FP16 scale per block (Q4_0, plus a Q4_K-style super-block mode) and measures the MSE quantization loss.">
+  <link rel="canonical" href="https://dcreations.fr/503/025-int4-block-quant-inspector/">
+  <title>Int4 Block Quant Inspector · Project 503 · D-CREATIONS</title>
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    a { color: inherit; text-decoration: none; }
+    main { max-width: 780px; margin: 0 auto; padding: 16px 14px 32px; }
+    .nav { margin: 6px 0 18px; }
+    .nav a { font-size: 14px; color: var(--text-2); }
+    .nav a:hover { color: var(--text); }
+    h1 { font-size: 26px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; }
+    h2 { font-size: 15px; font-weight: 600; margin: 0 0 12px; }
+    .lede { margin: 0 0 20px; max-width: 68ch; color: var(--text-2); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
+    .controls label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-2); }
+    select, input, button, textarea {
+      font: inherit;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 7px 10px;
+    }
+    input[type="number"] { width: 110px; }
+    button { cursor: pointer; }
+    button:hover { border-color: var(--text-2); }
+    textarea { width: 100%; resize: vertical; }
+    .custom-label { display: block; margin-top: 12px; font-size: 13px; color: var(--text-2); }
+    .custom-label textarea { margin-top: 4px; }
+    .custom-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
+    #customInfo { font-size: 13px; color: var(--text-2); }
+    .hint { color: var(--text-2); font-size: 13px; margin: 12px 0 0; }
+    .hexline {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin: 10px 0 14px;
+    }
+    .tablewrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    thead th { color: var(--text-2); font-weight: 600; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr.sel td { font-weight: 700; }
+    tbody tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--text); }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .tab[aria-selected="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .matrix[hidden] { display: none; }
+    .cell {
+      aspect-ratio: 1 / 1;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      margin: 0;
+      background: var(--card);
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .cell:hover { outline: 1px solid var(--text-2); outline-offset: -1px; }
+    .cell.sel { outline: 2px solid var(--text); outline-offset: -2px; }
+    .cellinfo {
+      font-size: 13px;
+      color: var(--text-2);
+      margin: 10px 0 0;
+      min-height: 1.5em;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+    figure { margin: 0; }
+    figcaption { font-size: 13px; color: var(--text-2); margin-bottom: 6px; }
+    canvas { display: block; width: 100%; height: 220px; }
+    .math { margin: 0; padding-left: 18px; color: var(--text-2); font-size: 14px; }
+    .math li { margin-bottom: 6px; }
+    .math strong, .math code { color: var(--text); }
+    .math code { font-size: 13px; }
+    .footer { text-align: center; color: var(--text-2); font-size: 13px; padding: 18px 0 8px; }
+    @media (max-width: 480px) {
+      h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="nav"><a href="/503/">← Project 503</a></div>
+  <h1>Int4 Block Quant Inspector</h1>
+  <p class="lede">Pack 32 float weights into 4-bit nibbles behind one shared FP16 scale per block (Q4_0), or into 256-weight super-blocks with 6-bit sub-scales (Q4_K style), and measure the MSE loss.</p>
+
+  <section class="card">
+    <h2>Controls</h2>
+    <div class="controls">
+      <label>Distribution
+        <select id="dist">
+          <option value="gaussian">Gaussian (σ = 0.4)</option>
+          <option value="uniform">Uniform (−1 … 1)</option>
+          <option value="laplace">Laplace</option>
+          <option value="sparse">Sparse (90% zeros)</option>
+        </select>
+      </label>
+      <label>Seed
+        <input id="seed" type="number" min="0" max="999999999" step="1" value="42">
+      </label>
+      <label>Weights
+        <select id="count">
+          <option value="32">32 (one block)</option>
+          <option value="64">64</option>
+          <option value="128">128</option>
+          <option value="256">256 (one super-block)</option>
+          <option value="512">512</option>
+          <option value="1024">1024</option>
+        </select>
+      </label>
+      <label>Method
+        <select id="method">
+          <option value="q4_0">Q4_0 · one FP16 scale per 32</option>
+          <option value="q4k">Q4_K style · 256 per super-block</option>
+        </select>
+      </label>
+      <button id="randomize" type="button">Randomize weights</button>
+    </div>
+    <label class="custom-label">Custom weights (optional)
+      <textarea id="custom" rows="3" placeholder="Paste floats separated by spaces, commas or new lines — e.g. 0.31, -1.2, 0.05 …"></textarea>
+    </label>
+    <div class="custom-row">
+      <button id="applyCustom" type="button">Load custom weights</button>
+      <span id="customInfo"></span>
+    </div>
+    <p class="hint">Everything recalculates live and works fully offline — no network, no keys. Settings and custom weights are saved in this browser only (localStorage) and never sent anywhere. Loading custom weights replaces the generated set; changing a generator setting goes back to generated weights.</p>
+  </section>
+
+  <section class="card">
+    <h2>Results — both methods on the same weights</h2>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Groups</th><th>Stored bytes</th><th>Bits/weight</th><th>MSE</th><th>RMSE</th><th>Max |err|</th><th>SQNR</th></tr>
+        </thead>
+        <tbody id="cmp-body"></tbody>
+      </table>
+    </div>
+    <p class="hint" id="padinfo"></p>
+  </section>
+
+  <section class="card">
+    <h2>Group inspector · 32 weights</h2>
+    <div class="controls">
+      <label>Group
+        <select id="groupSel"></select>
+      </label>
+    </div>
+    <p class="cellinfo" id="groupinfo"></p>
+    <p class="hexline" id="hexline"></p>
+    <div class="tabs" role="tablist">
+      <button class="tab" type="button" role="tab" data-tab="input" aria-selected="true">FP32 input</button>
+      <button class="tab" type="button" role="tab" data-tab="codes" aria-selected="false">4-bit codes</button>
+      <button class="tab" type="button" role="tab" data-tab="deq" aria-selected="false">Dequantized</button>
+      <button class="tab" type="button" role="tab" data-tab="err" aria-selected="false">Error</button>
+    </div>
+    <div class="matrix" id="grid-input" role="tabpanel"></div>
+    <div class="matrix" id="grid-codes" role="tabpanel" hidden></div>
+    <div class="matrix" id="grid-deq" role="tabpanel" hidden></div>
+    <div class="matrix" id="grid-err" role="tabpanel" hidden></div>
+    <p class="cellinfo" id="cellinfo">Click a cell to inspect it.</p>
+  </section>
+
+  <section class="card">
+    <h2>Quantization error distribution</h2>
+    <figure>
+      <figcaption id="histcap"></figcaption>
+      <canvas id="hist"></canvas>
+    </figure>
+    <p class="hint">40 bins between the smallest and largest error of the selected method. The dashed line marks zero error.</p>
+  </section>
+
+  <section class="card">
+    <h2>How it works</h2>
+    <ul class="math">
+      <li><strong>Q4_0 block — 32 weights → 18 bytes.</strong> The weight with the largest absolute value (sign kept) gives the scale <code>d = max / −8</code>, stored as one FP16 (2 bytes). Each weight becomes a nibble <code>q = clamp(round(w/d) + 8, 0, 15)</code>; two nibbles per byte, low nibble first → 16 bytes. Dequantize: <code>ŵ = (q − 8) · d</code>.</li>
+      <li><strong>Codes span −8…+7.</strong> One extreme of each block clips slightly — that asymmetry is part of Q4_0.</li>
+      <li><strong>Q4_K style super-block — 256 weights → 136 bytes.</strong> 8 groups of 32. Group sub-scale <code>r = amax/8</code>; super-scale <code>d = FP16(max r / 63)</code>; each <code>r</code> is stored as a 6-bit code <code>k = clamp(round(r/d), 0, 63)</code> (8 × 6 bits = 6 bytes); the group scale is <code>e = d·k</code>, then nibbles as above. Layout: 2 B (d) + 6 B (k) + 128 B (nibbles).</li>
+      <li><strong>FP16.</strong> The scale is rounded to IEEE-754 half precision before use and shown as hex; dequantization uses the rounded value, like real hardware.</li>
+      <li><strong>Loss.</strong> <code>MSE = mean((ŵ − w)²)</code> over the input weights, <code>RMSE = √MSE</code>, <code>SQNR = 10·log10(Σw² / Σerr²)</code>. FP32 needs 4 bytes per weight; Q4_0 stores 4.5 bits/weight, Q4_K style 4.25.</li>
+    </ul>
+  </section>
+
+  <div class="footer">Project #25 of 503 · Daniel Madac, D-CREATIONS</div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var GROUP = 32;
+  var SUPER = 256;
+  var SUB = 8;
+  var BINS = 40;
+  var COUNTS = [32, 64, 128, 256, 512, 1024];
+  var DISTS = ["gaussian", "uniform", "laplace", "sparse"];
+
+  var state = { dist: "gaussian", seed: 42, count: 32, method: "q4_0", group: 0, tab: "input", custom: "" };
+
+  function storeLoad() {
+    try {
+      var raw = window.localStorage.getItem("p503-int4-settings");
+      if (!raw) return;
+      var s = JSON.parse(raw);
+      if (s && typeof s === "object") {
+        if (DISTS.indexOf(s.dist) >= 0) state.dist = s.dist;
+        if (typeof s.seed === "number" && isFinite(s.seed) && s.seed >= 0) state.seed = s.seed;
+        if (COUNTS.indexOf(s.count) >= 0) state.count = s.count;
+        if (s.method === "q4_0" || s.method === "q4k") state.method = s.method;
+        if (typeof s.group === "number" && isFinite(s.group) && s.group >= 0) state.group = s.group;
+        if (typeof s.tab === "string") state.tab = s.tab;
+        if (typeof s.custom === "string") state.custom = s.custom;
+      }
+    } catch (e) { /* storage unavailable: run without persistence */ }
+  }
+
+  function storeSave() {
+    try {
+      window.localStorage.setItem("p503-int4-settings", JSON.stringify(state));
+    } catch (e) { /* ignore */ }
+  }
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function gaussian(r) {
+    var u = 0, v = 0;
+    while (u === 0) u = r();
+    while (v === 0) v = r();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  function genWeights(dist, seed, count) {
+    var r = mulberry32(seed >>> 0);
+    var w = new Array(count);
+    for (var i = 0; i < count; i++) {
+      var v;
+      if (dist === "uniform") {
+        v = r() * 2 - 1;
+      } else if (dist === "laplace") {
+        var u = r() - 0.5;
+        v = -Math.sign(u) * Math.log(1 - 2 * Math.abs(u)) * 0.5;
+      } else if (dist === "sparse") {
+        v = r() < 0.9 ? 0 : gaussian(r) * 0.4;
+      } else {
+        v = gaussian(r) * 0.4;
+      }
+      w[i] = v;
+    }
+    return w;
+  }
+
+  function parseWeights(text) {
+    var toks = String(text).replace(/[,;]+/g, " ").split(/\s+/);
+    var out = [];
+    for (var i = 0; i < toks.length; i++) {
+      if (!toks[i]) continue;
+      var v = parseFloat(toks[i]);
+      if (isFinite(v)) out.push(v);
+    }
+    return out;
+  }
+
+  function padTo(w, m) {
+    var out = w.slice();
+    if (out.length === 0) out.push(0);
+    while (out.length % m !== 0) out.push(0);
+    return out;
+  }
+
+  var f32buf = new ArrayBuffer(4);
+  var f32view = new Float32Array(f32buf);
+  var u32view = new Uint32Array(f32buf);
+
+  function f32ToF16Bits(val) {
+    f32view[0] = val;
+    var x = u32view[0];
+    var sign = (x >>> 16) & 0x8000;
+    var exp = ((x >>> 23) & 0xff) - 127 + 15;
+    var mant = x & 0x7fffff;
+    if (exp <= 0) {
+      if (exp < -10) return sign;
+      mant |= 0x800000;
+      var shift = 14 - exp;
+      var half = mant >>> shift;
+      var rem = mant & ((1 << shift) - 1);
+      var halfway = 1 << (shift - 1);
+      if (rem > halfway || (rem === halfway && (half & 1))) half++;
+      return sign | half;
+    }
+    if (exp >= 31) return sign | 0x7c00;
+    var halfMant = mant >>> 13;
+    var rem2 = mant & 0x1fff;
+    if (rem2 > 0x1000 || (rem2 === 0x1000 && (halfMant & 1))) {
+      halfMant++;
+      if (halfMant === 0x400) {
+        halfMant = 0;
+        exp++;
+        if (exp >= 31) return sign | 0x7c00;
+      }
+    }
+    return sign | (exp << 10) | halfMant;
+  }
+
+  function f16BitsToF32(h) {
+    var sign = (h & 0x8000) ? -1 : 1;
+    var exp = (h >>> 10) & 0x1f;
+    var mant = h & 0x3ff;
+    if (exp === 0) return sign * mant * Math.pow(2, -24);
+    if (exp === 31) return mant ? NaN : sign * Infinity;
+    return sign * (1 + mant / 1024) * Math.pow(2, exp - 15);
+  }
+
+  function hex16(h) {
+    return "0x" + ("000" + (h & 0xffff).toString(16)).slice(-4);
+  }
+
+  function hexBytes(arr) {
+    var s = [];
+    for (var i = 0; i < arr.length; i++) s.push(("0" + (arr[i] & 0xff).toString(16)).slice(-2));
+    return s.join(" ");
+  }
+
+  function fmt(x, digits) {
+    if (!isFinite(x)) return "∞";
+    var d = digits === undefined ? 4 : digits;
+    var a = Math.abs(x);
+    if (a !== 0 && (a < 0.001 || a >= 100000)) return x.toExponential(2);
+    return x.toFixed(d);
+  }
+
+  function fmtSigned(x, digits) {
+    return (x < 0 ? "-" : "+") + fmt(Math.abs(x), digits);
+  }
+
+  function packNibbles(q) {
+    var bytes = new Uint8Array(16);
+    for (var i = 0; i < 16; i++) bytes[i] = (q[2 * i] & 0xf) | ((q[2 * i + 1] & 0xf) << 4);
+    return bytes;
+  }
+
+  function pack6(k) {
+    var bytes = new Uint8Array(6);
+    for (var i = 0; i < 8; i++) {
+      var pos = i * 6;
+      for (var b = 0; b < 6; b++) {
+        if ((k[i] >> b) & 1) {
+          var p = pos + b;
+          bytes[p >> 3] |= 1 << (p & 7);
+        }
+      }
+    }
+    return bytes;
+  }
+
+  function quantGroup32(w, off) {
+    var i, amax = 0, maxv = 0;
+    for (i = 0; i < GROUP; i++) {
+      var v = w[off + i];
+      var a = Math.abs(v);
+      if (a > amax) { amax = a; maxv = v; }
+    }
+    var dRaw = amax > 0 ? maxv / -8 : 0;
+    var dBits = f32ToF16Bits(dRaw);
+    var d = f16BitsToF32(dBits);
+    var q = new Array(GROUP), deq = new Array(GROUP), err = new Array(GROUP);
+    for (i = 0; i < GROUP; i++) {
+      var x = w[off + i];
+      var qi;
+      if (d === 0 || !isFinite(d)) {
+        qi = 8;
+      } else {
+        qi = Math.round(x / d) + 8;
+        if (qi < 0) qi = 0;
+        if (qi > 15) qi = 15;
+      }
+      q[i] = qi;
+      var dv = (qi - 8) * d;
+      deq[i] = dv;
+      err[i] = dv - x;
+    }
+    var mse = 0;
+    for (i = 0; i < GROUP; i++) mse += err[i] * err[i];
+    return {
+      off: off, super: null, sub: 0, k: null, e: d,
+      dRaw: dRaw, dBits: dBits, d: d,
+      q: q, deq: deq, err: err,
+      bytes: packNibbles(q), mse: mse / GROUP
+    };
+  }
+
+  function quantizeQ4_0(w, nOrig) {
+    var pw = padTo(w, GROUP);
+    var nGroups = pw.length / GROUP;
+    var groups = [];
+    for (var g = 0; g < nGroups; g++) groups.push(quantGroup32(pw, g * GROUP));
+    var res = {
+      mode: "q4_0", label: "Q4_0 (32/block)",
+      w: pw, nOrig: nOrig, pad: pw.length - nOrig,
+      groups: groups, superBlocks: null,
+      totalBytes: nGroups * 18, bitsPerWeight: nGroups * 18 * 8 / nOrig
+    };
+    computeStats(res);
+    return res;
+  }
+
+  function quantizeQ4K(w, nOrig) {
+    var pw = padTo(w, SUPER);
+    var nSuper = pw.length / SUPER;
+    var groups = [];
+    var supers = [];
+    for (var s = 0; s < nSuper; s++) {
+      var off = s * SUPER;
+      var r = new Array(SUB);
+      var j, i;
+      for (j = 0; j < SUB; j++) {
+        var amax = 0;
+        for (i = 0; i < GROUP; i++) {
+          var a = Math.abs(pw[off + j * GROUP + i]);
+          if (a > amax) amax = a;
+        }
+        r[j] = amax > 0 ? amax / 8 : 0;
+      }
+      var rMax = 0;
+      for (j = 0; j < SUB; j++) if (r[j] > rMax) rMax = r[j];
+      var dRaw = rMax > 0 ? rMax / 63 : 0;
+      var dBits = f32ToF16Bits(dRaw);
+      var d = f16BitsToF32(dBits);
+      var k = new Array(SUB);
+      for (j = 0; j < SUB; j++) {
+        var kj = d > 0 ? Math.round(r[j] / d) : 0;
+        if (kj < 0) kj = 0;
+        if (kj > 63) kj = 63;
+        k[j] = kj;
+      }
+      supers.push({ dRaw: dRaw, dBits: dBits, d: d, k: k, kBytes: pack6(k) });
+      for (j = 0; j < SUB; j++) {
+        var e = d * k[j];
+        var goff = off + j * GROUP;
+        var q = new Array(GROUP), deq = new Array(GROUP), err = new Array(GROUP);
+        for (i = 0; i < GROUP; i++) {
+          var x = pw[goff + i];
+          var qi;
+          if (e === 0 || !isFinite(e)) {
+            qi = 8;
+          } else {
+            qi = Math.round(x / e) + 8;
+            if (qi < 0) qi = 0;
+            if (qi > 15) qi = 15;
+          }
+          q[i] = qi;
+          var dv = (qi - 8) * e;
+          deq[i] = dv;
+          err[i] = dv - x;
+        }
+        var mse = 0;
+        for (i = 0; i < GROUP; i++) mse += err[i] * err[i];
+        groups.push({
+          off: goff, super: s, sub: j, k: k[j], e: e,
+          dRaw: 0, dBits: 0, d: e,
+          q: q, deq: deq, err: err,
+          bytes: packNibbles(q), mse: mse / GROUP
+        });
+      }
+    }
+    var res = {
+      mode: "q4k", label: "Q4_K style (256/super-block)",
+      w: pw, nOrig: nOrig, pad: pw.length - nOrig,
+      groups: groups, superBlocks: supers,
+      totalBytes: nSuper * 136, bitsPerWeight: nSuper * 136 * 8 / nOrig
+    };
+    computeStats(res);
+    return res;
+  }
+
+  function computeStats(res) {
+    var se = 0, sw = 0, maxAbs = 0;
+    var n = res.nOrig;
+    for (var g = 0; g < res.groups.length; g++) {
+      var gr = res.groups[g];
+      for (var i = 0; i < GROUP; i++) {
+        var gi = gr.off + i;
+        if (gi >= n) break;
+        var e = gr.err[i];
+        se += e * e;
+        sw += res.w[gi] * res.w[gi];
+        var a = Math.abs(e);
+        if (a > maxAbs) maxAbs = a;
+      }
+    }
+    res.mse = se / n;
+    res.rmse = Math.sqrt(res.mse);
+    res.maxAbs = maxAbs;
+    res.sqnr = se > 0 ? 10 * Math.log10(sw / se) : Infinity;
+  }
+
+  var elDist = document.getElementById("dist");
+  var elSeed = document.getElementById("seed");
+  var elCount = document.getElementById("count");
+  var elMethod = document.getElementById("method");
+  var elRandom = document.getElementById("randomize");
+  var elCustom = document.getElementById("custom");
+  var elApplyCustom = document.getElementById("applyCustom");
+  var elCustomInfo = document.getElementById("customInfo");
+  var elCmpBody = document.getElementById("cmp-body");
+  var elPadInfo = document.getElementById("padinfo");
+  var elGroupSel = document.getElementById("groupSel");
+  var elGroupInfo = document.getElementById("groupinfo");
+  var elHexLine = document.getElementById("hexline");
+  var elCellInfo = document.getElementById("cellinfo");
+  var elHistCap = document.getElementById("histcap");
+  var elHist = document.getElementById("hist");
+
+  var gridIds = { input: "grid-input", codes: "grid-codes", deq: "grid-deq", err: "grid-err" };
+  var gridKeys = ["input", "codes", "deq", "err"];
+  var grids = {};
+  var tabButtons = [];
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (b) { tabButtons.push(b); });
+
+  var weights = [];
+  var customWeights = null;
+  var res0 = null, resK = null;
+  var selectedCell = -1;
+
+  function selRes() { return state.method === "q4k" ? resK : res0; }
+
+  function buildGrid(key) {
+    var el = document.getElementById(gridIds[key]);
+    grids[key] = el;
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < GROUP; i++) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "cell";
+      b.setAttribute("data-i", String(i));
+      b.setAttribute("aria-label", "weight " + (i + 1) + " of the group");
+      frag.appendChild(b);
+    }
+    el.appendChild(frag);
+    el.addEventListener("click", function (ev) {
+      var t = ev.target;
+      while (t && t !== el && !(t.classList && t.classList.contains("cell"))) t = t.parentNode;
+      if (t && t !== el && t.classList && t.classList.contains("cell")) {
+        selectCell(parseInt(t.getAttribute("data-i"), 10));
+      }
+    });
+  }
+
+  function divColor(v, absmax) {
+    var t = absmax > 0 ? v / absmax : 0;
+    if (t > 1) t = 1;
+    if (t < -1) t = -1;
+    var a = Math.abs(t);
+    if (t >= 0) return "rgba(198,40,40," + a.toFixed(3) + ")";
+    return "rgba(33,101,180," + a.toFixed(3) + ")";
+  }
+
+  function errColor(e, maxErr) {
+    var a = maxErr > 0 ? Math.abs(e) / maxErr : 0;
+    if (a > 1) a = 1;
+    return a === 0 ? "" : "rgba(198,40,40," + (a * 0.95).toFixed(3) + ")";
+  }
+
+  function paintGrid(key, colorFn, titleFn) {
+    var cells = grids[key].children;
+    for (var i = 0; i < GROUP; i++) {
+      var col = colorFn(i);
+      cells[i].style.background = col === "" ? "" : col;
+      cells[i].title = titleFn(i);
+    }
+  }
+
+  function markSelected() {
+    gridKeys.forEach(function (key) {
+      var cells = grids[key].children;
+      for (var i = 0; i < GROUP; i++) cells[i].classList.toggle("sel", i === selectedCell);
+    });
+  }
+
+  function selectCell(i) {
+    selectedCell = i;
+    markSelected();
+    renderCellInfo();
+  }
+
+  function renderCellInfo() {
+    var res = selRes();
+    if (!res || selectedCell < 0) {
+      elCellInfo.textContent = "Click a cell to inspect it.";
+      return;
+    }
+    var gr = res.groups[state.group];
+    var i = selectedCell;
+    var gi = gr.off + i;
+    elCellInfo.textContent =
+      "w[" + gi + "] — fp32 " + fmt(res.w[gi]) +
+      " → nibble " + gr.q[i] + " (0x" + gr.q[i].toString(16) + ", value " + (gr.q[i] - 8) + ")" +
+      " → dequantized " + fmt(gr.deq[i]) +
+      " · error " + fmtSigned(gr.err[i]);
+  }
+
+  function paintGrids() {
+    var res = selRes();
+    var gr = res.groups[state.group];
+    var w = res.w, off = gr.off;
+    var amax = 0, maxErr = 0, i;
+    for (i = 0; i < GROUP; i++) {
+      var a = Math.abs(w[off + i]);
+      if (a > amax) amax = a;
+      var e = Math.abs(gr.err[i]);
+      if (e > maxErr) maxErr = e;
+    }
+    if (amax === 0) amax = 1;
+    paintGrid("input", function (i) { return divColor(w[off + i], amax); }, function (i) { return "fp32 " + fmt(w[off + i]); });
+    paintGrid("codes", function (i) { return divColor(gr.q[i] - 8, 8); }, function (i) { return "nibble " + gr.q[i] + " → " + (gr.q[i] - 8); });
+    paintGrid("deq", function (i) { return divColor(gr.deq[i], amax); }, function (i) { return "dequantized " + fmt(gr.deq[i]); });
+    paintGrid("err", function (i) { return errColor(gr.err[i], maxErr); }, function (i) { return "error " + fmtSigned(gr.err[i]); });
+    markSelected();
+  }
+
+  function addCmpRow(r, sel) {
+    var tr = document.createElement("tr");
+    if (sel) tr.className = "sel";
+    var cells = [
+      r.label,
+      String(r.groups.length),
+      r.totalBytes + " B",
+      r.bitsPerWeight.toFixed(2),
+      fmt(r.mse, 6),
+      fmt(r.rmse, 6),
+      fmt(r.maxAbs, 6),
+      isFinite(r.sqnr) ? r.sqnr.toFixed(1) + " dB" : "∞ dB"
+    ];
+    for (var i = 0; i < cells.length; i++) {
+      var td = document.createElement("td");
+      td.textContent = cells[i];
+      tr.appendChild(td);
+    }
+    elCmpBody.appendChild(tr);
+  }
+
+  function renderTable() {
+    elCmpBody.innerHTML = "";
+    addCmpRow(res0, state.method === "q4_0");
+    addCmpRow(resK, state.method === "q4k");
+    var n = res0.nOrig;
+    elPadInfo.textContent =
+      n + " input weights" +
+      (res0.pad > 0 ? ", padded with " + res0.pad + " zero(s) to fill whole blocks" : "") +
+      ". FP32 storage would take " + (4 * n) + " bytes; Q4_0 stores " + res0.totalBytes +
+      " B (" + res0.bitsPerWeight.toFixed(2) + " bits/weight), Q4_K style stores " + resK.totalBytes +
+      " B (" + resK.bitsPerWeight.toFixed(2) + " bits/weight).";
+  }
+
+  function rebuildGroupSel() {
+    var res = selRes();
+    elGroupSel.innerHTML = "";
+    for (var g = 0; g < res.groups.length; g++) {
+      var o = document.createElement("option");
+      o.value = String(g);
+      var gr = res.groups[g];
+      o.textContent = "Group " + (g + 1) + " · w" + gr.off + "–w" + (gr.off + GROUP - 1) + " · MSE " + fmt(gr.mse, 6);
+      elGroupSel.appendChild(o);
+    }
+    if (state.group >= res.groups.length) state.group = res.groups.length - 1;
+    if (state.group < 0) state.group = 0;
+    elGroupSel.value = String(state.group);
+  }
+
+  function renderGroup() {
+    var res = selRes();
+    var g = state.group;
+    var gr = res.groups[g];
+    selectedCell = -1;
+    var info;
+    if (res.mode === "q4_0") {
+      info = "Group " + (g + 1) + " of " + res.groups.length +
+        " · weights w" + gr.off + "–w" + (gr.off + GROUP - 1) +
+        " · FP16 scale d = " + fmt(gr.d, 6) + " (" + hex16(gr.dBits) + ")" +
+        " · raw scale " + fmt(gr.dRaw, 6) +
+        " · block = 2 B scale + 16 B nibbles = 18 B · group MSE = " + fmt(gr.mse, 6);
+      var block = new Uint8Array(18);
+      block[0] = gr.dBits & 0xff;
+      block[1] = (gr.dBits >> 8) & 0xff;
+      block.set(gr.bytes, 2);
+      elHexLine.textContent = "Packed block, 18 bytes (FP16 scale little-endian, then nibbles, low nibble first): " + hexBytes(block);
+    } else {
+      var sb = res.superBlocks[gr.super];
+      info = "Group " + (g + 1) + " of " + res.groups.length +
+        " (super-block " + (gr.super + 1) + ", sub " + (gr.sub + 1) + " of " + SUB + ")" +
+        " · 6-bit sub-scale k = " + gr.k +
+        " · super-scale d = " + fmt(sb.d, 6) + " (" + hex16(sb.dBits) + ")" +
+        " · effective scale e = d·k = " + fmt(gr.e, 6) +
+        " · group MSE = " + fmt(gr.mse, 6);
+      var hdr = new Uint8Array(8);
+      hdr[0] = sb.dBits & 0xff;
+      hdr[1] = (sb.dBits >> 8) & 0xff;
+      hdr.set(sb.kBytes, 2);
+      elHexLine.textContent = "Super-block header, 8 bytes (d little-endian + 8×6-bit k packed): " + hexBytes(hdr) +
+        " — this group's nibbles, 16 bytes: " + hexBytes(gr.bytes);
+    }
+    elGroupInfo.textContent = info;
+    paintGrids();
+    renderCellInfo();
+  }
+
+  function setTab(tab) {
+    state.tab = tab;
+    tabButtons.forEach(function (b) {
+      b.setAttribute("aria-selected", b.getAttribute("data-tab") === tab ? "true" : "false");
+    });
+    gridKeys.forEach(function (key) {
+      document.getElementById(gridIds[key]).hidden = key !== tab;
+    });
+  }
+
+  function drawHist(errs, label) {
+    if (!elHist || !errs) return;
+    elHistCap.textContent = label + " · error per weight";
+    var dpr = window.devicePixelRatio || 1;
+    var cssW = elHist.clientWidth || 300;
+    var cssH = 220;
+    var wpx = Math.max(1, Math.round(cssW * dpr));
+    var hpx = Math.round(cssH * dpr);
+    if (elHist.width !== wpx || elHist.height !== hpx) {
+      elHist.width = wpx;
+      elHist.height = hpx;
+    }
+    var ctx = elHist.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+    var cs = getComputedStyle(document.documentElement);
+    var colText = cs.getPropertyValue("--text").trim() || "#111";
+    var colText2 = cs.getPropertyValue("--text-2").trim() || "#5a5a5a";
+    var colLine = cs.getPropertyValue("--line").trim() || "#e2e2de";
+
+    var i, min = Infinity, max = -Infinity;
+    for (i = 0; i < errs.length; i++) {
+      if (errs[i] < min) min = errs[i];
+      if (errs[i] > max) max = errs[i];
+    }
+    if (min === max) { min -= 1e-6; max += 1e-6; }
+    var counts = new Array(BINS);
+    for (i = 0; i < BINS; i++) counts[i] = 0;
+    for (i = 0; i < errs.length; i++) {
+      var b = Math.floor((errs[i] - min) / (max - min) * BINS);
+      if (b < 0) b = 0;
+      if (b >= BINS) b = BINS - 1;
+      counts[b]++;
+    }
+    var maxC = 0;
+    for (i = 0; i < BINS; i++) if (counts[i] > maxC) maxC = counts[i];
+
+    var padL = 6, padR = 6, padT = 16, padB = 20;
+    var plotW = Math.max(10, cssW - padL - padR);
+    var plotH = Math.max(10, cssH - padT - padB);
+    var baseY = padT + plotH;
+
+    ctx.strokeStyle = colLine;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padL, baseY + 0.5);
+    ctx.lineTo(padL + plotW, baseY + 0.5);
+    ctx.stroke();
+
+    ctx.fillStyle = colText;
+    ctx.globalAlpha = 0.82;
+    var bw = plotW / BINS;
+    for (i = 0; i < BINS; i++) {
+      var h = maxC > 0 ? (counts[i] / maxC) * plotH : 0;
+      ctx.fillRect(padL + i * bw, baseY - h, Math.max(1, bw - 1), h);
+    }
+    ctx.globalAlpha = 1;
+
+    if (min < 0 && max > 0) {
+      var zx = padL + ((0 - min) / (max - min)) * plotW;
+      ctx.strokeStyle = colText2;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(zx, padT);
+      ctx.lineTo(zx, baseY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    ctx.fillStyle = colText2;
+    ctx.font = "11px system-ui, -apple-system, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText(fmt(min, 4), padL, cssH - 6);
+    ctx.textAlign = "right";
+    ctx.fillText(fmt(max, 4), padL + plotW, cssH - 6);
+    ctx.textAlign = "center";
+    ctx.fillText(BINS + " bins", padL + plotW / 2, cssH - 6);
+    ctx.textAlign = "left";
+    ctx.fillText("max " + maxC, padL, padT - 5);
+  }
+
+  function drawHistSelected() {
+    var res = selRes();
+    if (!res) return;
+    var errs = [];
+    for (var g = 0; g < res.groups.length; g++) {
+      var gr = res.groups[g];
+      for (var i = 0; i < GROUP; i++) {
+        if (gr.off + i < res.nOrig) errs.push(gr.err[i]);
+      }
+    }
+    drawHist(errs, res.label + " · MSE " + fmt(res.mse, 6));
+  }
+
+  function update() {
+    state.dist = elDist.value;
+    var s = parseInt(elSeed.value, 10);
+    if (!isFinite(s) || s < 0) s = 0;
+    state.seed = s;
+    var c = parseInt(elCount.value, 10);
+    if (COUNTS.indexOf(c) < 0) c = 32;
+    state.count = c;
+    state.method = elMethod.value;
+    if (customWeights) {
+      weights = customWeights;
+    } else {
+      weights = genWeights(state.dist, state.seed, state.count);
+    }
+    res0 = quantizeQ4_0(weights, weights.length);
+    resK = quantizeQ4K(weights, weights.length);
+    renderTable();
+    rebuildGroupSel();
+    renderGroup();
+    drawHistSelected();
+    storeSave();
+  }
+
+  function useGenerated() {
+    customWeights = null;
+    elCustom.value = "";
+    elCustomInfo.textContent = "";
+    state.custom = "";
+    update();
+  }
+
+  elDist.addEventListener("change", useGenerated);
+  elSeed.addEventListener("change", useGenerated);
+  elCount.addEventListener("change", useGenerated);
+  elRandom.addEventListener("click", function () {
+    elSeed.value = String(Math.floor(Math.random() * 1000000));
+    useGenerated();
+  });
+  elMethod.addEventListener("change", function () {
+    state.method = elMethod.value;
+    update();
+  });
+  elApplyCustom.addEventListener("click", function () {
+    var arr = parseWeights(elCustom.value);
+    if (arr.length === 0) {
+      elCustomInfo.textContent = "No valid numbers found — keeping current weights.";
+      return;
+    }
+    customWeights = arr;
+    state.custom = elCustom.value;
+    elCustomInfo.textContent = "Loaded " + arr.length + " custom weights.";
+    update();
+  });
+  elGroupSel.addEventListener("change", function () {
+    state.group = parseInt(elGroupSel.value, 10);
+    if (!isFinite(state.group) || state.group < 0) state.group = 0;
+    renderGroup();
+    storeSave();
+  });
+  tabButtons.forEach(function (b) {
+    b.addEventListener("click", function () {
+      setTab(b.getAttribute("data-tab"));
+      storeSave();
+    });
+  });
+
+  var mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  if (mq) {
+    if (mq.addEventListener) mq.addEventListener("change", drawHistSelected);
+    else if (mq.addListener) mq.addListener(drawHistSelected);
+  }
+  window.addEventListener("resize", drawHistSelected);
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(drawHistSelected);
+    ro.observe(elHist.parentNode);
+  }
+
+  storeLoad();
+  elDist.value = state.dist;
+  elSeed.value = String(state.seed);
+  elCount.value = String(state.count);
+  elMethod.value = state.method;
+  elCustom.value = state.custom;
+  var parsedCustom = parseWeights(state.custom);
+  if (parsedCustom.length > 0) {
+    customWeights = parsedCustom;
+    elCustomInfo.textContent = "Loaded " + parsedCustom.length + " custom weights.";
+  }
+  buildGrid("input");
+  buildGrid("codes");
+  buildGrid("deq");
+  buildGrid("err");
+  setTab(gridKeys.indexOf(state.tab) >= 0 ? state.tab : "input");
+  update();
+})();
+</script>
+</body>
+</html>

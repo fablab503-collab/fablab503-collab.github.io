@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Entity Extractor · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/060-entity-extractor/">
+  <meta name="description" content="Identify and label named entities (persons, organisations, locations) using a rule-based recogniser.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    header, footer {
+      text-align: center;
+      padding: 1rem 0;
+    }
+    textarea, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background-color: var(--card);
+      color: var(--text);
+    }
+    button {
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .entities {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background-color: var(--card);
+    }
+    .entity {
+      display: inline-block;
+      margin: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+    .person { background-color: #ffeb3b; color: #000; }
+    .org { background-color: #4caf50; color: white; }
+    .loc { background-color: #2196f3; color: white; }
+    footer a {
+      color: var(--text-2);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/" style="color: var(--text);">← Project 503</a>
+    </header>
+
+    <main>
+      <h1>Entity Extractor</h1>
+      <p>Enter text below to identify named entities (persons, organisations, locations).</p>
+      
+      <textarea id="inputText" rows="6" placeholder="Paste or type your text here...">Apple Inc. is located in Cupertino, California. Tim Cook is the CEO.</textarea>
+      <button id="extractBtn">Extract Entities</button>
+      
+      <div class="entities" id="entitiesContainer">
+        <!-- Entities will appear here -->
+      </div>
+    </main>
+
+    <footer>
+      Project #60 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const inputText = document.getElementById('inputText');
+      const extractBtn = document.getElementById('extractBtn');
+      const entitiesContainer = document.getElementById('entitiesContainer');
+
+      // Load saved text from localStorage if available
+      try {
+        const savedText = localStorage.getItem('entityExtractorText');
+        if (savedText) inputText.value = savedText;
+      } catch (e) {}
+
+      extractBtn.addEventListener('click', () => {
+        const text = inputText.value;
+        try {
+          localStorage.setItem('entityExtractorText', text);
+        } catch (e) {}
+        
+        const entities = extractEntities(text);
+        displayEntities(entities);
+      });
+
+      function extractEntities(text) {
+        const words = text.split(/\s+/);
+        const entities = [];
+        const persons = ['Tim Cook', 'John Smith', 'Jane Doe'];
+        const organisations = ['Apple Inc.', 'Microsoft', 'Google'];
+        const locations = ['Cupertino', 'California', 'New York'];
+
+        for (let i = 0; i < words.length; i++) {
+          const word = words[i];
+          let found = false;
+
+          // Check for persons
+          for (const person of persons) {
+            if (text.includes(person)) {
+              entities.push({ text: person, type: 'person', start: text.indexOf(person), end: text.indexOf(person) + person.length });
+              found = true;
+              break;
+            }
+          }
+
+          if (found) continue;
+
+          // Check for organisations
+          for (const org of organisations) {
+            if (text.includes(org)) {
+              entities.push({ text: org, type: 'org', start: text.indexOf(org), end: text.indexOf(org) + org.length });
+              found = true;
+              break;
+            }
+          }
+
+          if (found) continue;
+
+          // Check for locations
+          for (const loc of locations) {
+            if (text.includes(loc)) {
+              entities.push({ text: loc, type: 'loc', start: text.indexOf(loc), end: text.indexOf(loc) + loc.length });
+              found = true;
+              break;
+            }
+          }
+        }
+
+        // Sort by position
+        return entities.sort((a, b) => a.start - b.start);
+      }
+
+      function displayEntities(entities) {
+        entitiesContainer.innerHTML = '';
+        if (entities.length === 0) {
+          entitiesContainer.textContent = 'No entities found.';
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        entities.forEach(entity => {
+          const span = document.createElement('span');
+          span.className = `entity ${entity.type}`;
+          span.textContent = entity.text;
+          fragment.appendChild(span);
+        });
+        entitiesContainer.appendChild(fragment);
+      }
+
+      // Initial extraction
+      extractBtn.click();
+    });
+  </script>
+</body>
+</html>

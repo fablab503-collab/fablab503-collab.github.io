@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Number Extractor · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/089-number-extractor/">
+<meta name="description" content="Paste any text and see every number in it — integers, decimals and percentages — extracted into a sortable table.">
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --card: #fff;
+    --text: #111;
+    --text-2: #5a5a5a;
+    --line: #e2e2de;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --card: #1c1c1c;
+      --text: #f2f2f2;
+      --text-2: #a8a8a8;
+      --line: #2c2c2c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .back {
+    display: inline-block;
+    padding: 16px 20px 0;
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .back:hover { color: var(--text); text-decoration: underline; }
+  main {
+    max-width: 720px;
+    margin: 12px auto 0;
+    padding: 24px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  h1 { font-size: 24px; margin: 0 0 6px; }
+  .lede { margin: 0 0 20px; color: var(--text-2); font-size: 15px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    resize: vertical;
+  }
+  textarea:focus { outline: 2px solid var(--text-2); outline-offset: 1px; }
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 12px 0 20px;
+  }
+  button {
+    font: inherit;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+  }
+  button.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+  button:hover { opacity: 0.85; }
+  #count { font-size: 13px; color: var(--text-2); }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-2);
+    background: var(--bg);
+    user-select: none;
+    white-space: nowrap;
+  }
+  th.sortable { cursor: pointer; }
+  th.sortable:hover { color: var(--text); }
+  th .arrow { font-size: 10px; margin-left: 4px; }
+  tr:last-child td { border-bottom: none; }
+  td.num { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: nowrap; }
+  td.empty { color: var(--text-2); text-align: center; padding: 16px; }
+  .note { margin: 16px 0 0; font-size: 13px; color: var(--text-2); }
+  footer {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-2);
+    padding: 24px 16px 32px;
+  }
+  @media (max-width: 480px) {
+    main { margin: 8px 12px 0; padding: 16px; }
+    h1 { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<a class="back" href="/503/">← Project 503</a>
+<main>
+  <h1>Number Extractor</h1>
+  <p class="lede">Paste text below. Every number in it — integers, decimals and percentages — is listed in a table you can sort by clicking a column header.</p>
+  <label for="input">Your text</label>
+  <textarea id="input" rows="6" placeholder="Type or paste text that contains numbers…"></textarea>
+  <div class="actions">
+    <button id="run" class="primary" type="button">Extract</button>
+    <button id="copy" type="button">Copy values</button>
+    <span id="count"></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="sortable" data-key="text">Found in text<span class="arrow"></span></th>
+          <th class="sortable" data-key="value">Value<span class="arrow"></span></th>
+          <th class="sortable" data-key="type">Type<span class="arrow"></span></th>
+          <th class="sortable" data-key="index">Position<span class="arrow"></span></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <p class="note">Numbers are read as written: 3.14 and 3,14 both mean 3.14, a trailing % marks a percentage, a leading − or - marks a negative. Click a column header to sort ascending, click again to sort descending. Everything runs locally in your browser.</p>
+</main>
+<footer>Project #89 of 503 · Daniel Madac, D-CREATIONS</footer>
+<script>
+(function () {
+  'use strict';
+
+  // Matches integers, decimals (dot or comma) and percentages, with optional sign.
+  var RE = /[+-]?(?:\d+(?:[.,]\d+)?|\.\d+)%?/g;
+
+  function findNumbers(text) {
+    var found = [];
+    var m;
+    RE.lastIndex = 0;
+    while ((m = RE.exec(text)) !== null) {
+      var raw = m[0];
+      var isPct = raw.charAt(raw.length - 1) === '%';
+      var core = isPct ? raw.slice(0, -1) : raw;
+      var value = parseFloat(core.replace(',', '.'));
+      if (isNaN(value)) continue;
+      var type = isPct ? 'percentage' : (/[.,]/.test(core) ? 'decimal' : 'integer');
+      found.push({ text: raw, value: value, type: type, index: m.index });
+      if (raw.length === 0) RE.lastIndex++;
+    }
+    return found;
+  }
+
+  function fmt(value, type) {
+    var s = String(value);
+    return type === 'percentage' ? s + '%' : s;
+  }
+
+  var input = document.getElementById('input');
+  var rows = document.getElementById('rows');
+  var count = document.getElementById('count');
+  var KEY = 'p503-089-number-extractor-text';
+
+  var EXAMPLE = 'Sales grew 12.5% in Q1, from 1,240 units to 1,395. Revenue was €8.2M, costs 3,150 €, margin about 24%. The app has 7 bugs, 2 are critical, version 2.10 ships in -3 days.';
+
+  function save(t) { try { localStorage.setItem(KEY, t); } catch (e) { /* storage unavailable */ } }
+  function load() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+
+  var sortKey = 'index';
+  var sortDir = 1;
+
+  function compare(a, b) {
+    if (sortKey === 'value') return (a.value - b.value) * sortDir;
+    if (sortKey === 'index') return (a.index - b.index) * sortDir;
+    if (sortKey === 'type') return (a.type < b.type ? -1 : a.type > b.type ? 1 : 0) * sortDir || (a.index - b.index);
+    return (a.text < b.text ? -1 : a.text > b.text ? 1 : 0) * sortDir || (a.index - b.index);
+  }
+
+  function render() {
+    var text = input.value;
+    save(text);
+    var nums = findNumbers(text).sort(compare);
+    rows.innerHTML = '';
+    count.textContent = nums.length ? nums.length + (nums.length === 1 ? ' number found' : ' numbers found') : '';
+    document.querySelectorAll('th.sortable').forEach(function (th) {
+      th.querySelector('.arrow').textContent = th.getAttribute('data-key') === sortKey ? (sortDir === 1 ? '▲' : '▼') : '';
+    });
+    if (!nums.length) {
+      var tr = document.createElement('tr');
+      var td = document.createElement('td');
+      td.colSpan = 4;
+      td.className = 'empty';
+      td.textContent = 'No numbers found.';
+      tr.appendChild(td);
+      rows.appendChild(tr);
+      return;
+    }
+    nums.forEach(function (n) {
+      var tr = document.createElement('tr');
+      var td1 = document.createElement('td');
+      td1.textContent = n.text;
+      var td2 = document.createElement('td');
+      td2.className = 'num';
+      td2.textContent = fmt(n.value, n.type);
+      var td3 = document.createElement('td');
+      td3.textContent = n.type;
+      var td4 = document.createElement('td');
+      td4.className = 'num';
+      td4.textContent = String(n.index);
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tr.appendChild(td3);
+      tr.appendChild(td4);
+      rows.appendChild(tr);
+    });
+  }
+
+  document.querySelectorAll('th.sortable').forEach(function (th) {
+    th.addEventListener('click', function () {
+      var key = th.getAttribute('data-key');
+      if (sortKey === key) { sortDir = -sortDir; } else { sortKey = key; sortDir = 1; }
+      render();
+    });
+  });
+
+  document.getElementById('run').addEventListener('click', render);
+  input.addEventListener('input', render);
+
+  document.getElementById('copy').addEventListener('click', function () {
+    var lines = [];
+    rows.querySelectorAll('tr').forEach(function (tr) {
+      var cells = tr.querySelectorAll('td');
+      if (cells.length === 4) lines.push(cells[1].textContent);
+    });
+    var text = lines.join('\n');
+    function done() {
+      var btn = document.getElementById('copy');
+      btn.textContent = 'Copied';
+      setTimeout(function () { btn.textContent = 'Copy values'; }, 1200);
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallback(); });
+      } else { fallback(); }
+    } catch (e) { fallback(); }
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done();
+      } catch (e) { /* clipboard unavailable */ }
+    }
+  });
+
+  input.value = load() || EXAMPLE;
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Spell Checker Lite · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/086-spell-checker-lite/">
+<meta name="description" content="Spell Checker Lite flags potentially misspelled words against an embedded dictionary and suggests corrections by edit distance, fully offline in one HTML file.">
+<style>
+:root{
+  --bg:#f4f4f2; --card:#fff; --text:#111; --text-2:#5a5a5a; --line:#e2e2de;
+  --flag:#b3261e; --flag-bg:#fdeceb; --accent:#111; --accent-text:#fff; --ok:#1a7f37;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121212; --card:#1c1c1c; --text:#f2f2f2; --text-2:#a8a8a8; --line:#2c2c2c;
+    --flag:#ff8a80; --flag-bg:#3a1d1b; --accent:#f2f2f2; --accent-text:#121212; --ok:#6fdc8c;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.5; padding:16px;
+}
+.back{
+  display:inline-block; color:var(--text-2); text-decoration:none;
+  font-size:14px; margin:4px 0 14px;
+}
+.back:hover{color:var(--text); text-decoration:underline}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  max-width:720px; margin:0 auto; padding:20px;
+}
+h1{font-size:22px; margin:0 0 6px}
+.sub{color:var(--text-2); font-size:14px; margin:0 0 16px}
+textarea{
+  width:100%; min-height:140px; resize:vertical; padding:12px;
+  border:1px solid var(--line); border-radius:10px; background:var(--bg);
+  color:var(--text); font:inherit; font-size:15px;
+}
+.row{display:flex; gap:8px; margin:12px 0; flex-wrap:wrap}
+button{
+  border:1px solid var(--accent); background:var(--accent); color:var(--accent-text);
+  border-radius:10px; padding:9px 16px; font:inherit; font-size:14px; cursor:pointer;
+}
+button.ghost{background:transparent; color:var(--text); border-color:var(--line)}
+button.small{padding:5px 10px; font-size:13px}
+#stats{font-size:13px; color:var(--text-2); margin:4px 0 12px}
+#output{
+  border:1px solid var(--line); border-radius:10px; padding:12px; font-size:15px;
+  white-space:pre-wrap; word-break:break-word; min-height:48px; background:var(--bg);
+}
+.flag{
+  background:var(--flag-bg); color:var(--flag); border-bottom:2px solid var(--flag);
+  cursor:pointer; border-radius:3px; padding:0 1px;
+}
+#panel{
+  border:1px solid var(--line); border-radius:10px; padding:12px; margin-top:12px;
+  display:none; font-size:14px;
+}
+#panel.show{display:block}
+#panel .word{font-weight:600}
+.sugg{margin:8px 0 4px; display:flex; gap:6px; flex-wrap:wrap}
+.sugg button{background:transparent; color:var(--text); border-color:var(--line)}
+.sugg button:hover{border-color:var(--text)}
+details{margin-top:16px; font-size:14px; color:var(--text-2)}
+summary{cursor:pointer; color:var(--text)}
+.dict-row{display:flex; gap:6px; margin:10px 0; flex-wrap:wrap}
+.dict-row input{
+  flex:1; min-width:140px; padding:8px 10px; border:1px solid var(--line);
+  border-radius:8px; background:var(--bg); color:var(--text); font:inherit; font-size:14px;
+}
+#custom-list{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+#custom-list span{
+  border:1px solid var(--line); border-radius:999px; padding:3px 10px; font-size:13px;
+}
+#custom-list button{border:none; background:none; color:var(--text-2); cursor:pointer; padding:0 0 0 6px; font-size:13px}
+footer{
+  text-align:center; color:var(--text-2); font-size:13px; margin:22px 0 8px;
+}
+</style>
+</head>
+<body>
+<a class="back" href="/503/">← Project 503</a>
+<main class="card">
+  <h1>Spell Checker Lite</h1>
+  <p class="sub">Type or paste text below. Words that are not in the embedded dictionary are flagged, and corrections are suggested by edit distance. Everything runs offline in this page.</p>
+  <textarea id="input" placeholder="Start typing here…" spellcheck="false"></textarea>
+  <div class="row">
+    <button id="check">Check spelling</button>
+    <button id="clear" class="ghost">Clear</button>
+  </div>
+  <p id="stats"></p>
+  <div id="output"></div>
+  <div id="panel">
+    <span class="word" id="panel-word"></span>
+    <div class="sugg" id="panel-sugg"></div>
+    <button class="small ghost" id="panel-add">Add this word to my dictionary</button>
+  </div>
+  <details>
+    <summary>My dictionary (<span id="dict-count">0</span> custom words, saved locally in this browser only)</summary>
+    <div class="dict-row">
+      <input id="dict-input" placeholder="Add a word…" maxlength="40">
+      <button class="small" id="dict-add">Add</button>
+      <button class="small ghost" id="dict-clear">Clear all</button>
+    </div>
+    <div id="custom-list"></div>
+  </details>
+</main>
+<footer>Project #86 of 503 · Daniel Madac, D-CREATIONS</footer>
+<script>
+"use strict";
+var DICT_TEXT = "a about above accept across act action actually add address afraid after afternoon again against age ago agree air all allow almost alone along already also although always am among amount and animal another answer any anyone anything appear apple apply area argue arm around arrive art as ask at away baby back bad bag ball bank base be bean bear beat beautiful because become bed before begin behind believe bell belong below best better between big bill bird bit black blue boat body book born both bottle bottom box boy brain break bring brother build burn bus business but buy by call came can capital car care carry case cat catch cause center century certain chair chance change character charge cheap check child choice choose church city class clean clear climb clock close cloth cloud cold come common company compare complete computer condition consider contain continue control cook cool copy corn corner correct cost could count country course cover create cross crowd cry cup current cut dance danger dark data daughter day dead deal dear decide deep desk die difference different dinner direct do doctor does dog dollar door double down draw dream dress drink drive drop dry during dust each early ear eat edge effect effort egg eight either end enemy enjoy enough enter entire equal error escape even evening event ever every exact example except exercise expect eye face fact fair fall false family far farm fast father fear feel feet fell felt few field fight figure fill final find fine finger finish fire first fish fit five fix flat floor flower fly follow food foot for force forget form forward four free fresh friend from front fruit full fun future game garden gas gate get girl give glad glass go god gold gone good got government grand grass great green ground group grow hair hand happen happy hard has hat have he head hear heart heat heavy help her here high hill him his history hit hold hole home hope horse hospital hot hotel hour house how however huge human hundred idea if in inch include increase indeed inside instead interest into iron is island it item its job join joke jump just keep key kill kind king kitchen know lady land language large last late laugh law lay lead learn leave left leg less let letter level life light like line lion list listen little live local long look lose lot love low luck lunch made mail main make man many map march mark market match may maybe me mean measure meat meet member memory men message metal middle might mile mind mine minute miss money month moon more morning most mother mountain mouse mouth move much music must my name nation near neck need never new news next nice night no noise north nose not note nothing now number object ocean of off offer office often oil old on once one only open or order other out outside over own page paint paper part past pay people per perhaps pick picture place plan plant play please point poor popular possible post power practice prepare present press pretty price print probably problem public pull push put quality question quick quiet quite race radio raise reach read ready real reason receive red remember rest right river road rock room round rule run safe said same save saw say school sea season seat second see seem self sell send sense set seven several she ship shoe shop short should shoulder shout show side sign simple since sing single sister sit six size skill skin sky sleep small smell smile snow so soft soil soldier solve some son song soon sort sound south space speak special speed spell spend spoon sport spot spread spring stand star start state stay step stone stop store story street strong student study subject such sudden suffer sugar summer sun supply support suppose sure sweet swim system table tail take talk tall teach team tell ten term terrible test than that the their them then there these thick thin thing think third this those though thought thousand three through throw tie time tiny tire today together tomorrow ton tonight too took top total touch toward town tree true try turn twelve two type under understand unit until up upon us use usual very view village visit voice wait walk wall want war warm wash watch water wave way we wear week well went were west what when where which while white who whole why wide wife will win wind window wine wing winter wire wish with within woman word work world worry would write wrong yard year yellow yes yesterday yet you young your";
+var CONTRACTIONS = "i'm you're he's she's it's we're they're that's what's there's here's who's how's let's don't doesn't didn't can't won't isn't aren't wasn't weren't hasn't haven't hadn't couldn't shouldn't wouldn't ain't o'clock y'all ma'am i've you've we've they've i'll you'll he'll she'll we'll they'll i'd you'd he'd she'd we'd they'd mightn't mustn't needn't shan't";
+var DICTIONARY = {};
+(DICT_TEXT + " " + CONTRACTIONS).split(/\s+/).forEach(function(w){ if(w) DICTIONARY[w] = true; });
+
+var LS_KEY = "scl86.customWords";
+function lsGet(){
+  try{
+    var raw = localStorage.getItem(LS_KEY);
+    var arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){ return []; }
+}
+function lsSet(arr){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }catch(e){}
+}
+var custom = {};
+lsGet().forEach(function(w){ custom[String(w).toLowerCase()] = true; });
+
+var input = document.getElementById("input");
+var output = document.getElementById("output");
+var stats = document.getElementById("stats");
+var panel = document.getElementById("panel");
+var panelWord = document.getElementById("panel-word");
+var panelSugg = document.getElementById("panel-sugg");
+var panelAdd = document.getElementById("panel-add");
+
+function levenshtein(a, b){
+  if(a === b) return 0;
+  var la = a.length, lb = b.length;
+  if(la === 0) return lb;
+  if(lb === 0) return la;
+  var prev = [], cur = [], i, j;
+  for(j = 0; j <= lb; j++) prev[j] = j;
+  for(i = 1; i <= la; i++){
+    cur[0] = i;
+    for(j = 1; j <= lb; j++){
+      var cost = a.charAt(i-1) === b.charAt(j-1) ? 0 : 1;
+      cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + cost);
+    }
+    var tmp = prev; prev = cur; cur = tmp;
+  }
+  return prev[lb];
+}
+
+function maxDist(len){
+  if(len <= 4) return 1;
+  if(len <= 7) return 2;
+  return 3;
+}
+
+function suggestions(word){
+  var w = word.toLowerCase();
+  var md = maxDist(w.length);
+  var out = [];
+  for(var cand in DICTIONARY){
+    if(Math.abs(cand.length - w.length) > md) continue;
+    var d = levenshtein(w, cand);
+    if(d > 0 && d <= md) out.push([d, cand]);
+  }
+  out.sort(function(x, y){ return x[0] - y[0] || (x[1] < y[1] ? -1 : 1); });
+  return out.slice(0, 5).map(function(o){ return o[1]; });
+}
+
+function matchCase(orig, repl){
+  if(orig === orig.toUpperCase() && orig.length > 1) return repl.toUpperCase();
+  if(orig.charAt(0) === orig.charAt(0).toUpperCase()) return repl.charAt(0).toUpperCase() + repl.slice(1);
+  return repl;
+}
+
+var matches = [];
+
+function isKnown(word){
+  var w = word.toLowerCase();
+  if(DICTIONARY[w] || custom[w]) return true;
+  if(/^[A-Z]{2,6}$/.test(word)) return true; // acronym like NASA or HTML
+  return false;
+}
+
+function runCheck(){
+  var text = input.value;
+  matches = [];
+  output.textContent = "";
+  panel.classList.remove("show");
+  if(!text.trim()){
+    stats.textContent = "Type something above, then press Check spelling.";
+    return;
+  }
+  var re = /[A-Za-z]+(?:'[A-Za-z]+)?/g, m, last = 0, flagged = 0;
+  while((m = re.exec(text)) !== null){
+    output.appendChild(document.createTextNode(text.slice(last, m.index)));
+    last = m.index + m[0].length;
+    if(isKnown(m[0])){
+      output.appendChild(document.createTextNode(m[0]));
+    }else{
+      flagged++;
+      var idx = matches.length;
+      matches.push({ start: m.index, end: last, word: m[0] });
+      var span = document.createElement("span");
+      span.className = "flag";
+      span.textContent = m[0];
+      span.setAttribute("data-idx", idx);
+      output.appendChild(span);
+    }
+  }
+  output.appendChild(document.createTextNode(text.slice(last)));
+  var total = text.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g) || [];
+  stats.textContent = total.length + " words checked · " + flagged + " flagged" +
+    (flagged ? " · click a flagged word for suggestions" : " · no problems found");
+  stats.style.color = flagged ? "var(--flag)" : "var(--ok)";
+}
+
+output.addEventListener("click", function(ev){
+  var t = ev.target;
+  if(!t || t.className !== "flag") return;
+  var rec = matches[Number(t.getAttribute("data-idx"))];
+  if(!rec) return;
+  panelWord.textContent = rec.word;
+  panelSugg.textContent = "";
+  var sugg = suggestions(rec.word);
+  if(!sugg.length){
+    var none = document.createElement("span");
+    none.textContent = "No close matches in the dictionary.";
+    none.style.color = "var(--text-2)";
+    panelSugg.appendChild(none);
+  }else{
+    sugg.forEach(function(s){
+      var b = document.createElement("button");
+      b.textContent = matchCase(rec.word, s);
+      b.addEventListener("click", function(){ replace(rec, matchCase(rec.word, s)); });
+      panelSugg.appendChild(b);
+    });
+  }
+  panelAdd.onclick = function(){ addCustom(rec.word); };
+  panel.classList.add("show");
+});
+
+function replace(rec, repl){
+  var text = input.value;
+  input.value = text.slice(0, rec.start) + repl + text.slice(rec.end);
+  runCheck();
+}
+
+function renderCustom(){
+  var list = document.getElementById("custom-list");
+  list.textContent = "";
+  var words = lsGet();
+  document.getElementById("dict-count").textContent = words.length;
+  words.forEach(function(w){
+    var chip = document.createElement("span");
+    chip.textContent = w;
+    var x = document.createElement("button");
+    x.textContent = "×";
+    x.title = "Remove";
+    x.addEventListener("click", function(){
+      var arr = lsGet().filter(function(o){ return o !== w; });
+      lsSet(arr);
+      delete custom[w];
+      renderCustom();
+      runCheck();
+    });
+    chip.appendChild(x);
+    list.appendChild(chip);
+  });
+}
+
+function addCustom(word){
+  var w = String(word).toLowerCase().trim();
+  if(!w) return;
+  var arr = lsGet();
+  if(arr.indexOf(w) === -1){ arr.push(w); lsSet(arr); }
+  custom[w] = true;
+  renderCustom();
+  runCheck();
+}
+
+document.getElementById("check").addEventListener("click", runCheck);
+document.getElementById("clear").addEventListener("click", function(){
+  input.value = "";
+  output.textContent = "";
+  stats.textContent = "";
+  panel.classList.remove("show");
+});
+document.getElementById("dict-add").addEventListener("click", function(){
+  addCustom(document.getElementById("dict-input").value);
+  document.getElementById("dict-input").value = "";
+});
+document.getElementById("dict-input").addEventListener("keydown", function(ev){
+  if(ev.key === "Enter"){ addCustom(this.value); this.value = ""; }
+});
+document.getElementById("dict-clear").addEventListener("click", function(){
+  lsSet([]);
+  custom = {};
+  renderCustom();
+  runCheck();
+});
+
+renderCustom();
+runCheck();
+</script>
+</body>
+</html>

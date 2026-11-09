@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Device Discovery Probe · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/042-device-discovery-probe/">
+  <meta name="description" content="Simulate discovering new devices on a local network with ping and capability checks.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --shadow: rgba(0,0,0,.05);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); line-height: 1.5; padding: 1rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { margin-bottom: 2rem; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px var(--shadow); }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .status { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .warning { background: #fff3cd; color: #856404; }
+    .btn { background: var(--text); color: var(--card); border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+    .btn:hover { opacity: 0.9; }
+    .device-list { margin-top: 1rem; }
+    .device-item { padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
+    .device-item:last-child { border-bottom: none; }
+    .device-name { font-weight: bold; }
+    .device-ip { color: var(--text-2); font-size: 0.875rem; }
+    .capabilities { margin-top: 0.5rem; }
+    .capability { display: inline-block; background: var(--line); padding: 0.25rem 0.5rem; border-radius: 4px; margin-right: 0.5rem; font-size: 0.75rem; }
+    .log { font-family: monospace; background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 1rem; margin-top: 1rem; height: 200px; overflow-y: auto; }
+    footer { text-align: center; margin-top: 2rem; color: var(--text-2); font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/" class="btn">← Project 503</a>
+    </header>
+
+    <main>
+      <div class="card">
+        <h1>Device Discovery Probe</h1>
+        <p>Simulate discovering new devices on a local network with ping and capability checks.</p>
+        <button id="scanBtn" class="btn">Scan Network</button>
+        <div id="log" class="log"></div>
+      </div>
+
+      <div class="card">
+        <h2>Discovered Devices</h2>
+        <div id="deviceList" class="device-list"></div>
+      </div>
+    </main>
+
+    <footer>
+      Project #42 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const logElement = document.getElementById('log');
+    const deviceListElement = document.getElementById('deviceList');
+    const scanBtn = document.getElementById('scanBtn');
+
+    function log(message) {
+      const now = new Date();
+      const timestamp = now.toISOString().substr(11, 8);
+      logElement.textContent += `[${timestamp}] ${message}\n`;
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+
+    function generateRandomIP() {
+      return `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+    }
+
+    function generateDeviceName() {
+      const names = ['Router', 'Laptop', 'Desktop', 'Smartphone', 'Tablet', 'Printer', 'Camera', 'TV', 'Speaker', 'Smartwatch'];
+      return names[Math.floor(Math.random() * names.length)];
+    }
+
+    function simulatePing(ip) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const success = Math.random() > 0.2;
+          resolve(success);
+        }, 100 + Math.random() * 300);
+      });
+    }
+
+    function simulateCapabilities(ip) {
+      const capabilities = [];
+      if (Math.random() > 0.5) capabilities.push('HTTP');
+      if (Math.random() > 0.7) capabilities.push('SSH');
+      if (Math.random() > 0.6) capabilities.push('FTP');
+      if (Math.random() > 0.8) capabilities.push('SMB');
+      return capabilities;
+    }
+
+    function addDevice(device) {
+      const deviceElement = document.createElement('div');
+      deviceElement.className = 'device-item';
+      deviceElement.innerHTML = `
+        <div class="device-name">${device.name}</div>
+        <div class="device-ip">${device.ip}</div>
+        <div class="capabilities">
+          ${device.capabilities.map(cap => `<span class="capability">${cap}</span>`).join('')}
+        </div>
+      `;
+      deviceListElement.appendChild(deviceElement);
+    }
+
+    function loadSavedDevices() {
+      try {
+        const saved = localStorage.getItem('discoveredDevices');
+        if (saved) {
+          JSON.parse(saved).forEach(device => addDevice(device));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function saveDevices(devices) {
+      try {
+        localStorage.setItem('discoveredDevices', JSON.stringify(devices));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    scanBtn.addEventListener('click', async () => {
+      log('Starting network scan...');
+      const devices = [];
+      for (let i = 0; i < 10; i++) {
+        const ip = generateRandomIP();
+        const name = generateDeviceName();
+        const pingSuccess = await simulatePing(ip);
+        
+        if (pingSuccess) {
+          const capabilities = simulateCapabilities(ip);
+          const device = { ip, name, capabilities };
+          devices.push(device);
+          addDevice(device);
+          log(`Discovered: ${name} (${ip}) with capabilities: ${capabilities.join(', ')}`);
+        } else {
+          log(`Failed to ping: ${ip}`);
+        }
+      }
+      saveDevices(devices);
+      log('Scan completed.');
+    });
+
+    loadSavedDevices();
+  </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hot Device Cooldown · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/051-hot-device-cooldown/">
+  <meta name="description" content="Simulate cooling down overheated devices and redistributing their load.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --primary: #4a6fa5;
+      --success: #4caf50;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 1rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2rem; }
+    h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .project-link { color: var(--primary); text-decoration: none; }
+    .project-link:hover { text-decoration: underline; }
+    .devices { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .device { background-color: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; text-align: center; }
+    .device-name { font-weight: bold; margin-bottom: 0.5rem; }
+    .temp { font-size: 2rem; margin: 0.5rem 0; }
+    .temp.high { color: #f44336; }
+    .temp.normal { color: var(--success); }
+    .cooldown-btn { background-color: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-top: 0.5rem; }
+    .cooldown-btn:hover { background-color: #3a5a80; }
+    .cooldown-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+    .load-distribution { margin-top: 2rem; }
+    .distribution-bar { height: 20px; background-color: var(--line); border-radius: 10px; margin: 0.5rem 0; overflow: hidden; }
+    .distribution-fill { height: 100%; background-color: var(--primary); border-radius: 10px; transition: width 0.5s ease; }
+    footer { text-align: center; margin-top: 2rem; color: var(--text-2); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/" class="project-link">← Project 503</a>
+      <h1>Hot Device Cooldown</h1>
+      <p>Simulate cooling down overheated devices and redistributing their load.</p>
+    </header>
+
+    <div class="devices" id="devices-container">
+      <!-- Devices will be added here by JavaScript -->
+    </div>
+
+    <div class="load-distribution">
+      <h2>Load Distribution</h2>
+      <div class="distribution-bar">
+        <div class="distribution-fill" id="distribution-fill"></div>
+      </div>
+      <p>Current load: <span id="current-load">0%</span></p>
+    </div>
+
+    <footer>
+      Project #51 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const devices = [
+      { id: 'cpu', name: 'CPU', temp: 85 },
+      { id: 'gpu', name: 'GPU', temp: 92 },
+      { id: 'ssd', name: 'SSD', temp: 78 },
+      { id: 'ram', name: 'RAM', temp: 65 }
+    ];
+
+    const maxLoad = 100;
+    let currentLoad = 0;
+
+    function updateDeviceTemp(deviceId, newTemp) {
+      const deviceElement = document.getElementById(`temp-${deviceId}`);
+      if (deviceElement) {
+        deviceElement.textContent = `${newTemp}°C`;
+        deviceElement.className = `temp ${newTemp > 80 ? 'high' : 'normal'}`;
+      }
+    }
+
+    function updateLoadDistribution() {
+      const fill = document.getElementById('distribution-fill');
+      const loadText = document.getElementById('current-load');
+      if (fill && loadText) {
+        fill.style.width = `${currentLoad}%`;
+        loadText.textContent = `${currentLoad}%`;
+      }
+    }
+
+    function cooldownDevice(deviceId) {
+      try {
+        const device = devices.find(d => d.id === deviceId);
+        if (!device) return;
+
+        const currentTemp = device.temp;
+        if (currentTemp <= 30) return;
+
+        const newTemp = Math.max(30, currentTemp - 15);
+        device.temp = newTemp;
+
+        updateDeviceTemp(deviceId, newTemp);
+
+        // Simulate load redistribution
+        const loadChange = Math.min(20, currentTemp - 30);
+        currentLoad = Math.max(0, currentLoad - loadChange);
+        updateLoadDistribution();
+
+        // Save to localStorage
+        const savedDevices = devices.map(d => ({ id: d.id, temp: d.temp }));
+        localStorage.setItem('hotDeviceCooldown', JSON.stringify(savedDevices));
+      } catch (e) {
+        console.error("Error in cooldownDevice:", e);
+      }
+    }
+
+    function init() {
+      try {
+        const savedDevices = localStorage.getItem('hotDeviceCooldown');
+        if (savedDevices) {
+          const parsed = JSON.parse(savedDevices);
+          devices.forEach(device => {
+            const saved = parsed.find(d => d.id === device.id);
+            if (saved) device.temp = saved.temp;
+          });
+        }
+      } catch (e) {
+        console.error("Error loading from localStorage:", e);
+      }
+
+      const container = document.getElementById('devices-container');
+      devices.forEach(device => {
+        const deviceElement = document.createElement('div');
+        deviceElement.className = 'device';
+        deviceElement.innerHTML = `
+          <div class="device-name">${device.name}</div>
+          <div class="temp ${device.temp > 80 ? 'high' : 'normal'}" id="temp-${device.id}">${device.temp}°C</div>
+          <button class="cooldown-btn" onclick="cooldownDevice('${device.id}')">Cool Down</button>
+        `;
+        container.appendChild(deviceElement);
+      });
+
+      // Initialize load distribution
+      updateLoadDistribution();
+    }
+
+    window.cooldownDevice = cooldownDevice;
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

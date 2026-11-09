@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Collocation Finder · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/074-collocation-finder/">
+  <meta name="description" content="Identify word pairs that co-occur more often than chance using pointwise mutual information.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.5;
+    }
+    main {
+      max-width: 768px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 0.5rem;
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-family: var(--font);
+      resize: vertical;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      color: var(--text);
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    button:hover {
+      background-color: var(--line);
+    }
+    .results {
+      margin-top: 2rem;
+      padding: 1rem;
+      background-color: var(--card);
+      border: 1px solid var(--line);
+    }
+    .pair {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .pair:last-child {
+      border-bottom: none;
+    }
+    .pmi-value {
+      font-weight: bold;
+    }
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      color: var(--text-2);
+      font-size: 0.9rem;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="/503/">← Project 503</a>
+    <h1>Collocation Finder</h1>
+    <p>Enter text below to find word pairs that co-occur more often than chance using pointwise mutual information.</p>
+    <textarea id="inputText" placeholder="Paste your text here..."></textarea>
+    <button id="findBtn">Find Collocations</button>
+    <div class="results" id="results"></div>
+  </main>
+  <footer>
+    Project #74 of 503 · Daniel Madac, D-CREATIONS
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const inputText = document.getElementById('inputText');
+      const findBtn = document.getElementById('findBtn');
+      const results = document.getElementById('results');
+
+      // Load saved text if exists
+      try {
+        const savedText = localStorage.getItem('collocationFinderText');
+        if (savedText) inputText.value = savedText;
+      } catch (e) {}
+
+      findBtn.addEventListener('click', () => {
+        try {
+          localStorage.setItem('collocationFinderText', inputText.value);
+        } catch (e) {}
+        
+        const text = inputText.value.toLowerCase();
+        const words = text.match(/\b\w+\b/g);
+        if (!words || words.length < 2) {
+          results.innerHTML = '<p>Enter more text to analyze.</p>';
+          return;
+        }
+
+        // Count word frequencies
+        const wordFreq = {};
+        for (const word of words) {
+          wordFreq[word] = (wordFreq[word] || 0) + 1;
+        }
+
+        // Count bigram frequencies
+        const bigrams = {};
+        for (let i = 0; i < words.length - 1; i++) {
+          const bigram = `${words[i]} ${words[i+1]}`;
+          bigrams[bigram] = (bigrams[bigram] || 0) + 1;
+        }
+
+        // Calculate PMI for each bigram
+        const totalWords = words.length;
+        const pairs = [];
+        for (const [bigram, count] of Object.entries(bigrams)) {
+          const [w1, w2] = bigram.split(' ');
+          const p1 = wordFreq[w1] / totalWords;
+          const p2 = wordFreq[w2] / totalWords;
+          const p12 = count / totalWords;
+          
+          // PMI = log(P(w1,w2) / (P(w1)*P(w2)))
+          const pmi = Math.log(p12 / (p1 * p2));
+          
+          pairs.push({ bigram, pmi });
+        }
+
+        // Sort by PMI descending
+        pairs.sort((a, b) => b.pmi - a.pmi);
+
+        // Display top 10
+        results.innerHTML = '<h2>Top Collocations</h2>';
+        const list = document.createElement('div');
+        for (let i = 0; i < Math.min(10, pairs.length); i++) {
+          const pair = pairs[i];
+          const div = document.createElement('div');
+          div.className = 'pair';
+          div.innerHTML = `<span>${pair.bigram}</span><span class="pmi-value">${pair.pmi.toFixed(3)}</span>`;
+          list.appendChild(div);
+        }
+        results.appendChild(list);
+      });
+    });
+  </script>
+</body>
+</html>

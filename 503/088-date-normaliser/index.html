@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Date Normaliser · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/088-date-normaliser/">
+<meta name="description" content="Paste any text and see every date expression in it normalised to ISO 8601 (YYYY-MM-DD) in a side-by-side table.">
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --card: #fff;
+    --text: #111;
+    --text-2: #5a5a5a;
+    --line: #e2e2de;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --card: #1c1c1c;
+      --text: #f2f2f2;
+      --text-2: #a8a8a8;
+      --line: #2c2c2c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .back {
+    display: inline-block;
+    padding: 16px 20px 0;
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .back:hover { color: var(--text); text-decoration: underline; }
+  main {
+    max-width: 720px;
+    margin: 12px auto 0;
+    padding: 24px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  h1 { font-size: 24px; margin: 0 0 6px; }
+  .lede { margin: 0 0 20px; color: var(--text-2); font-size: 15px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    resize: vertical;
+  }
+  textarea:focus { outline: 2px solid var(--text-2); outline-offset: 1px; }
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 12px 0 20px;
+  }
+  button {
+    font: inherit;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+  }
+  button.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+  button:hover { opacity: 0.85; }
+  #count { font-size: 13px; color: var(--text-2); }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-2); background: var(--bg); }
+  tr:last-child td { border-bottom: none; }
+  td.iso { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: nowrap; }
+  td.invalid { color: #c0392b; }
+  td.empty { color: var(--text-2); text-align: center; padding: 16px; }
+  .note { margin: 16px 0 0; font-size: 13px; color: var(--text-2); }
+  footer {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-2);
+    padding: 24px 16px 32px;
+  }
+  @media (max-width: 480px) {
+    main { margin: 8px 12px 0; padding: 16px; }
+    h1 { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<a class="back" href="/503/">← Project 503</a>
+<main>
+  <h1>Date Normaliser</h1>
+  <p class="lede">Paste text below. Every date expression is found and shown next to its ISO 8601 form (YYYY-MM-DD).</p>
+  <label for="input">Your text</label>
+  <textarea id="input" rows="6" placeholder="Type or paste text that contains dates…"></textarea>
+  <div class="actions">
+    <button id="run" class="primary" type="button">Normalise</button>
+    <button id="copy" type="button">Copy ISO dates</button>
+    <span id="count"></span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Found in text</th><th>ISO 8601</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <p class="note">Ambiguous numeric dates like 05/01/2024 are read as DD/MM/YYYY. Relative dates (today, tomorrow, next Friday, in 10 days) are resolved from the current date. Everything runs locally in your browser.</p>
+</main>
+<footer>Project #88 of 503 · Daniel Madac, D-CREATIONS</footer>
+<script>
+(function () {
+  'use strict';
+
+  var MONTHS = {
+    january: 1, february: 2, march: 3, april: 4, may: 5, june: 6, july: 7,
+    august: 8, september: 9, october: 10, november: 11, december: 12,
+    jan: 1, feb: 2, mar: 3, apr: 4, jun: 6, jul: 7, aug: 8,
+    sep: 9, sept: 9, oct: 10, nov: 11, dec: 12
+  };
+  var WEEKDAYS = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+  var MONTH_ALT = 'january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec';
+  var WEEKDAY_ALT = 'monday|tuesday|wednesday|thursday|friday|saturday|sunday';
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function iso(y, m, d) {
+    var ys = '' + y;
+    while (ys.length < 4) ys = '0' + ys;
+    return ys + '-' + pad2(m) + '-' + pad2(d);
+  }
+  function makeDate(y, m, d) {
+    var dt = new Date(2000, m - 1, d);
+    dt.setFullYear(y);
+    return dt;
+  }
+  function validDate(y, m, d) {
+    if (!y || y > 9999 || m < 1 || m > 12 || d < 1 || d > 31) return false;
+    var dt = makeDate(y, m, d);
+    return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
+  }
+  function refToday() {
+    var n = new Date();
+    return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  }
+  function addDays(date, n) { var d = new Date(date); d.setDate(d.getDate() + n); return d; }
+  function addMonths(date, n) {
+    var first = new Date(date.getFullYear(), date.getMonth() + n, 1);
+    var last = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+    return new Date(first.getFullYear(), first.getMonth(), Math.min(date.getDate(), last));
+  }
+  function parts(d) { return [d.getFullYear(), d.getMonth() + 1, d.getDate()]; }
+
+  // Each handler returns [year, month, day] or null.
+  var patterns = [
+    {
+      re: /\b(\d{4})-(\d{1,2})-(\d{1,2})\b/g,
+      h: function (m) { return [+m[1], +m[2], +m[3]]; }
+    },
+    {
+      re: new RegExp('\\b(' + MONTH_ALT + ')\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?(?:\\s*,\\s*|\\s+)(\\d{4})\\b', 'gi'),
+      h: function (m) { return [+m[3], MONTHS[m[1].toLowerCase()], +m[2]]; }
+    },
+    {
+      re: new RegExp('\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?(' + MONTH_ALT + ')\\.?(?:\\s*,\\s*|\\s+)(\\d{4})\\b', 'gi'),
+      h: function (m) { return [+m[3], MONTHS[m[2].toLowerCase()], +m[1]]; }
+    },
+    {
+      re: /\b(\d{1,2})([\/.\-])(\d{1,2})\2(\d{2,4})\b/g,
+      h: function (m) {
+        var a = +m[1], b = +m[3], y = +m[4];
+        if (y < 100) y = y < 50 ? 2000 + y : 1900 + y;
+        var d, mo;
+        if (a > 12 && a <= 31) { d = a; mo = b; }
+        else if (b > 12 && b <= 31) { mo = a; d = b; }
+        else { d = a; mo = b; } // ambiguous: default to DD/MM/YYYY
+        return [y, mo, d];
+      }
+    },
+    {
+      re: /\b(today|tonight|yesterday|tomorrow)\b/gi,
+      h: function (m, ref) {
+        var w = m[1].toLowerCase();
+        if (w === 'yesterday') return parts(addDays(ref, -1));
+        if (w === 'tomorrow') return parts(addDays(ref, 1));
+        return parts(ref);
+      }
+    },
+    {
+      re: /\b(in\s+(\d+)\s+(day|week|month)s?|(\d+)\s+(day|week|month)s?\s+ago)\b/gi,
+      h: function (m, ref) {
+        var n = +(m[2] || m[4]);
+        var unit = (m[3] || m[5]).toLowerCase();
+        var sign = m[2] ? 1 : -1;
+        var d = unit === 'day' ? addDays(ref, sign * n)
+              : unit === 'week' ? addDays(ref, sign * n * 7)
+              : addMonths(ref, sign * n);
+        return parts(d);
+      }
+    },
+    {
+      re: /\b(next|last)\s+(week|month)\b/gi,
+      h: function (m, ref) {
+        var sign = m[1].toLowerCase() === 'next' ? 1 : -1;
+        var d = m[2].toLowerCase() === 'week' ? addDays(ref, sign * 7) : addMonths(ref, sign);
+        return parts(d);
+      }
+    },
+    {
+      re: new RegExp('\\b(next|last)\\s+(' + WEEKDAY_ALT + ')\\b', 'gi'),
+      h: function (m, ref) {
+        var target = WEEKDAYS[m[2].toLowerCase()];
+        var dow = ref.getDay();
+        var isNext = m[1].toLowerCase() === 'next';
+        var diff = isNext ? (target - dow + 7) % 7 : (dow - target + 7) % 7;
+        if (diff === 0) diff = 7;
+        return parts(addDays(ref, isNext ? diff : -diff));
+      }
+    }
+  ];
+
+  function findDates(text, ref) {
+    var found = [];
+    patterns.forEach(function (p) {
+      p.re.lastIndex = 0;
+      var m;
+      while ((m = p.re.exec(text)) !== null) {
+        var pr = p.h(m, ref);
+        if (!pr) continue;
+        found.push({ start: m.index, end: m.index + m[0].length, text: m[0], y: pr[0], mo: pr[1], d: pr[2] });
+        if (m[0].length === 0) p.re.lastIndex++;
+      }
+    });
+    found.sort(function (a, b) {
+      return a.start - b.start || (b.end - b.start) - (a.end - a.start);
+    });
+    var kept = [], lastEnd = -1;
+    found.forEach(function (f) {
+      if (f.start >= lastEnd) { kept.push(f); lastEnd = f.end; }
+    });
+    return kept;
+  }
+
+  var input = document.getElementById('input');
+  var rows = document.getElementById('rows');
+  var count = document.getElementById('count');
+  var KEY = 'p503-088-date-normaliser-text';
+
+  var EXAMPLE = 'Kickoff on January 5, 2025, retro last Friday. Demo day is 03/12/2025, release 2025-06-30. Postmortem tomorrow, follow-up in 14 days.';
+
+  function save(t) { try { localStorage.setItem(KEY, t); } catch (e) { /* storage unavailable */ } }
+  function load() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+
+  function render() {
+    var text = input.value;
+    save(text);
+    var dates = findDates(text, refToday());
+    rows.innerHTML = '';
+    count.textContent = dates.length ? dates.length + (dates.length === 1 ? ' date found' : ' dates found') : '';
+    if (!dates.length) {
+      var tr = document.createElement('tr');
+      var td = document.createElement('td');
+      td.colSpan = 2;
+      td.className = 'empty';
+      td.textContent = 'No date expressions found.';
+      tr.appendChild(td);
+      rows.appendChild(tr);
+      return;
+    }
+    dates.forEach(function (f) {
+      var ok = validDate(f.y, f.mo, f.d);
+      var tr = document.createElement('tr');
+      var td1 = document.createElement('td');
+      td1.textContent = f.text;
+      var td2 = document.createElement('td');
+      td2.className = 'iso' + (ok ? '' : ' invalid');
+      td2.textContent = ok ? iso(f.y, f.mo, f.d) : 'invalid date';
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      rows.appendChild(tr);
+    });
+  }
+
+  document.getElementById('run').addEventListener('click', render);
+  input.addEventListener('input', render);
+
+  document.getElementById('copy').addEventListener('click', function () {
+    var lines = [];
+    rows.querySelectorAll('tr').forEach(function (tr) {
+      var cells = tr.querySelectorAll('td');
+      if (cells.length === 2) lines.push(cells[0].textContent + '\t' + cells[1].textContent);
+    });
+    var text = lines.join('\n');
+    function done() {
+      var btn = document.getElementById('copy');
+      btn.textContent = 'Copied';
+      setTimeout(function () { btn.textContent = 'Copy ISO dates'; }, 1200);
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallback(); });
+      } else { fallback(); }
+    } catch (e) { fallback(); }
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done();
+      } catch (e) { /* clipboard unavailable */ }
+    }
+  });
+
+  input.value = load() || EXAMPLE;
+  render();
+})();
+</script>
+</body>
+</html>

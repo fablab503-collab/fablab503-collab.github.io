@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Round Robin Scheduler · Project 503 · D-CREATIONS</title>
+  <meta name="description" content="Deal jobs to your devices in round-robin order and watch the schedule draw itself on a visual timeline.">
+  <link rel="canonical" href="https://dcreations.fr/503/029-round-robin-scheduler/">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --accent: #2563eb;
+      --on-accent: #111;
+      --j1: #f4c95d; --j2: #8ecae6; --j3: #a8dfa0; --j4: #f4a261;
+      --j5: #cdb4f6; --j6: #f7a8b8; --j7: #8fd8c8; --j8: #d9d9d3;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+        --accent: #60a5fa;
+        --on-accent: #f2f2f2;
+        --j1: #a07c1f; --j2: #2f6f9f; --j3: #3f7d3a; --j4: #b06a2c;
+        --j5: #7d5fb8; --j6: #b05a72; --j7: #2f8577; --j8: #4a4a44;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 1rem;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    a { color: var(--accent); }
+    .back {
+      display: inline-block;
+      margin: 0.25rem 0 1rem;
+      text-decoration: none;
+      color: var(--text-2);
+      font-size: 0.9rem;
+    }
+    .back:hover { color: var(--text); }
+    main { max-width: 760px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; margin: 0 0 0.25rem; }
+    .lede { color: var(--text-2); margin: 0 0 1rem; max-width: 62ch; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    h2 { font-size: 1.05rem; margin: 0 0 0.75rem; }
+    ul.list { list-style: none; margin: 0 0 0.75rem; padding: 0; }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .row:last-child { border-bottom: 0; }
+    .row.off { opacity: 0.45; }
+    input, select, button {
+      font: inherit;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0.45rem 0.6rem;
+    }
+    input[type="text"] { flex: 1 1 110px; min-width: 0; }
+    input[type="number"] { width: 4.5rem; }
+    button { cursor: pointer; }
+    button:hover { border-color: var(--text-2); }
+    button.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+    button.rm { padding: 0.2rem 0.55rem; }
+    .avail { display: flex; gap: 0.3rem; align-items: center; font-size: 0.85rem; color: var(--text-2); }
+    .addrow, .controls { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    .controls label { color: var(--text-2); font-size: 0.9rem; display: flex; gap: 0.4rem; align-items: center; }
+    .unit { color: var(--text-2); font-size: 0.85rem; }
+    #stats { color: var(--text-2); font-size: 0.9rem; margin: 0 0 0.5rem; }
+    .tl-scroll { overflow-x: auto; }
+    .tl-inner { min-width: 540px; }
+    .tl-axis, .tl-row { display: flex; align-items: center; }
+    .tl-label {
+      width: 130px;
+      flex: none;
+      font-size: 0.85rem;
+      color: var(--text-2);
+      padding-right: 0.5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .tl-track {
+      position: relative;
+      flex: 1;
+      height: 34px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin: 3px 0;
+    }
+    .tl-axis .tl-track { height: 20px; background: transparent; border: 0; }
+    .tl-tick {
+      position: absolute;
+      top: 0;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      color: var(--text-2);
+    }
+    .tl-tick:first-child { transform: none; }
+    .tl-block {
+      position: absolute;
+      top: 4px;
+      height: 26px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      line-height: 26px;
+      padding: 0 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--on-accent);
+      min-width: 2px;
+    }
+    .tl-now { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--text); left: 0; }
+    #legend { display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem; margin-top: 0.5rem; font-size: 0.78rem; color: var(--text-2); }
+    .chip { display: inline-flex; align-items: center; gap: 0.3rem; }
+    .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+    details { margin-top: 0.5rem; font-size: 0.9rem; }
+    summary { cursor: pointer; color: var(--text-2); }
+    #eventList { margin: 0.5rem 0 0; padding-left: 1.2rem; font-size: 0.82rem; color: var(--text-2); max-height: 180px; overflow: auto; }
+    #emptyNote { color: var(--text-2); font-size: 0.9rem; margin: 0.25rem 0 0; }
+    footer {
+      text-align: center;
+      color: var(--text-2);
+      font-size: 0.85rem;
+      padding: 1.5rem 0 1rem;
+      border-top: 1px solid var(--line);
+      max-width: 760px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="/503/">← Project 503</a>
+  <main>
+    <h1>Round Robin Scheduler</h1>
+    <p class="lede">Jobs are dealt to free devices in turn, like cards around a table. Each device works at its own speed. Press Run to watch the timeline.</p>
+
+    <section class="card">
+      <h2>Devices</h2>
+      <ul class="list" id="deviceList"></ul>
+      <div class="addrow">
+        <input type="text" id="devName" placeholder="Device name" maxlength="24">
+        <select id="devSpeed" title="Speed in units per tick">
+          <option value="1">1×</option>
+          <option value="2" selected>2×</option>
+          <option value="3">3×</option>
+          <option value="4">4×</option>
+        </select>
+        <button type="button" id="addDev">Add device</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Jobs</h2>
+      <ul class="list" id="jobList"></ul>
+      <div class="addrow">
+        <input type="text" id="jobName" placeholder="Job name" maxlength="24">
+        <input type="number" id="jobDur" min="1" max="60" step="1" value="6" title="Duration in units">
+        <span class="unit">units</span>
+        <button type="button" id="addJob">Add job</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Controls</h2>
+      <div class="controls">
+        <button type="button" id="runBtn" class="primary">Run</button>
+        <button type="button" id="replayBtn">Replay</button>
+        <label>Playback
+          <select id="playSpeed">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+          </select>
+        </label>
+        <button type="button" id="resetBtn">Reset lists</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Timeline</h2>
+      <p id="stats"><span id="clock">t = 0</span></p>
+      <div class="tl-scroll">
+        <div id="timeline"></div>
+      </div>
+      <p id="emptyNote">Add devices and jobs, then press Run.</p>
+      <div id="legend"></div>
+      <details id="eventDetails" style="display:none">
+        <summary>Event log</summary>
+        <ol id="eventList"></ol>
+      </details>
+    </section>
+  </main>
+  <footer>Project #29 of 503 · Daniel Madac, D-CREATIONS</footer>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // All localStorage access goes through these helpers; every call is try/catch wrapped.
+    var store = {
+      get: function (k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } },
+      set: function (k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} },
+      del: function (k) { try { window.localStorage.removeItem(k); } catch (e) {} }
+    };
+    var KEY = 'dcreations-503-029-round-robin';
+
+    function defaultState() {
+      return {
+        devices: [
+          { id: 'd1', name: 'iPhone', speed: 1, available: true },
+          { id: 'd2', name: 'iPad', speed: 2, available: true },
+          { id: 'd3', name: 'MacBook', speed: 3, available: true },
+          { id: 'd4', name: 'iMac', speed: 4, available: true }
+        ],
+        jobs: [
+          { id: 'j1', name: 'Photo export', duration: 8 },
+          { id: 'j2', name: 'Video render', duration: 12 },
+          { id: 'j3', name: 'Backup', duration: 6 },
+          { id: 'j4', name: 'Search index', duration: 4 },
+          { id: 'j5', name: 'Sync notes', duration: 5 },
+          { id: 'j6', name: 'Compile app', duration: 10 }
+        ],
+        speedFactor: 1
+      };
+    }
+
+    var state = defaultState();
+    var saved = store.get(KEY);
+    if (saved) {
+      try {
+        var parsed = JSON.parse(saved);
+        if (parsed && Array.isArray(parsed.devices) && Array.isArray(parsed.jobs)) {
+          state = parsed;
+          if (typeof state.speedFactor !== 'number') state.speedFactor = 1;
+        }
+      } catch (e) {}
+    }
+
+    function save() { store.set(KEY, JSON.stringify(state)); }
+
+    function $(id) { return document.getElementById(id); }
+    function h(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text != null) e.textContent = text;
+      return e;
+    }
+    function uid(prefix) {
+      return prefix + '-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1e6).toString(36);
+    }
+    function fmt(t) { return String(Math.round(t * 10) / 10); }
+    function clampDur(v) {
+      var n = Math.round(Number(v));
+      if (!isFinite(n) || n < 1) n = 1;
+      if (n > 60) n = 60;
+      return n;
+    }
+    function jobVar(jobId) {
+      var i = 0;
+      for (var k = 0; k < state.jobs.length; k++) if (state.jobs[k].id === jobId) { i = k; break; }
+      return 'var(--j' + ((i % 8) + 1) + ')';
+    }
+
+    var sim = null;       // { segments, events, endTime, avail }
+    var blocks = [];      // { el, start, end } for the playback animation
+    var nowLines = [];    // vertical "now" line in each track
+    var rafId = null;
+
+    // Round-robin simulation: queued jobs are assigned to idle devices scanning
+    // in cyclic order; each device processes its job at its own speed.
+    function simulate() {
+      var avail = state.devices.filter(function (d) { return d.available; });
+      var queue = state.jobs.map(function (j) {
+        return { id: j.id, name: j.name, duration: clampDur(j.duration) };
+      });
+      var segments = [];
+      var events = [];
+      var running = {};
+      var order = [];
+      var time = 0;
+      var ptr = 0;
+      var guard = 0;
+      while (guard++ < 100000) {
+        while (queue.length) {
+          var idx = -1;
+          for (var k = 0; k < avail.length; k++) {
+            var i = (ptr + k) % avail.length;
+            if (!running[avail[i].id]) { idx = i; break; }
+          }
+          if (idx === -1) break;
+          var dev = avail[idx];
+          var job = queue.shift();
+          running[dev.id] = { job: job, remaining: job.duration, start: time, speed: dev.speed, dev: dev };
+          order.push(dev.id);
+          events.push({ t: time, text: job.name + ' → ' + dev.name });
+          ptr = (idx + 1) % avail.length;
+        }
+        if (!order.length) break;
+        var dt = Infinity;
+        order.forEach(function (id) { dt = Math.min(dt, running[id].remaining / running[id].speed); });
+        time += dt;
+        var done = [];
+        order.forEach(function (id) {
+          var r = running[id];
+          r.remaining -= dt * r.speed;
+          if (r.remaining <= 1e-9) done.push(id);
+        });
+        done.forEach(function (id) {
+          var r = running[id];
+          segments.push({ devId: id, jobId: r.job.id, jobName: r.job.name, start: r.start, end: time });
+          events.push({ t: time, text: r.job.name + ' done on ' + r.dev.name });
+          delete running[id];
+          order.splice(order.indexOf(id), 1);
+        });
+      }
+      return { segments: segments, events: events, endTime: time, avail: avail };
+    }
+
+    function niceStep(end) {
+      var steps = [0.5, 1, 2, 5, 10, 20, 25, 50, 100];
+      for (var i = 0; i < steps.length; i++) if (end / steps[i] <= 10) return steps[i];
+      return 100;
+    }
+
+    function renderDevices() {
+      var ul = $('deviceList');
+      ul.innerHTML = '';
+      state.devices.forEach(function (d) {
+        var li = h('li', 'row' + (d.available ? '' : ' off'));
+
+        var name = h('input');
+        name.type = 'text';
+        name.value = d.name;
+        name.maxLength = 24;
+        name.setAttribute('aria-label', 'Device name');
+        name.addEventListener('change', function () {
+          d.name = name.value.trim() || d.name;
+          name.value = d.name;
+          save();
+          clearSim();
+        });
+
+        var sp = h('select');
+        sp.title = 'Speed in units per tick';
+        [1, 2, 3, 4].forEach(function (s) {
+          var o = h('option', '', s + '×');
+          o.value = String(s);
+          sp.appendChild(o);
+        });
+        sp.value = String(d.speed);
+        sp.addEventListener('change', function () {
+          d.speed = parseInt(sp.value, 10) || 1;
+          save();
+          clearSim();
+        });
+
+        var av = h('label', 'avail');
+        var cb = h('input');
+        cb.type = 'checkbox';
+        cb.checked = d.available;
+        cb.addEventListener('change', function () {
+          d.available = cb.checked;
+          save();
+          renderDevices();
+          clearSim();
+        });
+        av.appendChild(cb);
+        av.appendChild(document.createTextNode('free'));
+
+        var rm = h('button', 'rm', '✕');
+        rm.type = 'button';
+        rm.title = 'Remove device';
+        rm.addEventListener('click', function () {
+          state.devices = state.devices.filter(function (x) { return x !== d; });
+          save();
+          renderDevices();
+          clearSim();
+        });
+
+        li.appendChild(name);
+        li.appendChild(sp);
+        li.appendChild(av);
+        li.appendChild(rm);
+        ul.appendChild(li);
+      });
+    }
+
+    function renderJobs() {
+      var ul = $('jobList');
+      ul.innerHTML = '';
+      state.jobs.forEach(function (j) {
+        var li = h('li', 'row');
+
+        var name = h('input');
+        name.type = 'text';
+        name.value = j.name;
+        name.maxLength = 24;
+        name.setAttribute('aria-label', 'Job name');
+        name.addEventListener('change', function () {
+          j.name = name.value.trim() || j.name;
+          name.value = j.name;
+          save();
+          clearSim();
+        });
+
+        var dur = h('input');
+        dur.type = 'number';
+        dur.min = '1';
+        dur.max = '60';
+        dur.step = '1';
+        dur.value = String(clampDur(j.duration));
+        dur.title = 'Duration in units';
+        dur.addEventListener('change', function () {
+          j.duration = clampDur(dur.value);
+          dur.value = String(j.duration);
+          save();
+          clearSim();
+        });
+
+        var rm = h('button', 'rm', '✕');
+        rm.type = 'button';
+        rm.title = 'Remove job';
+        rm.addEventListener('click', function () {
+          state.jobs = state.jobs.filter(function (x) { return x !== j; });
+          save();
+          renderJobs();
+          clearSim();
+        });
+
+        li.appendChild(name);
+        li.appendChild(dur);
+        li.appendChild(h('span', 'unit', 'units'));
+        li.appendChild(rm);
+        ul.appendChild(li);
+      });
+    }
+
+    function renderLegend() {
+      var lg = $('legend');
+      lg.innerHTML = '';
+      state.jobs.forEach(function (j, i) {
+        var chip = h('span', 'chip');
+        var dot = h('span', 'dot');
+        dot.style.background = 'var(--j' + ((i % 8) + 1) + ')';
+        chip.appendChild(dot);
+        chip.appendChild(document.createTextNode(j.name));
+        lg.appendChild(chip);
+      });
+    }
+
+    function renderTimeline() {
+      var tl = $('timeline');
+      tl.innerHTML = '';
+      blocks = [];
+      nowLines = [];
+      var note = $('emptyNote');
+      if (!sim || !sim.endTime || !sim.segments.length) {
+        note.style.display = '';
+        note.textContent = !sim
+          ? 'Add devices and jobs, then press Run.'
+          : 'Nothing to schedule — mark at least one device free and add at least one job.';
+        return;
+      }
+      note.style.display = 'none';
+      var end = sim.endTime;
+      var inner = h('div', 'tl-inner');
+
+      var axisRow = h('div', 'tl-axis');
+      axisRow.appendChild(h('span', 'tl-label', 'time'));
+      var axisTrack = h('div', 'tl-track');
+      var step = niceStep(end);
+      for (var t = 0; t <= end + 1e-9; t += step) {
+        var tick = h('span', 'tl-tick', fmt(t));
+        tick.style.left = (t / end * 100) + '%';
+        axisTrack.appendChild(tick);
+      }
+      var axisNow = h('div', 'tl-now');
+      axisTrack.appendChild(axisNow);
+      nowLines.push(axisNow);
+      axisRow.appendChild(axisTrack);
+      inner.appendChild(axisRow);
+
+      sim.avail.forEach(function (dev) {
+        var row = h('div', 'tl-row');
+        var lab = h('span', 'tl-label', dev.name + ' · ' + dev.speed + '×');
+        lab.title = dev.name;
+        var track = h('div', 'tl-track');
+        var now = h('div', 'tl-now');
+        now.style.left = '0%';
+        track.appendChild(now);
+        nowLines.push(now);
+        sim.segments.forEach(function (s) {
+          if (s.devId !== dev.id) return;
+          var b = h('div', 'tl-block', s.jobName);
+          b.style.left = (s.start / end * 100) + '%';
+          b.style.width = ((s.end - s.start) / end * 100) + '%';
+          b.style.background = jobVar(s.jobId);
+          b.title = s.jobName + ' — ' + fmt(s.start) + ' to ' + fmt(s.end) + ' on ' + dev.name;
+          track.appendChild(b);
+          blocks.push({ el: b, start: s.start, end: s.end });
+        });
+        row.appendChild(lab);
+        row.appendChild(track);
+        inner.appendChild(row);
+      });
+      tl.appendChild(inner);
+    }
+
+    function renderStats() {
+      var stats = $('stats');
+      var clock = $('clock');
+      if (!sim || !sim.endTime) {
+        stats.textContent = '';
+        clock.textContent = 'Press Run to schedule.';
+        stats.appendChild(clock);
+        return;
+      }
+      var work = 0;
+      state.jobs.forEach(function (j) { work += clampDur(j.duration); });
+      var used = {};
+      sim.segments.forEach(function (s) { used[s.devId] = true; });
+      var usedN = Object.keys(used).length;
+      var util = sim.avail.length ? Math.round(100 * work / (sim.endTime * sim.avail.length)) : 0;
+      stats.textContent = 'Makespan ' + fmt(sim.endTime) + ' units · ' +
+        usedN + ' of ' + sim.avail.length + ' free devices used · utilization ' + util + '% · ';
+      clock.textContent = 't = 0 / ' + fmt(sim.endTime);
+      stats.appendChild(clock);
+    }
+
+    function renderEvents() {
+      var det = $('eventDetails');
+      var ol = $('eventList');
+      ol.innerHTML = '';
+      if (!sim || !sim.events.length) { det.style.display = 'none'; return; }
+      det.style.display = '';
+      sim.events.slice(0, 80).forEach(function (ev) {
+        ol.appendChild(h('li', '', 't=' + fmt(ev.t) + ' — ' + ev.text));
+      });
+    }
+
+    function drawAt(t) {
+      if (!sim || !sim.endTime) return;
+      var end = sim.endTime;
+      blocks.forEach(function (b) {
+        var vis = Math.max(0, Math.min(b.end - b.start, t - b.start));
+        b.el.style.width = (vis / end * 100) + '%';
+      });
+      var frac = Math.min(1, t / end);
+      nowLines.forEach(function (n) { n.style.left = (frac * 100) + '%'; });
+      $('clock').textContent = 't = ' + fmt(t) + ' / ' + fmt(end);
+    }
+
+    function play() {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      if (!sim || !sim.endTime) return;
+      var end = sim.endTime;
+      var base = Math.max(1600, Math.min(9000, end * 700));
+      var dur = base / (state.speedFactor || 1);
+      var t0 = performance.now();
+      var frame = function (now) {
+        var t = Math.min(end, (now - t0) * end / dur);
+        drawAt(t);
+        if (t < end) { rafId = requestAnimationFrame(frame); } else { rafId = null; }
+      };
+      rafId = requestAnimationFrame(frame);
+    }
+
+    function renderAll() {
+      renderTimeline();
+      renderStats();
+      renderEvents();
+      renderLegend();
+    }
+
+    function clearSim() {
+      sim = null;
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      renderAll();
+    }
+
+    $('addDev').addEventListener('click', function () {
+      var n = $('devName').value.trim() || ('Device ' + (state.devices.length + 1));
+      state.devices.push({
+        id: uid('d'),
+        name: n.slice(0, 24),
+        speed: parseInt($('devSpeed').value, 10) || 1,
+        available: true
+      });
+      $('devName').value = '';
+      save();
+      renderDevices();
+      clearSim();
+    });
+
+    $('addJob').addEventListener('click', function () {
+      var n = $('jobName').value.trim() || ('Job ' + (state.jobs.length + 1));
+      state.jobs.push({ id: uid('j'), name: n.slice(0, 24), duration: clampDur($('jobDur').value) });
+      $('jobName').value = '';
+      save();
+      renderJobs();
+      clearSim();
+    });
+
+    $('runBtn').addEventListener('click', function () {
+      sim = simulate();
+      renderAll();
+      play();
+    });
+
+    $('replayBtn').addEventListener('click', function () {
+      if (sim && sim.endTime) play();
+    });
+
+    $('playSpeed').value = String(state.speedFactor || 1);
+    $('playSpeed').addEventListener('change', function () {
+      state.speedFactor = parseFloat($('playSpeed').value) || 1;
+      save();
+      if (sim && sim.endTime) play();
+    });
+
+    $('resetBtn').addEventListener('click', function () {
+      state = defaultState();
+      save();
+      $('playSpeed').value = '1';
+      renderDevices();
+      renderJobs();
+      clearSim();
+    });
+
+    renderDevices();
+    renderJobs();
+    clearSim();
+  })();
+  </script>
+</body>
+</html>

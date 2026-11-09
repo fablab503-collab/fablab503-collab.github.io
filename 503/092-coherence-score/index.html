@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coherence Score · Project 503 · D-CREATIONS</title>
+<meta name="description" content="Estimate how coherent a text is by measuring the average distance between related terms in the document.">
+<link rel="canonical" href="https://dcreations.fr/503/092-coherence-score/">
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --card: #fff;
+    --text: #111;
+    --text-2: #5a5a5a;
+    --line: #e2e2de;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --card: #1c1c1c;
+      --text: #f2f2f2;
+      --text-2: #a8a8a8;
+      --line: #2c2c2c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 16px 16px 32px;
+  }
+  .top {
+    margin-bottom: 24px;
+  }
+  .top a {
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .top a:hover { color: var(--text); text-decoration: underline; }
+  h1 {
+    font-size: 26px;
+    margin: 0 0 8px;
+  }
+  .lede {
+    color: var(--text-2);
+    font-size: 15px;
+    margin: 0 0 20px;
+    max-width: 60ch;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-2);
+    margin-bottom: 8px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 180px;
+    resize: vertical;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    padding: 10px;
+  }
+  textarea:focus {
+    outline: 2px solid var(--text-2);
+    outline-offset: 1px;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  button {
+    font: inherit;
+    font-size: 14px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--text-2); }
+  button.primary {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .score-line {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .score {
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .score-label {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .bar {
+    height: 10px;
+    border-radius: 5px;
+    background: var(--line);
+    overflow: hidden;
+    margin: 10px 0 14px;
+  }
+  .bar-fill {
+    height: 100%;
+    width: 0;
+    background: var(--text);
+    transition: width .25s ease;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 0;
+  }
+  .stat {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .stat dt {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-bottom: 2px;
+  }
+  .stat dd {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .note {
+    font-size: 13px;
+    color: var(--text-2);
+    margin: 12px 0 0;
+  }
+  footer {
+    margin-top: 28px;
+    font-size: 13px;
+    color: var(--text-2);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a href="/503/">← Project 503</a></div>
+
+  <h1>Coherence Score</h1>
+  <p class="lede">Paste a text below. The score estimates coherence by measuring the average distance between related terms in the document: when related words sit close together, the text reads as more coherent.</p>
+
+  <div class="card">
+    <label for="text">Your text</label>
+    <textarea id="text" placeholder="Paste or type a paragraph or more…"></textarea>
+    <div class="row">
+      <button id="sample" type="button">Load sample text</button>
+      <button id="clear" type="button">Clear</button>
+    </div>
+  </div>
+
+  <div class="card" id="result">
+    <div class="score-line">
+      <span class="score" id="score">–</span>
+      <span class="score-label" id="scoreLabel">Waiting for text</span>
+    </div>
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+    <dl class="stats">
+      <div class="stat"><dt>Words</dt><dd id="statWords">0</dd></div>
+      <div class="stat"><dt>Related terms</dt><dd id="statTerms">0</dd></div>
+      <div class="stat"><dt>Avg. distance</dt><dd id="statDist">–</dd></div>
+    </dl>
+    <p class="note" id="note">Type at least a few sentences. Terms that repeat (after light stemming) are treated as related.</p>
+  </div>
+
+  <footer>Project #92 of 503 · Daniel Madac, D-CREATIONS</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STOPWORDS = {
+    "the":1,"a":1,"an":1,"and":1,"or":1,"but":1,"if":1,"then":1,"else":1,"when":1,"where":1,
+    "at":1,"by":1,"for":1,"with":1,"about":1,"against":1,"between":1,"into":1,"through":1,
+    "during":1,"before":1,"after":1,"above":1,"below":1,"to":1,"from":1,"up":1,"down":1,"in":1,
+    "out":1,"on":1,"off":1,"over":1,"under":1,"again":1,"further":1,"once":1,"here":1,"there":1,
+    "all":1,"any":1,"both":1,"each":1,"few":1,"more":1,"most":1,"other":1,"some":1,"such":1,
+    "no":1,"nor":1,"not":1,"only":1,"own":1,"same":1,"so":1,"than":1,"too":1,"very":1,"can":1,
+    "will":1,"just":1,"should":1,"now":1,"is":1,"are":1,"was":1,"were":1,"be":1,"been":1,
+    "being":1,"have":1,"has":1,"had":1,"having":1,"do":1,"does":1,"did":1,"doing":1,"would":1,
+    "could":1,"shall":1,"may":1,"might":1,"must":1,"of":1,"it":1,"its":1,"this":1,"that":1,
+    "these":1,"those":1,"he":1,"she":1,"they":1,"them":1,"his":1,"her":1,"their":1,"we":1,
+    "you":1,"your":1,"i":1,"me":1,"my":1,"as":1,"which":1,"who":1,"whom":1,"what":1,"how":1
+  };
+
+  var SAMPLE = "Coherence is the quality that makes a text hang together. When a text is coherent, its ideas flow in a clear order and each sentence connects to the next. Readers can follow the argument without getting lost, because related ideas appear near each other. A coherent text repeats its key terms at short distances, links sentences with clear transitions, and keeps one main idea in focus. When coherence breaks down, ideas jump around, terms are scattered, and the reader must work hard to connect the parts. This tool estimates coherence in a simple way: it finds the terms that repeat in your text and measures the average distance between them. Short average distances give a high coherence score, long distances give a low score.";
+
+  function stem(word) {
+    var w = word.replace(/'s$/, "");
+    if (w.length > 4 && w.slice(-3) === "ies") return w.slice(0, -3) + "y";
+    if (w.length > 3 && w.slice(-2) === "es") return w.slice(0, -2);
+    if (w.length > 3 && w.slice(-1) === "s" && w.slice(-2) !== "ss") return w.slice(0, -1);
+    if (w.length > 5 && w.slice(-3) === "ing") return w.slice(0, -3);
+    if (w.length > 4 && w.slice(-2) === "ed") return w.slice(0, -2);
+    if (w.length > 4 && w.slice(-2) === "ly") return w.slice(0, -2);
+    return w;
+  }
+
+  function analyze(text) {
+    var tokens = (text.toLowerCase().match(/[a-z0-9']+/g)) || [];
+    var positions = {}; // stem -> [positions in the content-word sequence]
+    var contentCount = 0;
+    for (var i = 0; i < tokens.length; i++) {
+      var raw = tokens[i];
+      if (raw.length < 3 || STOPWORDS[raw]) continue;
+      var s = stem(raw);
+      if (s.length < 3) continue;
+      if (!positions[s]) positions[s] = [];
+      positions[s].push(contentCount);
+      contentCount++;
+    }
+
+    var distances = [];
+    var relatedTerms = 0;
+    for (var key in positions) {
+      if (!Object.prototype.hasOwnProperty.call(positions, key)) continue;
+      var list = positions[key];
+      if (list.length < 2) continue;
+      relatedTerms++;
+      for (var j = 1; j < list.length; j++) {
+        distances.push(list[j] - list[j - 1]);
+      }
+    }
+
+    var avg = null;
+    if (distances.length > 0) {
+      var sum = 0;
+      for (var k = 0; k < distances.length; k++) sum += distances[k];
+      avg = sum / distances.length;
+    }
+
+    var score = null;
+    if (avg !== null) {
+      score = Math.round(100 / (1 + avg / 20));
+      if (score < 1) score = 1;
+      if (score > 100) score = 100;
+    }
+
+    return {
+      words: tokens.length,
+      relatedTerms: relatedTerms,
+      avgDistance: avg,
+      score: score
+    };
+  }
+
+  var textEl = document.getElementById("text");
+  var scoreEl = document.getElementById("score");
+  var labelEl = document.getElementById("scoreLabel");
+  var barEl = document.getElementById("barFill");
+  var wordsEl = document.getElementById("statWords");
+  var termsEl = document.getElementById("statTerms");
+  var distEl = document.getElementById("statDist");
+  var noteEl = document.getElementById("note");
+
+  function saveText(value) {
+    try {
+      window.localStorage.setItem("coherenceScoreText", value);
+    } catch (e) { /* storage unavailable; ignore */ }
+  }
+
+  function loadText() {
+    try {
+      var saved = window.localStorage.getItem("coherenceScoreText");
+      if (saved) textEl.value = saved;
+    } catch (e) { /* storage unavailable; ignore */ }
+  }
+
+  function render() {
+    var result = analyze(textEl.value);
+    wordsEl.textContent = String(result.words);
+    termsEl.textContent = String(result.relatedTerms);
+    if (result.score === null) {
+      scoreEl.textContent = "–";
+      barEl.style.width = "0";
+      if (result.words === 0) {
+        labelEl.textContent = "Waiting for text";
+        distEl.textContent = "–";
+        noteEl.textContent = "Type at least a few sentences. Terms that repeat (after light stemming) are treated as related.";
+      } else {
+        labelEl.textContent = "Not enough repeated terms";
+        distEl.textContent = "–";
+        noteEl.textContent = "The text needs at least one term that appears more than once to measure distance.";
+      }
+    } else {
+      scoreEl.textContent = String(result.score);
+      barEl.style.width = result.score + "%";
+      distEl.textContent = result.avgDistance.toFixed(1) + " words";
+      if (result.score >= 70) {
+        labelEl.textContent = "High coherence";
+        noteEl.textContent = "Related terms sit close together on average. The text likely reads as connected.";
+      } else if (result.score >= 40) {
+        labelEl.textContent = "Medium coherence";
+        noteEl.textContent = "Related terms are spread out a fair amount. Some parts may feel disconnected.";
+      } else {
+        labelEl.textContent = "Low coherence";
+        noteEl.textContent = "Related terms are far apart on average. The text may jump between ideas.";
+      }
+    }
+  }
+
+  textEl.addEventListener("input", function () {
+    saveText(textEl.value);
+    render();
+  });
+
+  document.getElementById("sample").addEventListener("click", function () {
+    textEl.value = SAMPLE;
+    saveText(SAMPLE);
+    render();
+  });
+
+  document.getElementById("clear").addEventListener("click", function () {
+    textEl.value = "";
+    saveText("");
+    render();
+    textEl.focus();
+  });
+
+  loadText();
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project 503 · D-CREATIONS</title>
+<meta name="description" content="Project 503: 503 projects before 5.03.2027. One square per project, a countdown and the pace it takes, by Daniel Madac (D-CREATIONS).">
+<link rel="canonical" href="https://dcreations.fr/503/">
+<style>
+  :root { --bg: #f4f4f2; --card: #ffffff; --text: #111111; --text-2: #5a5a5a; --line: #e2e2de; --empty: #e6e6e2; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #121212; --card: #1c1c1c; --text: #f2f2f2; --text-2: #a8a8a8; --line: #2c2c2c; --empty: #262626; }
+  }
+  :root[data-theme="dark"] { --bg: #121212; --card: #1c1c1c; --text: #f2f2f2; --text-2: #a8a8a8; --line: #2c2c2c; --empty: #262626; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 14px; }
+  header a { color: var(--text-2); text-decoration: none; }
+  header a:hover { color: var(--text); }
+  .lang button { background: none; border: 1px solid var(--line); color: var(--text-2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
+  .hero { padding: 24px 0 8px; }
+  .big { font-size: clamp(96px, 26vw, 200px); font-weight: 800; line-height: .9; letter-spacing: -0.05em; margin: 0; font-variant-numeric: tabular-nums; }
+  .big small { font-size: .32em; font-weight: 700; letter-spacing: -0.02em; color: var(--text-2); }
+  h1 { font-size: 22px; margin: 16px 0 8px; }
+  .lead { font-size: 19px; color: var(--text-2); margin: 0; max-width: 640px; }
+  .badge { display: inline-block; font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; margin-bottom: 14px; color: var(--text-2); }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 32px 0 24px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .stat b { display: block; font-size: 28px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 13px; color: var(--text-2); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12px, 1fr)); gap: 3px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .grid i { aspect-ratio: 1; border-radius: 2px; background: var(--empty); display: block; }
+  .grid a { aspect-ratio: 1; border-radius: 2px; background: var(--text); display: block; }
+  .grid a:hover { opacity: .6; }
+  .legend { font-size: 13px; color: var(--text-2); margin: 8px 0 0; }
+  h2 { font-size: 22px; margin: 40px 0 16px; }
+  ol.list { padding: 0; margin: 0; list-style: none; border-top: 1px solid var(--line); }
+  ol.list li { display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+  ol.list .n { color: var(--text-2); font-variant-numeric: tabular-nums; }
+  ol.list a { color: var(--text); text-decoration: none; }
+  ol.list a:hover { text-decoration: underline; }
+  ol.list .d { color: var(--text-2); font-size: 13px; }
+  footer { margin: 64px 0 32px; font-size: 13px; color: var(--text-2); }
+  [data-l="fr"] { display: none; }
+  html[lang="fr"] [data-l="en"] { display: none; }
+  html[lang="fr"] [data-l="fr"] { display: revert; }
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } .grid { grid-template-columns: repeat(auto-fill, minmax(9px, 1fr)); gap: 2px; padding: 10px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="/" data-l="en">← D-CREATIONS</a><a href="/fr/projets/" data-l="fr">← D-CREATIONS</a>
+    <span class="lang"><button type="button" id="lang" aria-label="Changer de langue / Switch language">FR</button></span>
+  </header>
+
+  <section class="hero">
+    <span class="badge" data-l="en">Challenge · 1 November 2026 → 5 March 2027</span>
+    <span class="badge" data-l="fr">Défi · 1er novembre 2026 → 5 mars 2027</span>
+    <p class="big"><span id="done">0</span><small> / 503</small></p>
+    <h1 data-l="en">Project 503: 503 projects before 5.03.2027</h1>
+    <h1 data-l="fr">Projet 503 : 503 projets avant le 5.03.2027</h1>
+    <p class="lead" data-l="en">5.03 is 503. So the goal is 503 projects by 5 March 2027: apps, websites, tools, prototypes and experiments, each one finished and shown here. One square per project.</p>
+    <p class="lead" data-l="fr">5.03, c'est 503. Le but : 503 projets d'ici le 5 mars 2027. Des applis, des sites, des outils, des prototypes et des expériences, chacun terminé et montré ici. Un carré par projet.</p>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><b id="left">503</b><span data-l="en">projects to go</span><span data-l="fr">projets restants</span></div>
+    <div class="stat"><b id="days">–</b><span data-l="en">days left</span><span data-l="fr">jours restants</span></div>
+    <div class="stat"><b id="pace">–</b><span data-l="en">projects a day needed</span><span data-l="fr">projets par jour à tenir</span></div>
+    <div class="stat"><b id="pct">0 %</b><span data-l="en">done</span><span data-l="fr">accompli</span></div>
+  </div>
+
+  <div class="grid" id="grid" aria-label="503 squares, one per project"></div>
+  <p class="legend" data-l="en">Filled = done. Tap a square to open the project.</p>
+  <p class="legend" data-l="fr">Plein = terminé. Touchez un carré pour ouvrir le projet.</p>
+
+  <h2 data-l="en">Projects so far</h2><h2 data-l="fr">Projets jusqu'ici</h2>
+  <ol class="list" id="list"></ol>
+
+  <footer>
+    <span data-l="en">A challenge by Daniel Madac, D-CREATIONS, Montpellier.</span>
+    <span data-l="fr">Un défi de Daniel Madac, D-CREATIONS, Montpellier.</span>
+  </footer>
+</div>
+<script>
+  (function () {
+    var root = document.documentElement, btn = document.getElementById('lang');
+    var saved = null; try { saved = localStorage.getItem('project-503-lang'); } catch (e) {}
+    var lang = saved || (/^fr/i.test(navigator.language) ? 'fr' : 'en');
+    var data = null;
+    function set(l) { root.lang = l; btn.textContent = l === 'fr' ? 'EN' : 'FR'; if (data) render(); }
+    btn.addEventListener('click', function () { lang = lang === 'fr' ? 'en' : 'fr'; set(lang); try { localStorage.setItem('project-503-lang', lang); } catch (e) {} });
+    set(lang);
+
+    function fmtDate(iso) {
+      if (!iso) return lang === 'fr' ? 'avant le défi' : 'before the challenge';
+      return new Date(iso + 'T12:00:00').toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function render() {
+      var goal = data.goal, list = data.projects, done = Math.min(list.length, goal);
+      var ms = new Date(data.deadline) - Date.now();
+      var days = Math.max(0, Math.ceil(ms / 86400000));
+      var left = goal - done;
+      document.getElementById('done').textContent = done;
+      document.getElementById('left').textContent = left;
+      document.getElementById('days').textContent = days;
+      document.getElementById('pace').textContent = days ? (left / days).toFixed(1) : '–';
+      document.getElementById('pct').textContent = Math.floor(done / goal * 100) + ' %';
+
+      var grid = document.getElementById('grid'), html = '';
+      for (var i = 0; i < goal; i++) {
+        var p = list[i];
+        html += p ? '<a href="' + p.url + '" title="#' + (i + 1) + ' ' + p.name.replace(/"/g, '&quot;') + '"></a>' : '<i></i>';
+      }
+      grid.innerHTML = html;
+
+      var ol = document.getElementById('list'); ol.innerHTML = '';
+      list.slice().reverse().forEach(function (p, k) {
+        var li = document.createElement('li');
+        var n = document.createElement('span'); n.className = 'n'; n.textContent = '#' + (list.length - k);
+        var a = document.createElement('a'); a.href = p.url; a.textContent = p.name;
+        var d = document.createElement('span'); d.className = 'd'; d.textContent = fmtDate(p.date);
+        li.append(n, a, d); ol.append(li);
+      });
+    }
+
+    fetch('projects.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (j) { data = j; render(); });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bpe Tokenizer Playground · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/013-bpe-tokenizer-playground/">
+  <meta name="description" content="Interactive byte-pair encoding visualizer that splits user text into subword tokens and displays compression ratios.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); line-height: 1.5; padding: 1rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header, footer { text-align: center; padding: 1rem 0; }
+    header a { color: var(--text); text-decoration: none; }
+    textarea, button { width: 100%; padding: 0.75rem; border: 1px solid var(--line); background: var(--card); color: var(--text); }
+    button { cursor: pointer; font-weight: bold; margin-top: 0.5rem; }
+    .tokens { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+    .token { padding: 0.25rem 0.5rem; background: var(--line); border-radius: 4px; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .stat-card { background: var(--card); padding: 1rem; border-radius: 4px; text-align: center; }
+    .highlight { background: #ffeb3b; }
+    .merge-step { margin: 1rem 0; padding: 1rem; background: var(--card); border-left: 4px solid #4caf50; }
+    .merges-label { display: block; margin-top: 0.75rem; }
+    input[type=range] { width: 100%; }
+    .token { font-family: ui-monospace, monospace; }
+    .token .eow { color: var(--text-2); }
+    .merge-step p { font-family: ui-monospace, monospace; }
+    .note { color: var(--text-2); font-size: 0.9rem; }
+    @media (prefers-color-scheme: dark) { .highlight { background: #6b5d00; } }
+    footer { font-size: 0.9rem; color: var(--text-2); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+
+    <main>
+      <h1>Bpe Tokenizer Playground</h1>
+      <p>Enter text to tokenize using byte-pair encoding (BPE). The tokenizer learns merges from your text: it starts from single characters, then repeatedly joins the most frequent neighbouring pair into a new token. <span class="note">· marks the end of a word.</span></p>
+      
+      <textarea id="input-text" rows="4" placeholder="Enter text here...">low lower lowest slow slower slowest new newer newest wide wider widest the tokenizer learns the tokens that repeat most</textarea>
+      <label class="merges-label" for="merges">Merges to learn: <strong id="merges-out">30</strong></label>
+      <input id="merges" type="range" min="0" max="200" value="30">
+      <button id="tokenize-btn">Tokenize Text</button>
+
+      <div id="output"></div>
+    </main>
+
+    <footer>
+      Project #13 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const inputText = document.getElementById('input-text');
+    const tokenizeBtn = document.getElementById('tokenize-btn');
+    const mergesInput = document.getElementById('merges');
+    const mergesOut = document.getElementById('merges-out');
+    const outputDiv = document.getElementById('output');
+    const EOW = '·';
+
+    function esc(t) {
+      return t.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+
+    function splitWords(text) {
+      return text.split(/\s+/).filter(w => w.length > 0);
+    }
+
+    // Each distinct word becomes a list of symbols: its characters plus an end-of-word marker.
+    function wordCounts(words) {
+      const counts = new Map();
+      for (const w of words) counts.set(w, (counts.get(w) || 0) + 1);
+      return [...counts].map(([w, n]) => ({ symbols: [...w, EOW], n }));
+    }
+
+    function applyMerge(symbols, a, b) {
+      const out = [];
+      for (let i = 0; i < symbols.length; i++) {
+        if (i < symbols.length - 1 && symbols[i] === a && symbols[i + 1] === b) {
+          out.push(a + b);
+          i++;
+        } else {
+          out.push(symbols[i]);
+        }
+      }
+      return out;
+    }
+
+    // Learn up to maxMerges merges: count every neighbouring pair, join the most frequent, repeat.
+    function learnMerges(entries, maxMerges) {
+      const merges = [];
+      for (let m = 0; m < maxMerges; m++) {
+        const pairs = new Map();
+        for (const e of entries) {
+          for (let i = 0; i < e.symbols.length - 1; i++) {
+            const key = e.symbols[i] + '\u0000' + e.symbols[i + 1];
+            pairs.set(key, (pairs.get(key) || 0) + e.n);
+          }
+        }
+        let best = null, bestN = 1;
+        for (const [key, n] of pairs) if (n > bestN) { best = key; bestN = n; }
+        if (!best) break; // no pair occurs twice: nothing left worth merging
+        const [a, b] = best.split('\u0000');
+        merges.push({ a, b, n: bestN });
+        for (const e of entries) e.symbols = applyMerge(e.symbols, a, b);
+      }
+      return merges;
+    }
+
+    function encode(word, merges) {
+      let symbols = [...word, EOW];
+      for (const { a, b } of merges) symbols = applyMerge(symbols, a, b);
+      return symbols;
+    }
+
+    function tokenizeText() {
+      const text = inputText.value;
+      const maxMerges = Number(mergesInput.value);
+      mergesOut.textContent = maxMerges;
+      try { localStorage.setItem('bpe_text', text); } catch (e) {}
+
+      const words = splitWords(text);
+      if (!words.length) { outputDiv.innerHTML = '<p class="note">Type some text to tokenize.</p>'; return; }
+
+      const merges = learnMerges(wordCounts(words), maxMerges);
+      const tokens = words.flatMap(w => encode(w, merges));
+      const chars = words.reduce((s, w) => s + [...w].length + 1, 0); // +1 end marker per word
+      const vocab = new Set([...text.replace(/\s+/g, '')]);
+      vocab.add(EOW);
+      merges.forEach(m => vocab.add(m.a + m.b));
+      const saved = Math.round((1 - tokens.length / chars) * 100);
+
+      let html = '<div class="tokens">';
+      for (const t of tokens) {
+        const body = t.endsWith(EOW) ? esc(t.slice(0, -1)) + '<span class="eow">' + EOW + '</span>' : esc(t);
+        html += `<span class="token">${body}</span>`;
+      }
+      html += '</div>';
+
+      html += `<div class="stats">
+          <div class="stat-card"><h3>${chars}</h3><p>Characters (start)</p></div>
+          <div class="stat-card"><h3>${tokens.length}</h3><p>Tokens (after BPE)</p></div>
+          <div class="stat-card"><h3>${saved}%</h3><p>Fewer symbols</p></div>
+          <div class="stat-card"><h3>${vocab.size}</h3><p>Vocabulary size</p></div>
+        </div>`;
+
+      html += '<div class="merge-step"><h3>Merge steps</h3>';
+      if (!merges.length) html += '<p class="note">No pair appears twice yet: add more text or more merges.</p>';
+      merges.slice(0, 15).forEach((m, i) => {
+        html += `<p>${i + 1}. <strong>${esc(m.a)} + ${esc(m.b)}</strong> → <span class="highlight">${esc(m.a + m.b)}</span> (seen ${m.n}×)</p>`;
+      });
+      if (merges.length > 15) html += `<p>+ ${merges.length - 15} more merges</p>`;
+      html += '</div>';
+
+      outputDiv.innerHTML = html;
+    }
+
+    tokenizeBtn.addEventListener('click', tokenizeText);
+    mergesInput.addEventListener('input', tokenizeText);
+
+    try {
+      const savedText = localStorage.getItem('bpe_text');
+      if (savedText) inputText.value = savedText;
+    } catch (e) {}
+
+    tokenizeText();
+  </script>
+</body>
+</html>

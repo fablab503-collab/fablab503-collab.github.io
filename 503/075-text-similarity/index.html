@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Text Similarity · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/075-text-similarity/">
+  <meta name="description" content="Compute cosine similarity between two text documents using TF-IDF vector representation.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    header, footer {
+      text-align: center;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .card {
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 0.5rem;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background-color: var(--card);
+      color: var(--text);
+      font-family: inherit;
+    }
+    button {
+      background-color: var(--text);
+      color: var(--card);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    button:hover {
+      background-color: var(--text-2);
+    }
+    .result {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border-radius: 4px;
+      background-color: rgba(0, 128, 0, 0.1);
+    }
+    .error {
+      color: red;
+      background-color: rgba(255, 0, 0, 0.1);
+    }
+    .dark-mode-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+
+    <main>
+      <div class="card">
+        <h1>Text Similarity</h1>
+        <p>Compute cosine similarity between two text documents using TF-IDF vector representation.</p>
+        
+        <label for="text1">Document 1:</label>
+        <textarea id="text1" placeholder="Enter first document..."></textarea>
+        
+        <label for="text2">Document 2:</label>
+        <textarea id="text2" placeholder="Enter second document..."></textarea>
+        
+        <button id="calculate">Calculate Similarity</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+      </div>
+    </main>
+
+    <footer>
+      Project #75 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const text1 = document.getElementById('text1');
+      const text2 = document.getElementById('text2');
+      const calculateBtn = document.getElementById('calculate');
+      const resultDiv = document.getElementById('result');
+
+      // Load saved texts
+      try {
+        const savedText1 = localStorage.getItem('text1');
+        const savedText2 = localStorage.getItem('text2');
+        if (savedText1) text1.value = savedText1;
+        if (savedText2) text2.value = savedText2;
+      } catch (e) {}
+
+      calculateBtn.addEventListener('click', () => {
+        try {
+          localStorage.setItem('text1', text1.value);
+          localStorage.setItem('text2', text2.value);
+        } catch (e) {}
+
+        const doc1 = text1.value.trim();
+        const doc2 = text2.value.trim();
+
+        if (!doc1 || !doc2) {
+          showError('Both documents must have content.');
+          return;
+        }
+
+        try {
+          const similarity = computeCosineSimilarity(doc1, doc2);
+          showResult(`Similarity: ${(similarity * 100).toFixed(2)}%`);
+        } catch (e) {
+          showError('Error computing similarity: ' + e.message);
+        }
+      });
+
+      function showError(message) {
+        resultDiv.textContent = message;
+        resultDiv.className = 'result error';
+        resultDiv.style.display = 'block';
+      }
+
+      function showResult(message) {
+        resultDiv.textContent = message;
+        resultDiv.className = 'result';
+        resultDiv.style.display = 'block';
+      }
+
+      function computeCosineSimilarity(text1, text2) {
+        const tfidf1 = computeTFIDF(text1);
+        const tfidf2 = computeTFIDF(text2);
+
+        const vector1 = buildVector(tfidf1);
+        const vector2 = buildVector(tfidf2);
+
+        const dotProduct = dot(vector1, vector2);
+        const magnitude1 = magnitude(vector1);
+        const magnitude2 = magnitude(vector2);
+
+        if (magnitude1 === 0 || magnitude2 === 0) {
+          return 0;
+        }
+
+        return dotProduct / (magnitude1 * magnitude2);
+      }
+
+      function computeTFIDF(text) {
+        const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+        const termFreq = {};
+        const docFreq = {};
+
+        // Term frequency
+        words.forEach(word => {
+          termFreq[word] = (termFreq[word] || 0) + 1;
+        });
+
+        // Document frequency
+        const uniqueWords = [...new Set(words)];
+        uniqueWords.forEach(word => {
+          docFreq[word] = (docFreq[word] || 0) + 1;
+        });
+
+        // TF-IDF
+        const tfidf = {};
+        const totalWords = words.length;
+
+        Object.keys(termFreq).forEach(word => {
+          const tf = termFreq[word] / totalWords;
+          const idf = Math.log(2 / (docFreq[word] || 1));
+          tfidf[word] = tf * idf;
+        });
+
+        return tfidf;
+      }
+
+      function buildVector(tfidf) {
+        const words = Object.keys(tfidf);
+        const vector = {};
+        words.forEach(word => {
+          vector[word] = tfidf[word];
+        });
+        return vector;
+      }
+
+      function dot(vector1, vector2) {
+        let sum = 0;
+        for (const word in vector1) {
+          if (vector2[word]) {
+            sum += vector1[word] * vector2[word];
+          }
+        }
+        return sum;
+      }
+
+      function magnitude(vector) {
+        let sum = 0;
+        for (const word in vector) {
+          sum += vector[word] * vector[word];
+        }
+        return Math.sqrt(sum);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unique Word Finder · Project 503 · D-CREATIONS</title>
+<meta name="description" content="Find the words that appear only once in a text and list them sorted by frequency and position.">
+<link rel="canonical" href="https://dcreations.fr/503/093-unique-word-finder/">
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --card: #fff;
+    --text: #111;
+    --text-2: #5a5a5a;
+    --line: #e2e2de;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --card: #1c1c1c;
+      --text: #f2f2f2;
+      --text-2: #a8a8a8;
+      --line: #2c2c2c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 16px 16px 32px;
+  }
+  .top {
+    margin-bottom: 24px;
+  }
+  .top a {
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .top a:hover { color: var(--text); text-decoration: underline; }
+  h1 {
+    font-size: 26px;
+    margin: 0 0 8px;
+  }
+  .lede {
+    color: var(--text-2);
+    font-size: 15px;
+    margin: 0 0 20px;
+    max-width: 60ch;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-2);
+    margin-bottom: 8px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 180px;
+    resize: vertical;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    padding: 10px;
+  }
+  textarea:focus {
+    outline: 2px solid var(--text-2);
+    outline-offset: 1px;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    align-items: center;
+  }
+  button, select {
+    font: inherit;
+    font-size: 14px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--text-2); }
+  button.primary {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 0 0 14px;
+  }
+  .stat {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .stat dt {
+    font-size: 12px;
+    color: var(--text-2);
+    margin-bottom: 2px;
+  }
+  .stat dd {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .sort-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .sort-row label { margin: 0; }
+  ul.word-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  ul.word-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  ul.word-list li:last-child { border-bottom: none; }
+  ul.word-list .word {
+    font-weight: 600;
+    word-break: break-word;
+  }
+  ul.word-list .meta {
+    color: var(--text-2);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .note {
+    font-size: 13px;
+    color: var(--text-2);
+    margin: 12px 0 0;
+  }
+  footer {
+    margin-top: 28px;
+    font-size: 13px;
+    color: var(--text-2);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a href="/503/">← Project 503</a></div>
+
+  <h1>Unique Word Finder</h1>
+  <p class="lede">Paste a text below. The finder counts every word (case-insensitive) and lists the words that appear exactly once, sorted by frequency and position in the text.</p>
+
+  <div class="card">
+    <label for="text">Your text</label>
+    <textarea id="text" placeholder="Paste or type a paragraph or more…"></textarea>
+    <div class="row">
+      <button id="sample" type="button">Load sample text</button>
+      <button id="clear" type="button">Clear</button>
+    </div>
+  </div>
+
+  <div class="card" id="result">
+    <dl class="stats">
+      <div class="stat"><dt>Words</dt><dd id="statWords">0</dd></div>
+      <div class="stat"><dt>Unique words</dt><dd id="statUnique">0</dd></div>
+      <div class="stat"><dt>Repeated words</dt><dd id="statRepeated">0</dd></div>
+    </dl>
+    <div class="sort-row">
+      <label for="sort">Sort by</label>
+      <select id="sort">
+        <option value="freq" selected>Frequency, then position</option>
+        <option value="pos">Position in text</option>
+        <option value="alpha">Alphabetical (A–Z)</option>
+      </select>
+    </div>
+    <ul class="word-list" id="wordList"></ul>
+    <p class="note" id="note">Type some text to find the words that appear only once.</p>
+  </div>
+
+  <footer>Project #93 of 503 · Daniel Madac, D-CREATIONS</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SAMPLE = "The quick brown fox jumps over the lazy dog. The dog barked, and the fox ran away. A quiet morning in the old village: one woman opened her shop, one man fixed a bicycle, and a child chased a butterfly through the narrow streets. Nobody spoke loudly. The fox appeared again at dusk, watching from the garden wall, while the dog slept by the warm oven. Morning light touched the rooftops, the shop bell rang once, and the village woke slowly.";
+
+  function tokenize(text) {
+    return (text.toLowerCase().match(/[a-z0-9']+/g)) || [];
+  }
+
+  function analyze(text) {
+    var tokens = tokenize(text);
+    var counts = {};
+    var firstPos = {};
+    for (var i = 0; i < tokens.length; i++) {
+      var w = tokens[i];
+      counts[w] = (counts[w] || 0) + 1;
+      if (!Object.prototype.hasOwnProperty.call(firstPos, w)) firstPos[w] = i + 1;
+    }
+
+    var uniques = [];
+    var repeated = 0;
+    for (var key in counts) {
+      if (!Object.prototype.hasOwnProperty.call(counts, key)) continue;
+      if (counts[key] === 1) {
+        uniques.push({ word: key, count: 1, pos: firstPos[key] });
+      } else {
+        repeated++;
+      }
+    }
+
+    return { words: tokens.length, uniques: uniques, repeated: repeated };
+  }
+
+  function sortUniques(uniques, mode) {
+    var list = uniques.slice();
+    if (mode === "pos") {
+      list.sort(function (a, b) { return a.pos - b.pos; });
+    } else if (mode === "alpha") {
+      list.sort(function (a, b) { return a.word < b.word ? -1 : (a.word > b.word ? 1 : 0); });
+    } else {
+      list.sort(function (a, b) {
+        if (b.count !== a.count) return b.count - a.count;
+        return a.pos - b.pos;
+      });
+    }
+    return list;
+  }
+
+  var textEl = document.getElementById("text");
+  var sortEl = document.getElementById("sort");
+  var wordsEl = document.getElementById("statWords");
+  var uniqueEl = document.getElementById("statUnique");
+  var repeatedEl = document.getElementById("statRepeated");
+  var listEl = document.getElementById("wordList");
+  var noteEl = document.getElementById("note");
+
+  function saveText(value) {
+    try {
+      window.localStorage.setItem("uniqueWordFinderText", value);
+    } catch (e) { /* storage unavailable; ignore */ }
+  }
+
+  function loadText() {
+    try {
+      var saved = window.localStorage.getItem("uniqueWordFinderText");
+      if (saved) textEl.value = saved;
+    } catch (e) { /* storage unavailable; ignore */ }
+  }
+
+  function render() {
+    var result = analyze(textEl.value);
+    wordsEl.textContent = String(result.words);
+    uniqueEl.textContent = String(result.uniques.length);
+    repeatedEl.textContent = String(result.repeated);
+
+    var sorted = sortUniques(result.uniques, sortEl.value);
+    listEl.innerHTML = "";
+    for (var i = 0; i < sorted.length; i++) {
+      var item = sorted[i];
+      var li = document.createElement("li");
+      var w = document.createElement("span");
+      w.className = "word";
+      w.textContent = item.word;
+      var meta = document.createElement("span");
+      meta.className = "meta";
+      meta.textContent = "×" + item.count + " · word #" + item.pos;
+      li.appendChild(w);
+      li.appendChild(meta);
+      listEl.appendChild(li);
+    }
+
+    if (result.words === 0) {
+      noteEl.textContent = "Type some text to find the words that appear only once.";
+    } else if (result.uniques.length === 0) {
+      noteEl.textContent = "Every word in this text appears more than once, so there are no unique words.";
+    } else {
+      noteEl.textContent = result.uniques.length + " word" + (result.uniques.length === 1 ? "" : "s") +
+        " appear exactly once. Matching is case-insensitive; position is the word's number in the text.";
+    }
+  }
+
+  textEl.addEventListener("input", function () {
+    saveText(textEl.value);
+    render();
+  });
+
+  sortEl.addEventListener("change", render);
+
+  document.getElementById("sample").addEventListener("click", function () {
+    textEl.value = SAMPLE;
+    saveText(SAMPLE);
+    render();
+  });
+
+  document.getElementById("clear").addEventListener("click", function () {
+    textEl.value = "";
+    saveText("");
+    render();
+    textEl.focus();
+  });
+
+  loadText();
+  render();
+})();
+</script>
+</body>
+</html>

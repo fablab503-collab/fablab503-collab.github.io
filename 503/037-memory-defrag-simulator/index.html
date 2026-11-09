@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Memory Defrag Simulator · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/037-memory-defrag-simulator/">
+  <meta name="description" content="Simulate memory fragmentation and defragmentation for large model loading.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      margin: 0;
+      padding: 1rem;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.5;
+      min-width: 375px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 1.5rem;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .card {
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    h1, h2 {
+      margin-top: 0;
+    }
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(16, 1fr);
+      gap: 2px;
+      margin: 1rem 0;
+    }
+    .cell {
+      aspect-ratio: 1;
+      border: 1px solid var(--line);
+      background-color: #ddd;
+    }
+    .allocated {
+      background-color: #4CAF50;
+    }
+    .fragmented {
+      background-color: #f44336;
+    }
+    .defragmented {
+      background-color: #2196F3;
+    }
+    .controls {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin: 1rem 0;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background-color: var(--text);
+      color: var(--card);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: var(--text-2);
+    }
+    footer {
+      text-align: center;
+      padding: 1rem 0;
+      color: var(--text-2);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+
+    <main>
+      <h1>Memory Defrag Simulator</h1>
+      <p>Simulate memory fragmentation and defragmentation for large model loading.</p>
+
+      <div class="card">
+        <h2>Memory Layout</h2>
+        <div class="memory-grid" id="memoryGrid"></div>
+        <div class="controls">
+          <button id="fragmentBtn">Fragment Memory</button>
+          <button id="defragBtn">Defragment</button>
+          <button id="resetBtn">Reset</button>
+        </div>
+        <div class="stats">
+          <span>Allocated: <span id="allocatedCount">0</span></span>
+          <span>Fragmented: <span id="fragmentedCount">0</span></span>
+          <span>Free: <span id="freeCount">0</span></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>How It Works</h2>
+        <p>This simulation shows how memory fragmentation occurs when loading large models and how defragmentation can help.</p>
+        <ul>
+          <li><strong>Green cells</strong>: Allocated memory blocks</li>
+          <li><strong>Red cells</strong>: Fragmented memory (small free blocks)</li>
+          <li><strong>Blue cells</strong>: Defragmented memory (large contiguous blocks)</li>
+        </ul>
+      </div>
+    </main>
+
+    <footer>
+      Project #37 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const grid = document.getElementById('memoryGrid');
+    const allocatedCount = document.getElementById('allocatedCount');
+    const fragmentedCount = document.getElementById('fragmentedCount');
+    const freeCount = document.getElementById('freeCount');
+    const fragmentBtn = document.getElementById('fragmentBtn');
+    const defragBtn = document.getElementById('defragBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let memory = [];
+    const gridSize = 16;
+    const totalCells = gridSize * gridSize;
+
+    function initializeMemory() {
+      memory = Array(totalCells).fill(0);
+      renderGrid();
+      updateStats();
+    }
+
+    function renderGrid() {
+      grid.innerHTML = '';
+      for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        if (memory[i] === 1) cell.classList.add('allocated');
+        if (memory[i] === 2) cell.classList.add('fragmented');
+        if (memory[i] === 3) cell.classList.add('defragmented');
+        grid.appendChild(cell);
+      }
+    }
+
+    function updateStats() {
+      const allocated = memory.filter(x => x === 1).length;
+      const fragmented = memory.filter(x => x === 2).length;
+      const free = memory.filter(x => x === 0).length;
+      allocatedCount.textContent = allocated;
+      fragmentedCount.textContent = fragmented;
+      freeCount.textContent = free;
+    }
+
+    function fragmentMemory() {
+      try {
+        const saved = localStorage.getItem('memoryDefrag');
+        if (saved) {
+          memory = JSON.parse(saved);
+        }
+      } catch (e) {}
+
+      for (let i = 0; i < totalCells; i++) {
+        if (Math.random() > 0.7 && memory[i] === 0) {
+          memory[i] = 1;
+        }
+      }
+
+      // Create fragmentation
+      for (let i = 0; i < 5; i++) {
+        const start = Math.floor(Math.random() * totalCells);
+        if (memory[start] === 0) {
+          memory[start] = 2;
+        }
+      }
+
+      renderGrid();
+      updateStats();
+
+      try {
+        localStorage.setItem('memoryDefrag', JSON.stringify(memory));
+      } catch (e) {}
+    }
+
+    function defragmentMemory() {
+      const freeBlocks = [];
+      const allocatedBlocks = [];
+
+      for (let i = 0; i < totalCells; i++) {
+        if (memory[i] === 0) freeBlocks.push(i);
+        if (memory[i] === 1) allocatedBlocks.push(i);
+      }
+
+      memory.fill(0);
+
+      // Place all allocated blocks at the beginning
+      for (let i = 0; i < allocatedBlocks.length; i++) {
+        memory[i] = 3;
+      }
+
+      renderGrid();
+      updateStats();
+
+      try {
+        localStorage.setItem('memoryDefrag', JSON.stringify(memory));
+      } catch (e) {}
+    }
+
+    function resetMemory() {
+      memory = Array(totalCells).fill(0);
+      renderGrid();
+      updateStats();
+
+      try {
+        localStorage.removeItem('memoryDefrag');
+      } catch (e) {}
+    }
+
+    fragmentBtn.addEventListener('click', fragmentMemory);
+    defragBtn.addEventListener('click', defragmentMemory);
+    resetBtn.addEventListener('click', resetMemory);
+
+    initializeMemory();
+  </script>
+</body>
+</html>

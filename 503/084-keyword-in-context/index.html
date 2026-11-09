@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Keyword In Context · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/084-keyword-in-context/">
+<meta name="description" content="Type a text and a search term and see every occurrence of the term shown with its surrounding words in a keyword-in-context concordance.">
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --card: #fff;
+    --text: #111;
+    --text-2: #5a5a5a;
+    --line: #e2e2de;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --card: #1c1c1c;
+      --text: #f2f2f2;
+      --text-2: #a8a8a8;
+      --line: #2c2c2c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 16px 16px 40px;
+  }
+  .top-link {
+    display: inline-block;
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .top-link:hover { color: var(--text); text-decoration: underline; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .sub { color: var(--text-2); font-size: 14px; margin: 0 0 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  label { font-size: 13px; color: var(--text-2); display: block; margin-bottom: 6px; }
+  textarea, input[type="text"], select {
+    width: 100%;
+    font: inherit;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  textarea { min-height: 140px; resize: vertical; }
+  textarea:focus, input[type="text"]:focus, select:focus {
+    outline: 2px solid var(--text-2);
+    outline-offset: 1px;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 14px;
+    align-items: flex-end;
+  }
+  .controls .field { flex: 1 1 200px; }
+  .controls .field.small { flex: 0 1 120px; }
+  .opts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--text-2);
+  }
+  .opts label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .btn-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  button {
+    font: inherit;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+  }
+  button.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+  button:hover { opacity: 0.85; }
+  .stats {
+    margin: 18px 0 10px;
+    font-size: 14px;
+    color: var(--text-2);
+  }
+  .results { list-style: none; margin: 0; padding: 0; }
+  .results li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 10px;
+    border-top: 1px solid var(--line);
+    font-size: 15px;
+    word-break: break-word;
+  }
+  .results li:first-child { border-top: none; }
+  .ctx-left { flex: 1 1 30%; text-align: right; color: var(--text-2); }
+  .kw {
+    flex: 0 0 auto;
+    font-weight: 700;
+    background: var(--line);
+    border-radius: 4px;
+    padding: 0 4px;
+  }
+  .ctx-right { flex: 1 1 30%; color: var(--text-2); }
+  .num {
+    flex: 0 0 auto;
+    color: var(--text-2);
+    font-size: 12px;
+    min-width: 2.5em;
+    padding-top: 3px;
+  }
+  .empty { color: var(--text-2); font-size: 14px; padding: 12px 2px; }
+  footer {
+    margin-top: 28px;
+    color: var(--text-2);
+    font-size: 13px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="top-link" href="/503/">&larr; Project 503</a>
+  <h1>Keyword In Context</h1>
+  <p class="sub">Paste a text, type a word, and see every occurrence with the words around it.</p>
+
+  <div class="card">
+    <label for="text">Your text</label>
+    <textarea id="text" placeholder="Paste or type your text here&hellip;"></textarea>
+
+    <div class="controls">
+      <div class="field">
+        <label for="term">Search term</label>
+        <input type="text" id="term" placeholder="e.g. light">
+      </div>
+      <div class="field small">
+        <label for="ctx">Words around</label>
+        <select id="ctx">
+          <option value="3">3</option>
+          <option value="5" selected>5</option>
+          <option value="8">8</option>
+          <option value="12">12</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="opts">
+      <label><input type="checkbox" id="case"> Case sensitive</label>
+      <label><input type="checkbox" id="whole"> Whole words only</label>
+      <label><input type="checkbox" id="sort"> Sort by the words after the term</label>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="primary" id="run">Show occurrences</button>
+      <button type="button" id="sample">Load sample text</button>
+      <button type="button" id="clear">Clear</button>
+    </div>
+
+    <p class="stats" id="stats"></p>
+    <ol class="results" id="results"></ol>
+    <p class="empty" id="empty" hidden></p>
+  </div>
+
+  <footer>Project #84 of 503 &middot; Daniel Madac, D-CREATIONS</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var textEl = document.getElementById("text");
+  var termEl = document.getElementById("term");
+  var ctxEl = document.getElementById("ctx");
+  var caseEl = document.getElementById("case");
+  var wholeEl = document.getElementById("whole");
+  var sortEl = document.getElementById("sort");
+  var statsEl = document.getElementById("stats");
+  var resultsEl = document.getElementById("results");
+  var emptyEl = document.getElementById("empty");
+
+  var SAMPLE = "The lighthouse keeper lit the lamp at dusk. Long before the light reached the ships, " +
+    "the whole harbour could see the light on the hill. Sailors said that no light guided them home " +
+    "like that light. When fog covered the sea, the light still burned, and every captain trusted " +
+    "the light above the rocks. In the morning the keeper cleaned the glass so the light would stay bright.";
+
+  function store(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { /* storage unavailable */ }
+  }
+  function read(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+
+  function escapeRegExp(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function wordsAround(str) {
+    return str.split(/\s+/).filter(function (x) { return x.length > 0; });
+  }
+
+  function findMatches(text, term, caseSensitive, wholeWord) {
+    if (!term) return [];
+    var flags = "g" + (caseSensitive ? "" : "i");
+    var pattern = escapeRegExp(term);
+    if (wholeWord) {
+      pattern = "(?<![\\p{L}\\p{N}_])" + pattern + "(?![\\p{L}\\p{N}_])";
+      flags = "gu" + (caseSensitive ? "" : "i");
+    }
+    var re;
+    try { re = new RegExp(pattern, flags); } catch (e) { return []; }
+    var out = [];
+    var m;
+    while ((m = re.exec(text)) !== null) {
+      out.push({ index: m.index, match: m[0] });
+      if (m.index === re.lastIndex) re.lastIndex++;
+    }
+    return out;
+  }
+
+  function render() {
+    var text = textEl.value;
+    var term = termEl.value.trim();
+    var n = parseInt(ctxEl.value, 10) || 5;
+    var matches = findMatches(text, term, caseEl.checked, wholeEl.checked);
+
+    if (sortEl.checked) {
+      matches.sort(function (a, b) {
+        var ra = text.slice(a.index + a.match.length).toLowerCase();
+        var rb = text.slice(b.index + b.match.length).toLowerCase();
+        if (ra < rb) return -1;
+        if (ra > rb) return 1;
+        return a.index - b.index;
+      });
+    }
+
+    resultsEl.textContent = "";
+    statsEl.textContent = "";
+    emptyEl.hidden = true;
+
+    if (!text.trim()) {
+      emptyEl.textContent = "Type or paste a text above, then a search term.";
+      emptyEl.hidden = false;
+      return;
+    }
+    if (!term) {
+      emptyEl.textContent = "Type a search term to see its occurrences.";
+      emptyEl.hidden = false;
+      return;
+    }
+    if (matches.length === 0) {
+      statsEl.textContent = 'No occurrences of "' + term + '".';
+      emptyEl.textContent = "Nothing found. Try another term or change the options.";
+      emptyEl.hidden = false;
+      return;
+    }
+
+    statsEl.textContent = matches.length + (matches.length === 1 ? " occurrence" : " occurrences") +
+      ' of "' + term + '"' + (caseEl.checked ? " (case sensitive)" : "") + ".";
+
+    matches.forEach(function (m, i) {
+      var leftWords = wordsAround(text.slice(Math.max(0, m.index - 200), m.index)).slice(-n);
+      var rightWords = wordsAround(text.slice(m.index + m.match.length, m.index + m.match.length + 200)).slice(0, n);
+
+      var li = document.createElement("li");
+
+      var num = document.createElement("span");
+      num.className = "num";
+      num.textContent = (i + 1) + ".";
+      li.appendChild(num);
+
+      var left = document.createElement("span");
+      left.className = "ctx-left";
+      left.textContent = leftWords.join(" ") + (leftWords.length ? " " : "");
+      li.appendChild(left);
+
+      var kw = document.createElement("span");
+      kw.className = "kw";
+      kw.textContent = m.match;
+      li.appendChild(kw);
+
+      var right = document.createElement("span");
+      right.className = "ctx-right";
+      right.textContent = (rightWords.length ? " " : "") + rightWords.join(" ");
+      li.appendChild(right);
+
+      resultsEl.appendChild(li);
+    });
+  }
+
+  function save() {
+    store("kwic_text", textEl.value);
+    store("kwic_term", termEl.value);
+    store("kwic_ctx", ctxEl.value);
+    store("kwic_case", caseEl.checked ? "1" : "0");
+    store("kwic_whole", wholeEl.checked ? "1" : "0");
+    store("kwic_sort", sortEl.checked ? "1" : "0");
+  }
+
+  function load() {
+    var t = read("kwic_text");
+    var k = read("kwic_term");
+    var c = read("kwic_ctx");
+    if (t !== null) textEl.value = t;
+    if (k !== null) termEl.value = k;
+    if (c !== null && !isNaN(parseInt(c, 10))) ctxEl.value = c;
+    caseEl.checked = read("kwic_case") === "1";
+    wholeEl.checked = read("kwic_whole") === "1";
+    sortEl.checked = read("kwic_sort") === "1";
+  }
+
+  document.getElementById("run").addEventListener("click", function () { save(); render(); });
+  document.getElementById("sample").addEventListener("click", function () {
+    textEl.value = SAMPLE;
+    if (!termEl.value.trim()) termEl.value = "light";
+    save(); render();
+  });
+  document.getElementById("clear").addEventListener("click", function () {
+    textEl.value = "";
+    termEl.value = "";
+    save(); render();
+  });
+
+  [textEl, termEl].forEach(function (el) {
+    el.addEventListener("input", function () { save(); render(); });
+  });
+  [ctxEl, caseEl, wholeEl, sortEl].forEach(function (el) {
+    el.addEventListener("change", function () { save(); render(); });
+  });
+
+  load();
+  render();
+})();
+</script>
+</body>
+</html>

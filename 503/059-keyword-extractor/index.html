@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Keyword Extractor · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/059-keyword-extractor/">
+  <meta name="description" content="Extract the most representative keywords from text using TF-IDF scoring computed entirely in the browser.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    header, footer {
+      text-align: center;
+      color: var(--text-2);
+    }
+    header a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    textarea, button, .keywords {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      background-color: var(--card);
+      color: var(--text);
+    }
+    button {
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .keywords {
+      min-height: 100px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    @media (max-width: 375px) {
+      body {
+        padding: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+    <main>
+      <h1>Keyword Extractor</h1>
+      <p>Pull the most representative keywords from text using TF-IDF scoring computed entirely in the browser.</p>
+      <textarea id="input" placeholder="Enter your text here..." rows="8"></textarea>
+      <button id="extract">Extract Keywords</button>
+      <div class="keywords" id="output"></div>
+    </main>
+    <footer>
+      Project #59 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const extractBtn = document.getElementById('extract');
+
+    function tokenize(text) {
+      return text.toLowerCase().match(/\b\w+\b/g) || [];
+    }
+
+    function removeStopWords(tokens) {
+      const stopWords = new Set([
+        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were',
+        'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must',
+        'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them'
+      ]);
+      return tokens.filter(token => !stopWords.has(token));
+    }
+
+    function tfidf(documents) {
+      const allTokens = new Set();
+      const docTokens = documents.map(doc => {
+        const tokens = removeStopWords(tokenize(doc));
+        tokens.forEach(token => allTokens.add(token));
+        return tokens;
+      });
+
+      const idf = {};
+      const tf = {};
+
+      allTokens.forEach(token => {
+        let count = 0;
+        docTokens.forEach(tokens => {
+          if (tokens.includes(token)) count++;
+        });
+        idf[token] = Math.log(documents.length / count);
+      });
+
+      docTokens.forEach((tokens, i) => {
+        tf[i] = {};
+        const tokenCounts = {};
+        tokens.forEach(token => {
+          tokenCounts[token] = (tokenCounts[token] || 0) + 1;
+        });
+        Object.keys(tokenCounts).forEach(token => {
+          tf[i][token] = tokenCounts[token] / tokens.length;
+        });
+      });
+
+      return (docIndex) => {
+        const scores = {};
+        Object.keys(tf[docIndex]).forEach(token => {
+          scores[token] = tf[docIndex][token] * idf[token];
+        });
+        return Object.entries(scores)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([token]) => token);
+      };
+    }
+
+    function extractKeywords(text) {
+      const documents = [text];
+      const getKeywords = tfidf(documents);
+      return getKeywords(0);
+    }
+
+    extractBtn.addEventListener('click', () => {
+      try {
+        const text = input.value.trim();
+        if (!text) {
+          output.textContent = 'Please enter some text.';
+          return;
+        }
+        const keywords = extractKeywords(text);
+        output.textContent = keywords.join('\n');
+        localStorage.setItem('lastText', text);
+      } catch (e) {
+        console.error(e);
+        output.textContent = 'Error processing text.';
+      }
+    });
+
+    try {
+      const savedText = localStorage.getItem('lastText');
+      if (savedText) {
+        input.value = savedText;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  </script>
+</body>
+</html>

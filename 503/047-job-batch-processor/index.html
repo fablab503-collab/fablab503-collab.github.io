@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Job Batch Processor · Project 503 · D-CREATIONS</title>
+  <meta name="description" content="Process batches of jobs together to amortize setup costs across multiple inputs.">
+  <link rel="canonical" href="https://dcreations.fr/503/047-job-batch-processor/">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --border-radius: 4px;
+      --transition: all 0.3s ease;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 1rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header, footer { text-align: center; padding: 1rem 0; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card { background-color: var(--card); border: 1px solid var(--line); border-radius: var(--border-radius); padding: 1.5rem; margin-bottom: 1rem; }
+    h1, h2 { margin-bottom: 0.5rem; }
+    input, button { padding: 0.5rem; border: 1px solid var(--line); border-radius: var(--border-radius); background-color: var(--card); color: var(--text); }
+    input { width: 100%; margin-bottom: 0.5rem; }
+    button { cursor: pointer; transition: var(--transition); }
+    button:hover { background-color: var(--line); }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .stat-card { text-align: center; padding: 1rem; background-color: var(--line); border-radius: var(--border-radius); }
+    .stat-value { font-size: 1.5rem; font-weight: bold; }
+    .stat-label { font-size: 0.9rem; color: var(--text-2); }
+    .job-list { margin-top: 1rem; }
+    .job-item { padding: 0.5rem; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
+    .job-item:last-child { border-bottom: none; }
+    .batch-info { margin-top: 1rem; font-size: 0.9rem; color: var(--text-2); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+
+    <main>
+      <h1>Job Batch Processor</h1>
+      <p>Process batches of jobs together to amortize setup costs across multiple inputs.</p>
+
+      <div class="card">
+        <h2>Add Jobs</h2>
+        <input type="text" id="jobInput" placeholder="Enter job description">
+        <button id="addJob">Add Job</button>
+        
+        <div class="job-list" id="jobList"></div>
+        
+        <div class="batch-info">
+          <p>Batch size: <span id="batchSize">0</span></p>
+          <p>Setup cost per batch: <span id="setupCost">10</span></p>
+          <p>Total jobs: <span id="totalJobs">0</span></p>
+        </div>
+        
+        <button id="processBatch" disabled>Process Batch</button>
+      </div>
+
+      <div class="card">
+        <h2>Processing Results</h2>
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-value" id="totalCost">0</div>
+            <div class="stat-label">Total Cost</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="avgPerJob">0</div>
+            <div class="stat-label">Avg/Job</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="batches">0</div>
+            <div class="stat-label">Batches</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      Project #47 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const batchSize = 5;
+    const setupCost = 10;
+    
+    let jobs = [];
+    let batches = [];
+    
+    const jobInput = document.getElementById('jobInput');
+    const addJobBtn = document.getElementById('addJob');
+    const jobList = document.getElementById('jobList');
+    const processBatchBtn = document.getElementById('processBatch');
+    const batchSizeEl = document.getElementById('batchSize');
+    const setupCostEl = document.getElementById('setupCost');
+    const totalJobsEl = document.getElementById('totalJobs');
+    const totalCostEl = document.getElementById('totalCost');
+    const avgPerJobEl = document.getElementById('avgPerJob');
+    const batchesEl = document.getElementById('batches');
+    
+    function loadState() {
+      try {
+        const savedJobs = localStorage.getItem('jobBatchJobs');
+        if (savedJobs) jobs = JSON.parse(savedJobs);
+        
+        const savedBatches = localStorage.getItem('jobBatchBatches');
+        if (savedBatches) batches = JSON.parse(savedBatches);
+      } catch (e) {}
+      
+      updateUI();
+    }
+    
+    function saveState() {
+      try {
+        localStorage.setItem('jobBatchJobs', JSON.stringify(jobs));
+        localStorage.setItem('jobBatchBatches', JSON.stringify(batches));
+      } catch (e) {}
+    }
+    
+    function addJob() {
+      const jobText = jobInput.value.trim();
+      if (!jobText) return;
+      
+      jobs.push({
+        id: Date.now(),
+        text: jobText,
+        timestamp: new Date()
+      });
+      
+      jobInput.value = '';
+      saveState();
+      updateUI();
+    }
+    
+    function processBatch() {
+      if (jobs.length === 0) return;
+      
+      const batchJobs = jobs.splice(0, batchSize);
+      batches.push({
+        id: Date.now(),
+        jobs: batchJobs,
+        setupCost: setupCost,
+        totalCost: batchJobs.length * setupCost
+      });
+      
+      saveState();
+      updateUI();
+    }
+    
+    function updateUI() {
+      batchSizeEl.textContent = batchSize;
+      setupCostEl.textContent = setupCost;
+      totalJobsEl.textContent = jobs.length;
+      
+      jobList.innerHTML = '';
+      jobs.forEach(job => {
+        const jobEl = document.createElement('div');
+        jobEl.className = 'job-item';
+        jobEl.innerHTML = `
+          <span>${job.text}</span>
+          <span>${new Date(job.timestamp).toLocaleTimeString()}</span>
+        `;
+        jobList.appendChild(jobEl);
+      });
+      
+      processBatchBtn.disabled = jobs.length === 0;
+      
+      const totalCost = batches.reduce((sum, batch) => sum + batch.totalCost, 0);
+      const totalJobsProcessed = batches.reduce((sum, batch) => sum + batch.jobs.length, 0);
+      
+      totalCostEl.textContent = totalCost;
+      avgPerJobEl.textContent = totalJobsProcessed ? (totalCost / totalJobsProcessed).toFixed(2) : '0';
+      batchesEl.textContent = batches.length;
+    }
+    
+    addJobBtn.addEventListener('click', addJob);
+    jobInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter') addJob();
+    });
+    processBatchBtn.addEventListener('click', processBatch);
+    
+    loadState();
+  </script>
+</body>
+</html>

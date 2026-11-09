@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text Categoriser · Project 503 · D-CREATIONS</title>
+<meta name="description" content="Classify any text into predefined categories using a naive Bayes classifier trained on examples embedded in this page — fully offline, no server needed.">
+<link rel="canonical" href="https://dcreations.fr/503/080-text-categoriser/">
+<style>
+  :root{
+    --bg:#f4f4f2;
+    --card:#fff;
+    --text:#111;
+    --text-2:#5a5a5a;
+    --line:#e2e2de;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#121212;
+      --card:#1c1c1c;
+      --text:#f2f2f2;
+      --text-2:#a8a8a8;
+      --line:#2c2c2c;
+    }
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  .top{
+    padding:16px 20px 0;
+  }
+  .top a{
+    color:var(--text-2);
+    text-decoration:none;
+    font-size:14px;
+  }
+  .top a:hover{ color:var(--text); text-decoration:underline; }
+  main{
+    flex:1;
+    width:100%;
+    max-width:680px;
+    margin:0 auto;
+    padding:24px 20px 40px;
+  }
+  h1{
+    font-size:26px;
+    margin:8px 0 4px;
+  }
+  .lede{
+    color:var(--text-2);
+    font-size:15px;
+    margin:0 0 20px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+  }
+  label{
+    display:block;
+    font-size:14px;
+    font-weight:600;
+    margin-bottom:8px;
+  }
+  textarea{
+    width:100%;
+    min-height:130px;
+    resize:vertical;
+    padding:12px;
+    font:inherit;
+    font-size:15px;
+    color:var(--text);
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:10px;
+  }
+  textarea:focus{
+    outline:2px solid var(--text-2);
+    outline-offset:1px;
+  }
+  .actions{
+    display:flex;
+    gap:10px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  button{
+    font:inherit;
+    font-size:15px;
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:10px;
+    border:1px solid var(--text);
+    background:var(--text);
+    color:var(--bg);
+    cursor:pointer;
+  }
+  button.secondary{
+    background:transparent;
+    color:var(--text);
+    border-color:var(--line);
+    font-weight:500;
+  }
+  button:hover{ opacity:.85; }
+  .examples{
+    margin-top:16px;
+    font-size:13px;
+    color:var(--text-2);
+  }
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:8px;
+  }
+  .chip{
+    font-size:13px;
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--text-2);
+    cursor:pointer;
+  }
+  .chip:hover{
+    border-color:var(--text-2);
+    color:var(--text);
+  }
+  #result{
+    margin-top:20px;
+    display:none;
+  }
+  #result.show{ display:block; }
+  .best{
+    font-size:18px;
+    font-weight:700;
+    margin:0 0 4px;
+  }
+  .best span{ color:var(--text-2); font-weight:500; font-size:15px; }
+  .bars{
+    margin-top:14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .bar-row{
+    display:grid;
+    grid-template-columns:150px 1fr 48px;
+    align-items:center;
+    gap:10px;
+    font-size:13px;
+  }
+  .bar-name{
+    color:var(--text);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .bar-track{
+    height:10px;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .bar-fill{
+    height:100%;
+    background:var(--text-2);
+    border-radius:999px;
+    width:0;
+  }
+  .bar-row.top .bar-fill{ background:var(--text); }
+  .bar-pct{
+    text-align:right;
+    color:var(--text-2);
+    font-variant-numeric:tabular-nums;
+  }
+  .words{
+    margin-top:16px;
+    font-size:13px;
+    color:var(--text-2);
+  }
+  .words .chip{ cursor:default; }
+  .note{
+    margin-top:18px;
+    font-size:12.5px;
+    color:var(--text-2);
+  }
+  footer{
+    text-align:center;
+    padding:20px;
+    font-size:13px;
+    color:var(--text-2);
+  }
+  @media (max-width:480px){
+    .bar-row{ grid-template-columns:110px 1fr 44px; }
+    h1{ font-size:22px; }
+  }
+</style>
+</head>
+<body>
+  <div class="top">
+    <a href="/503/">← Project 503</a>
+  </div>
+  <main>
+    <h1>Text Categoriser</h1>
+    <p class="lede">Paste any text and a naive Bayes classifier — trained on the examples embedded in this page — will guess its category. Everything runs offline in your browser.</p>
+
+    <div class="card">
+      <label for="input">Your text</label>
+      <textarea id="input" placeholder="Type or paste a sentence or paragraph…"></textarea>
+      <div class="actions">
+        <button id="classifyBtn" type="button">Classify</button>
+        <button id="clearBtn" type="button" class="secondary">Clear</button>
+      </div>
+      <div class="examples">
+        Try an example from:
+        <div class="chips" id="exampleChips"></div>
+      </div>
+
+      <div id="result" aria-live="polite">
+        <p class="best" id="bestLabel"></p>
+        <div class="bars" id="bars"></div>
+        <div class="words" id="words"></div>
+      </div>
+
+      <p class="note">No data leaves this page: the model is trained locally from the embedded examples every time the page loads. Your last text is saved only in this browser's localStorage.</p>
+    </div>
+  </main>
+  <footer>Project #80 of 503 · Daniel Madac, D-CREATIONS</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Training data: categories with embedded examples ---------- */
+  var DATA = {
+    "Technology": [
+      "The new smartphone has a faster processor and a better camera.",
+      "Developers released an update for the app with bug fixes.",
+      "Artificial intelligence models can now write code and answer questions.",
+      "The laptop battery lasts ten hours on a single charge.",
+      "Cloud services let teams store and share files online.",
+      "The software update improves security and performance.",
+      "A new version of the operating system was announced yesterday.",
+      "Electric cars use large batteries and need charging stations.",
+      "The startup raised funding to build a robotics platform.",
+      "Websites use JavaScript to react when you click a button."
+    ],
+    "Sports": [
+      "The team won the match in the final minutes.",
+      "He scored two goals and was named player of the game.",
+      "The coach announced a new training schedule for the season.",
+      "She broke the record in the 100 metres final.",
+      "The club signed a young striker from the academy.",
+      "Fans filled the stadium for the championship final.",
+      "The referee showed a red card after the foul.",
+      "They play in the top league this season.",
+      "He trained every morning before the tournament.",
+      "The goalkeeper saved three penalties in the shootout."
+    ],
+    "Food & Cooking": [
+      "Mix the flour with eggs and sugar, then bake for thirty minutes.",
+      "The recipe calls for olive oil, garlic and fresh basil.",
+      "This restaurant serves the best pasta in the city.",
+      "Chop the onions and fry them until golden.",
+      "A balanced diet includes vegetables, grains and protein.",
+      "The soup was salty, so I added more water.",
+      "Fresh bread from the bakery smells amazing.",
+      "Grill the chicken for six minutes on each side.",
+      "Vegan dishes use beans and tofu instead of meat.",
+      "The chef prepared a dessert with chocolate and cream."
+    ],
+    "Travel": [
+      "We booked flights and a hotel near the old town.",
+      "The train to the coast takes about two hours.",
+      "Do not forget your passport and travel insurance.",
+      "The city has beautiful beaches and busy markets.",
+      "Our tour guide showed us the famous cathedral.",
+      "I would love to visit Japan and see Kyoto in spring.",
+      "The hostel was cheap and the staff were friendly.",
+      "Carry-on luggage must fit under the seat.",
+      "We watched the sunset from the mountain viewpoint.",
+      "The museum has a great collection of ancient art."
+    ],
+    "Health & Wellbeing": [
+      "Regular exercise improves sleep and mood.",
+      "The doctor said my blood pressure is normal.",
+      "Drink more water and get eight hours of sleep.",
+      "Meditation helps reduce stress and anxiety.",
+      "The vaccine protects against the seasonal flu.",
+      "A physiotherapist showed me stretches for my back pain.",
+      "Mental health matters as much as physical health.",
+      "Wash your hands often to avoid catching a cold.",
+      "The study found that walking daily improves health.",
+      "He quit smoking after ten years."
+    ],
+    "Politics & World Affairs": [
+      "The parliament voted on the new law yesterday.",
+      "The minister announced new policies on climate change.",
+      "Voters went to the polls in the national election.",
+      "The two countries signed a trade agreement.",
+      "Protesters gathered in the capital to demand reform.",
+      "The president met with foreign leaders at the summit.",
+      "The government plans to invest in public transport.",
+      "The senate debated the bill for three hours.",
+      "The UN called for a ceasefire in the conflict.",
+      "New regulations will affect small businesses next year."
+    ]
+  };
+
+  var STOP = {
+    "the":1,"a":1,"an":1,"and":1,"or":1,"of":1,"to":1,"in":1,"is":1,"are":1,
+    "was":1,"were":1,"for":1,"on":1,"with":1,"at":1,"by":1,"it":1,"its":1,
+    "this":1,"that":1,"these":1,"those":1,"i":1,"you":1,"we":1,"they":1,"he":1,
+    "she":1,"be":1,"not":1,"so":1,"as":1,"from":1,"have":1,"has":1,"had":1,
+    "his":1,"her":1,"their":1,"our":1,"your":1,"my":1,"but":1,"can":1,"will":1,
+    "do":1,"did":1,"would":1,"could":1,"there":1,"than":1,"then":1,"when":1,
+    "if":1,"into":1,"about":1,"after":1,"before":1,"up":1,"out":1,"over":1
+  };
+
+  /* ---------- Tokenizer ---------- */
+  function tokenize(text){
+    var m = String(text).toLowerCase().match(/[\p{L}\p{N}]+/gu);
+    return m || [];
+  }
+
+  /* ---------- Train the naive Bayes model ---------- */
+  var classes = Object.keys(DATA);
+  var classWordCount = {};
+  var classTotal = {};
+  var vocab = {};
+  var totalDocs = 0;
+
+  classes.forEach(function(c){
+    classWordCount[c] = {};
+    classTotal[c] = 0;
+    DATA[c].forEach(function(example){
+      totalDocs++;
+      tokenize(example).forEach(function(w){
+        if (STOP[w]) return;
+        classWordCount[c][w] = (classWordCount[c][w] || 0) + 1;
+        classTotal[c]++;
+        vocab[w] = 1;
+      });
+    });
+  });
+
+  var V = Object.keys(vocab).length;
+  var logPrior = {};
+  classes.forEach(function(c){
+    logPrior[c] = Math.log(DATA[c].length / totalDocs);
+  });
+
+  function logLikelihood(word, c){
+    var count = classWordCount[c][word] || 0;
+    return Math.log((count + 1) / (classTotal[c] + V));
+  }
+
+  /* ---------- Classify ---------- */
+  function classify(text){
+    var tokens = tokenize(text).filter(function(w){ return !STOP[w]; });
+    var scores = {};
+    classes.forEach(function(c){
+      var s = logPrior[c];
+      tokens.forEach(function(w){ s += logLikelihood(w, c); });
+      scores[c] = s;
+    });
+
+    var max = -Infinity;
+    classes.forEach(function(c){ if (scores[c] > max) max = scores[c]; });
+
+    var sum = 0;
+    var exp = {};
+    classes.forEach(function(c){
+      exp[c] = Math.exp(scores[c] - max);
+      sum += exp[c];
+    });
+
+    var probs = {};
+    classes.forEach(function(c){ probs[c] = exp[c] / sum; });
+
+    var best = classes[0];
+    classes.forEach(function(c){ if (scores[c] > scores[best]) best = c; });
+
+    /* Most influential words: how much each token favours the winner over the runner-up */
+    var wordScore = {};
+    var unique = {};
+    tokens.forEach(function(w){ unique[w] = 1; });
+    Object.keys(unique).forEach(function(w){
+      var others = classes.filter(function(c){ return c !== best; })
+        .map(function(c){ return logLikelihood(w, c); });
+      var runnerUp = Math.max.apply(null, others);
+      wordScore[w] = logLikelihood(w, best) - runnerUp;
+    });
+    var topWords = Object.keys(wordScore)
+      .filter(function(w){ return wordScore[w] > 0; })
+      .sort(function(a, b){ return wordScore[b] - wordScore[a]; })
+      .slice(0, 6);
+
+    return { best: best, probs: probs, topWords: topWords };
+  }
+
+  /* ---------- UI ---------- */
+  var input = document.getElementById("input");
+  var result = document.getElementById("result");
+  var bestLabel = document.getElementById("bestLabel");
+  var bars = document.getElementById("bars");
+  var words = document.getElementById("words");
+  var exampleChips = document.getElementById("exampleChips");
+
+  /* Example chips: one per category, inserts a random example */
+  classes.forEach(function(c){
+    var chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.textContent = c;
+    chip.addEventListener("click", function(){
+      var ex = DATA[c][Math.floor(Math.random() * DATA[c].length)];
+      input.value = ex;
+      saveText();
+      runClassification();
+    });
+    exampleChips.appendChild(chip);
+  });
+
+  function pct(p){ return Math.round(p * 1000) / 10 + "%"; }
+
+  function runClassification(){
+    var text = input.value.trim();
+    if (!text){
+      result.classList.remove("show");
+      return;
+    }
+    var r = classify(text);
+    bestLabel.textContent = "Best match: " + r.best + " ";
+    var pctSpan = document.createElement("span");
+    pctSpan.textContent = "(" + pct(r.probs[r.best]) + " confidence)";
+    bestLabel.appendChild(pctSpan);
+
+    bars.innerHTML = "";
+    var sorted = classes.slice().sort(function(a, b){ return r.probs[b] - r.probs[a]; });
+    sorted.forEach(function(c, i){
+      var row = document.createElement("div");
+      row.className = "bar-row" + (i === 0 ? " top" : "");
+
+      var name = document.createElement("div");
+      name.className = "bar-name";
+      name.textContent = c;
+
+      var track = document.createElement("div");
+      track.className = "bar-track";
+      var fill = document.createElement("div");
+      fill.className = "bar-fill";
+      fill.style.width = Math.max(1, r.probs[c] * 100) + "%";
+      track.appendChild(fill);
+
+      var p = document.createElement("div");
+      p.className = "bar-pct";
+      p.textContent = pct(r.probs[c]);
+
+      row.appendChild(name);
+      row.appendChild(track);
+      row.appendChild(p);
+      bars.appendChild(row);
+    });
+
+    words.innerHTML = "";
+    if (r.topWords.length){
+      var label = document.createElement("span");
+      label.textContent = "Words that pointed to this result: ";
+      words.appendChild(label);
+      r.topWords.forEach(function(w){
+        var chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = w;
+        words.appendChild(chip);
+        words.appendChild(document.createTextNode(" "));
+      });
+    }
+
+    result.classList.add("show");
+  }
+
+  /* ---------- localStorage (always guarded) ---------- */
+  function saveText(){
+    try {
+      localStorage.setItem("tcc80-text", input.value);
+    } catch (e) { /* storage unavailable — ignore */ }
+  }
+  function loadText(){
+    try {
+      var saved = localStorage.getItem("tcc80-text");
+      if (saved){ input.value = saved; }
+    } catch (e) { /* storage unavailable — ignore */ }
+  }
+
+  document.getElementById("classifyBtn").addEventListener("click", runClassification);
+  document.getElementById("clearBtn").addEventListener("click", function(){
+    input.value = "";
+    saveText();
+    result.classList.remove("show");
+    input.focus();
+  });
+  input.addEventListener("input", saveText);
+  input.addEventListener("keydown", function(e){
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter"){ runClassification(); }
+  });
+
+  loadText();
+  if (input.value.trim()){ runClassification(); }
+})();
+</script>
+</body>
+</html>

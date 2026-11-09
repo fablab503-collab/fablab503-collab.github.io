@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Thermal Throttle Demo · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/034-thermal-throttle-demo/">
+  <meta name="description" content="Demonstrates how device performance degrades under sustained load with temperature thresholds.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --temp-high: #ff4d4d;
+      --temp-normal: #4d94ff;
+      --temp-low: #4dff88;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 1rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2rem; }
+    h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .project-link { color: var(--text); text-decoration: none; display: inline-block; margin-bottom: 1rem; }
+    .project-link:hover { text-decoration: underline; }
+    .card { background-color: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .temp-display { font-size: 3rem; text-align: center; margin: 1rem 0; }
+    .temp-bar { height: 20px; background-color: var(--line); border-radius: 10px; overflow: hidden; margin: 1rem 0; }
+    .temp-fill { height: 100%; border-radius: 10px; width: 0%; transition: width 0.5s ease; }
+    .controls { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin: 1rem 0; }
+    button { padding: 0.75rem 1.5rem; background-color: var(--text); color: var(--card); border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    button:hover { opacity: 0.9; }
+    .status { text-align: center; margin: 1rem 0; font-weight: bold; }
+    .info { font-size: 0.9rem; color: var(--text-2); margin-top: 1rem; }
+    footer { text-align: center; margin-top: 2rem; font-size: 0.9rem; color: var(--text-2); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/" class="project-link">← Project 503</a>
+      <h1>Thermal Throttle Demo</h1>
+      <p>Performance degradation under sustained load</p>
+    </header>
+    
+    <main>
+      <div class="card">
+        <div class="temp-display" id="temperature">25°C</div>
+        <div class="temp-bar">
+          <div class="temp-fill" id="tempFill"></div>
+        </div>
+        <div class="status" id="status">Normal Performance</div>
+        
+        <div class="controls">
+          <button id="startBtn">Start Load</button>
+          <button id="stopBtn">Stop Load</button>
+          <button id="resetBtn">Reset</button>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h2>How It Works</h2>
+        <p>This demo simulates thermal throttling. As the simulated CPU load increases, temperature rises and performance decreases.</p>
+        <p>Thresholds: Normal (≤ 65°C), Warning (65-75°C), Critical (> 75°C)</p>
+        <div class="info">
+          <p>Note: This is a simulation. Actual thermal throttling depends on hardware capabilities.</p>
+        </div>
+      </div>
+    </main>
+    
+    <footer>
+      Project #34 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const tempDisplay = document.getElementById('temperature');
+    const tempFill = document.getElementById('tempFill');
+    const statusDisplay = document.getElementById('status');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    
+    let temperature = 25;
+    let loadInterval = null;
+    let isRunning = false;
+    
+    function updateDisplay() {
+      tempDisplay.textContent = `${temperature}°C`;
+      
+      // Update bar color based on temperature
+      if (temperature > 75) {
+        tempFill.style.backgroundColor = '#ff4d4d';
+        statusDisplay.textContent = 'Critical Performance';
+        statusDisplay.style.color = '#ff4d4d';
+      } else if (temperature > 65) {
+        tempFill.style.backgroundColor = '#ff9900';
+        statusDisplay.textContent = 'Warning Performance';
+        statusDisplay.style.color = '#ff9900';
+      } else {
+        tempFill.style.backgroundColor = '#4dff88';
+        statusDisplay.textContent = 'Normal Performance';
+        statusDisplay.style.color = '#4dff88';
+      }
+      
+      // Update bar width
+      const width = Math.min(100, (temperature - 25) / 0.7);
+      tempFill.style.width = `${width}%`;
+    }
+    
+    function startLoad() {
+      if (isRunning) return;
+      isRunning = true;
+      
+      loadInterval = setInterval(() => {
+        try {
+          // Simulate temperature increase
+          const increase = Math.random() * 0.5 + 0.1;
+          temperature += increase;
+          
+          // Simulate performance degradation
+          if (temperature > 75) {
+            // Very high temp - severe throttling
+            temperature += Math.random() * 0.3;
+          } else if (temperature > 65) {
+            // High temp - moderate throttling
+            temperature += Math.random() * 0.2;
+          }
+          
+          // Cap at reasonable max
+          if (temperature > 90) temperature = 90;
+          
+          updateDisplay();
+        } catch (e) {
+          console.error(e);
+        }
+      }, 100);
+    }
+    
+    function stopLoad() {
+      if (!isRunning) return;
+      isRunning = false;
+      clearInterval(loadInterval);
+    }
+    
+    function reset() {
+      stopLoad();
+      temperature = 25;
+      updateDisplay();
+    }
+    
+    startBtn.addEventListener('click', startLoad);
+    stopBtn.addEventListener('click', stopLoad);
+    resetBtn.addEventListener('click', reset);
+    
+    // Initialize
+    updateDisplay();
+    
+    // Load saved state if available
+    try {
+      const savedTemp = localStorage.getItem('thermalDemoTemp');
+      if (savedTemp) {
+        temperature = parseFloat(savedTemp);
+        updateDisplay();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    
+    // Save state periodically
+    setInterval(() => {
+      try {
+        localStorage.setItem('thermalDemoTemp', temperature.toString());
+      } catch (e) {
+        console.error(e);
+      }
+    }, 5000);
+  </script>
+</body>
+</html>

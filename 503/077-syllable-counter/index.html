@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Syllable Counter · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/077-syllable-counter/">
+  <meta name="description" content="Count syllables in every word using vowel-group heuristics and flag words with unusual counts.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 768px;
+      margin: 0 auto;
+    }
+    header, footer {
+      text-align: center;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .card {
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    textarea, input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background-color: var(--card);
+      color: var(--text);
+      font-family: inherit;
+    }
+    button {
+      background-color: var(--text);
+      color: var(--card);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      margin-top: 0.5rem;
+    }
+    button:hover {
+      background-color: var(--text-2);
+    }
+    .result {
+      margin-top: 1.5rem;
+    }
+    .word {
+      display: inline-block;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--line);
+      border-radius: 4px;
+    }
+    .unusual {
+      background-color: #ffeb3b;
+      color: #111;
+    }
+    .count {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+
+    <main class="card">
+      <h1>Syllable Counter</h1>
+      <p>Enter text below to count syllables in each word.</p>
+      <textarea id="input" rows="6" placeholder="Type or paste your text here..."></textarea>
+      <button id="count">Count Syllables</button>
+      <div class="result" id="result"></div>
+    </main>
+
+    <footer>
+      Project #77 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const vowels = 'aeiouy';
+    const irregularWords = {
+      'the': 1, 'a': 1, 'an': 1, 'and': 1, 'or': 1, 'but': 1,
+      'is': 1, 'are': 1, 'was': 1, 'were': 1, 'be': 1, 'been': 1,
+      'have': 1, 'has': 1, 'had': 1, 'do': 1, 'does': 1, 'did': 1,
+      'will': 1, 'would': 1, 'could': 1, 'should': 1, 'may': 1, 'might': 1
+    };
+
+    function countSyllables(word) {
+      word = word.toLowerCase().trim();
+      if (irregularWords[word]) return irregularWords[word];
+      
+      let count = 0;
+      let prevWasVowel = false;
+      
+      for (let i = 0; i < word.length; i++) {
+        const char = word[i];
+        const isVowel = vowels.includes(char);
+        
+        if (isVowel && !prevWasVowel) {
+          count++;
+        }
+        prevWasVowel = isVowel;
+      }
+      
+      if (word.endsWith('e')) {
+        count--;
+      }
+      
+      if (count === 0) count = 1;
+      
+      return count;
+    }
+
+    function processText(text) {
+      const words = text.split(/\s+/).filter(w => w.length > 0);
+      const results = [];
+      
+      for (const word of words) {
+        const cleanWord = word.replace(/[^\w]/g, '');
+        if (!cleanWord) continue;
+        
+        const count = countSyllables(cleanWord);
+        const isUnusual = count > 3 || count < 1;
+        results.push({ word, count, unusual: isUnusual });
+      }
+      
+      return results;
+    }
+
+    function displayResults(results) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '';
+      
+      if (results.length === 0) {
+        resultDiv.textContent = 'No words found.';
+        return;
+      }
+      
+      const container = document.createElement('div');
+      results.forEach(({ word, count, unusual }) => {
+        const span = document.createElement('span');
+        span.className = `word ${unusual ? 'unusual' : ''}`;
+        span.innerHTML = `${word} <span class="count">(${count})</span>`;
+        container.appendChild(span);
+      });
+      
+      resultDiv.appendChild(container);
+    }
+
+    document.getElementById('count').addEventListener('click', () => {
+      const text = document.getElementById('input').value;
+      const results = processText(text);
+      displayResults(results);
+    });
+
+    // Load saved text if exists
+    try {
+      const savedText = localStorage.getItem('syllableCounterText');
+      if (savedText) {
+        document.getElementById('input').value = savedText;
+      }
+    } catch (e) {}
+
+    // Save text on input change
+    document.getElementById('input').addEventListener('input', () => {
+      try {
+        localStorage.setItem('syllableCounterText', document.getElementById('input').value);
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beam Search Tree Explorer · Project 503 · D-CREATIONS</title>
+  <meta name="description" content="Interactive beam search tree visualizer with configurable beam width and length penalty, highlighting the highest-scoring token sequence generation path.">
+  <link rel="canonical" href="https://dcreations.fr/503/020-beam-search-tree-explorer/">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --highlight: #2196f3;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+        --highlight: #4da6ff;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 1rem;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    .back {
+      display: inline-block;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    .back:hover { text-decoration: underline; }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: var(--card);
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+    .controls > * {
+      flex: 1;
+      min-width: 120px;
+    }
+    .controls label {
+      display: flex;
+      flex-direction: column;
+      gap: .25rem;
+      font-size: .875rem;
+    }
+    .controls input[type="range"] {
+      width: 100%;
+    }
+    .controls span.value {
+      font-variant-numeric: tabular-nums;
+      color: var(--text-2);
+    }
+    #generate {
+      padding: .5rem 1rem;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: .875rem;
+    }
+    #generate:hover { background: var(--bg); }
+    .tree-container {
+      width: 100%;
+      overflow: auto;
+      margin-bottom: 1rem;
+      background: var(--card);
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+    #treeSVG {
+      width: 100%;
+      min-height: 400px;
+    }
+    .node {
+      cursor: pointer;
+    }
+    .node circle {
+      fill: var(--card);
+      stroke: var(--line);
+      stroke-width: 1.5;
+      transition: stroke 0.2s, fill 0.2s;
+    }
+    .node.best circle {
+      stroke: var(--highlight);
+      stroke-width: 2.5;
+      fill: var(--highlight);
+      fill-opacity: 0.15;
+    }
+    .node text {
+      fill: var(--text);
+      font-size: 0.75rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      pointer-events: none;
+    }
+    .edge {
+      stroke: var(--line);
+      stroke-width: 1;
+    }
+    .edge.best {
+      stroke: var(--highlight);
+      stroke-width: 2;
+    }
+    .tooltip {
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: var(--card);
+      color: var(--text);
+      padding: .5rem .75rem;
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      font-size: .75rem;
+      pointer-events: none;
+      z-index: 10;
+      display: none;
+    }
+    .footer {
+      font-size: .75rem;
+      color: var(--text-2);
+      text-align: center;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <a href="/503/" class="back">← Project 503</a>
+  
+  <div class="controls">
+    <label>
+      Beam width
+      <input type="range" id="beamWidth" min="1" max="10" value="3">
+      <span class="value" id="beamWidthValue">3</span>
+    </label>
+    <label>
+      Length penalty
+      <input type="range" id="lengthPenalty" min="0" max="1" step="0.05" value="0.3">
+      <span class="value" id="lengthPenaltyValue">0.30</span>
+    </label>
+    <label>
+      Max depth
+      <input type="range" id="maxDepth" min="2" max="8" value="5">
+      <span class="value" id="maxDepthValue">5</span>
+    </label>
+    <button id="generate">Generate Tree</button>
+  </div>
+  
+  <div class="tree-container">
+    <svg id="treeSVG" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  
+  <div class="tooltip" id="tooltip"></div>
+  <div class="footer">Project #20 of 503 · Daniel Madac, D-CREATIONS</div>
+
+  <script>
+    (() => {
+      const VOCAB = ['The', 'quick', 'brown', 'fox', 'jumps', 'over', 'the', 'lazy', 'dog', 'cat',
+        'A', 'big', 'small', 'red', 'blue', 'green', 'fast', 'slow', 'bright', 'day'];
+      const LEVEL_SPACING = 140;
+      const NODE_SPACING = 35;
+      const NODE_R = 14;
+
+      const beamWidthEl = document.getElementById('beamWidth');
+      const beamWidthVal = document.getElementById('beamWidthValue');
+      const lengthPenaltyEl = document.getElementById('lengthPenalty');
+      const lengthPenaltyVal = document.getElementById('lengthPenaltyValue');
+      const maxDepthEl = document.getElementById('maxDepth');
+      const maxDepthVal = document.getElementById('maxDepthValue');
+      const generateBtn = document.getElementById('generate');
+      const svg = document.getElementById('treeSVG');
+      const tooltip = document.getElementById('tooltip');
+
+      let beamWidth = parseInt(beamWidthEl.value);
+      let lengthPenalty = parseFloat(lengthPenaltyEl.value);
+      let maxDepth = parseInt(maxDepthEl.value);
+      let currentNodes = [];
+
+      // Persist settings
+      function saveSettings() {
+        try { localStorage.setItem('beamSearch_beamWidth', beamWidth.toString()); } catch (e) {}
+        try { localStorage.setItem('beamSearch_lengthPenalty', lengthPenalty.toString()); } catch (e) {}
+        try { localStorage.setItem('beamSearch_maxDepth', maxDepth.toString()); } catch (e) {}
+      }
+      function loadSettings() {
+        try {
+          const bw = localStorage.getItem('beamSearch_beamWidth');
+          if (bw !== null) beamWidth = parseInt(bw);
+        } catch (e) {}
+        try {
+          const lp = localStorage.getItem('beamSearch_lengthPenalty');
+          if (lp !== null) lengthPenalty = parseFloat(lp);
+        } catch (e) {}
+        try {
+          const md = localStorage.getItem('beamSearch_maxDepth');
+          if (md !== null) maxDepth = parseInt(md);
+        } catch (e) {}
+      }
+      function updateControls() {
+        beamWidthEl.value = beamWidth;
+        beamWidthVal.textContent = beamWidth;
+        lengthPenaltyEl.value = lengthPenalty;
+        lengthPenaltyVal.textContent = lengthPenalty.toFixed(2);
+        maxDepthEl.value = maxDepth;
+        maxDepthVal.textContent = maxDepth;
+      }
+
+      loadSettings();
+      updateControls();
+
+      beamWidthEl.addEventListener('input', () => {
+        beamWidth = parseInt(beamWidthEl.value);
+        beamWidthVal.textContent = beamWidth;
+        saveSettings();
+      });
+      lengthPenaltyEl.addEventListener('input', () => {
+        lengthPenalty = parseFloat(lengthPenaltyEl.value);
+        lengthPenaltyVal.textContent = lengthPenalty.toFixed(2);
+        saveSettings();
+      });
+      maxDepthEl.addEventListener('input', () => {
+        maxDepth = parseInt(maxDepthEl.value);
+        maxDepthVal.textContent = maxDepth;
+        saveSettings();
+      });
+
+      // Random log-prob between -3 and -0.1
+      function randomLogProb() {
+        return -3 + Math.random() * 2.9;
+      }
+
+      // Random token from vocabulary
+      function randomToken() {
+        return VOCAB[Math.floor(Math.random() * VOCAB.length)];
+      }
+
+      // Generate tree using beam search
+      function generateTree() {
+        const nodes = [];
+        // Root node
+        nodes.push({
+          id: 0,
+          token: '[START]',
+          score: 0,
+          depth: 0,
+          parentId: null,
+          children: []
+        });
+
+        let currentIds = [0]; // nodes at current depth
+
+        for (let d = 1; d <= maxDepth; d++) {
+          const candidates = [];
+          // Generate children for every node in current beam
+          for (const parentId of currentIds) {
+            const parent = nodes.find(n => n.id === parentId);
+            // Generate up to beamWidth * 2 candidates per parent, then we'll prune
+            for (let i = 0; i < beamWidth * 2; i++) {
+              const token = randomToken();
+              const logProb = randomLogProb();
+              const rawScore = parent.score + logProb;
+              // Length penalty: subtract penalty * depth
+              const score = rawScore - lengthPenalty * d;
+              candidates.push({
+                id: nodes.length,
+                token,
+                score,
+                rawScore,
+                depth: d,
+                parentId,
+                children: []
+              });
+            }
+          }
+
+          // Sort candidates by score descending, take top beamWidth
+          candidates.sort((a, b) => b.score - a.score);
+          const nextIds = [];
+          for (let i = 0; i < Math.min(beamWidth, candidates.length); i++) {
+            const c = candidates[i];
+            nodes.push(c);
+            // Add to parent's children
+            const parent = nodes.find(n => n.id === c.parentId);
+            if (parent) parent.children.push(c.id);
+            nextIds.push(c.id);
+          }
+          currentIds = nextIds;
+          if (currentIds.length === 0) break;
+        }
+
+        return nodes;
+      }
+
+      // Compute layout positions
+      function computeLayout(nodes, levelSpacing, nodeSpacing) {
+        const levels = {};
+        for (const n of nodes) {
+          if (!levels[n.depth]) levels[n.depth] = [];
+          levels[n.depth].push(n.id);
+        }
+
+        const positions = {};
+        for (const depthStr in levels) {
+          const depth = parseInt(depthStr);
+          const ids = levels[depth];
+          // Sort by score descending so highest scoring at top
+          ids.sort((a, b) => {
+            const na = nodes.find(n => n.id === a);
+            const nb = nodes.find(n => n.id === b);
+            return nb.score - na.score;
+          });
+          ids.forEach((id, idx) => {
+            positions[id] = {
+              x: depth * levelSpacing,
+              y: idx * nodeSpacing
+            };
+          });
+        }
+        return positions;
+      }
+
+      // Find best path (highest score leaf -> root)
+      function findBestPath(nodes) {
+        // Find leaf with highest score
+        const leaves = nodes.filter(n => n.children.length === 0);
+        if (leaves.length === 0) return [];
+        leaves.sort((a, b) => b.score - a.score);
+        const bestLeaf = leaves[0];
+
+        // Trace back to root
+        const path = [];
+        let current = bestLeaf;
+        while (current) {
+          path.push(current.id);
+          const parent = nodes.find(n => n.id === current.parentId);
+          current = parent || null;
+        }
+        return path.reverse(); // root -> leaf
+      }
+
+      // Render tree
+      function renderTree() {
+        const nodes = generateTree();
+        const bestPath = findBestPath(nodes);
+        const bestPathSet = new Set(bestPath);
+        const pos = computeLayout(nodes, LEVEL_SPACING, NODE_SPACING);
+
+        // Clear SVG
+        svg.innerHTML = '';
+
+        // Compute SVG dimensions
+        const depths = [...new Set(nodes.map(n => n.depth))];
+        const maxDepth = Math.max(...depths);
+        const maxY = Math.max(...Object.values(pos).map(p => p.y)) + NODE_R * 2;
+        const svgWidth = (maxDepth + 1) * LEVEL_SPACING + 40;
+        const svgHeight = maxY + 40;
+        svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+
+        // Draw edges first (so they're behind nodes)
+        for (const n of nodes) {
+          if (n.parentId !== null) {
+            const p = pos[n.id];
+            const pp = pos[n.parentId];
+            const isBest = bestPathSet.has(n.id) && bestPathSet.has(n.parentId);
+            const edge = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            edge.setAttribute('x1', pp.x);
+            edge.setAttribute('y1', pp.y);
+            edge.setAttribute('x2', p.x);
+            edge.setAttribute('y2', p.y);
+            edge.setAttribute('class', isBest ? 'edge best' : 'edge');
+            svg.appendChild(edge);
+          }
+        }
+
+        // Draw nodes
+        for (const n of nodes) {
+          const p = pos[n.id];
+          const isBest = bestPathSet.has(n.id);
+          const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          group.setAttribute('class', isBest ? 'node best' : 'node');
+          group.setAttribute('transform', `translate(${p.x}, ${p.y})`);
+          group.setAttribute('data-id', n.id);
+
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('r', NODE_R);
+          group.appendChild(circle);
+
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('dominant-baseline', 'central');
+          text.setAttribute('dy', '0.35em');
+          text.textContent = n.token;
+          group.appendChild(text);
+
+          svg.appendChild(group);
+        }
+
+        // Update currentNodes reference for tooltip
+        currentNodes = nodes;
+      }
+
+      // Tooltip - add listeners once (references currentNodes which is updated)
+      svg.addEventListener('mousemove', (e) => {
+        const target = e.target.closest('.node');
+        if (!target) {
+          tooltip.style.display = 'none';
+          return;
+        }
+        const id = parseInt(target.getAttribute('data-id'));
+        const n = currentNodes.find(x => x.id === id);
+        if (!n) return;
+        tooltip.innerHTML = `
+          <strong>${n.token}</strong><br>
+          Score: ${n.score.toFixed(2)}<br>
+          Depth: ${n.depth}<br>
+          ${n.depth > 0 ? `Parent: ${currentNodes.find(x => x.id === n.parentId)?.token || '?'}` : ''}
+        `;
+        tooltip.style.display = 'block';
+        tooltip.style.left = (e.pageX + 10) + 'px';
+        tooltip.style.top = (e.pageY + 10) + 'px';
+      });
+      svg.addEventListener('mouseout', () => {
+        tooltip.style.display = 'none';
+      });
+
+      // Initial render
+      renderTree();
+      generateBtn.addEventListener('click', renderTree);
+
+      // Re-render on window resize (for responsiveness)
+      window.addEventListener('resize', () => {
+        renderTree();
+      });
+    })();
+  </script>
+</body>
+</html>

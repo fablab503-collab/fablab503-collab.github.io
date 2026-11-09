@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Load Balancer Simulator · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/031-load-balancer-simulator/">
+<meta name="description" content="Interactive load balancer simulator: incoming jobs are assigned to the device with the lowest current utilization percentage, live in your browser.">
+<style>
+:root{
+  --bg:#f4f4f2; --card:#fff; --text:#111; --text-2:#5a5a5a; --line:#e2e2de;
+  --ok:#1e8449; --warn:#b9770e; --bad:#c0392b;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121212; --card:#1c1c1c; --text:#f2f2f2; --text-2:#a8a8a8; --line:#2c2c2c;
+    --ok:#5fd39a; --warn:#e5b567; --bad:#ff7a66;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.5}
+header.top{padding:16px 20px}
+a.back{color:var(--text-2);text-decoration:none;font-size:14px}
+a.back:hover{color:var(--text)}
+main{max-width:880px;margin:0 auto;padding:0 16px 32px}
+h1{font-size:24px;margin:8px 0 6px}
+.lede{color:var(--text-2);margin:0 0 18px;max-width:64ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:16px;margin-bottom:16px}
+.card h2{font-size:16px;margin:0 0 10px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input{font:inherit;color:var(--text)}
+button{padding:8px 14px;border:1px solid var(--line);border-radius:8px;
+  background:var(--bg);cursor:pointer}
+button:hover{background:var(--line)}
+button:disabled{opacity:.5;cursor:default}
+button.small{padding:2px 8px;font-size:12px;border-radius:6px}
+label.speed{display:flex;align-items:center;gap:6px;color:var(--text-2);font-size:14px}
+select,input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.form{display:flex;flex-wrap:wrap;gap:8px}
+#inDev{width:130px}
+#inJob{width:100px}
+#inLoad,#inDur{width:84px}
+.hint{color:var(--text-2);font-size:13px;margin:10px 0 0}
+.status{font-weight:600;margin:12px 0 0}
+.devices{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.dev{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.dev-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dev-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{height:12px;border-radius:6px;background:var(--line);overflow:hidden;margin:8px 0 4px}
+.bar-fill{height:100%;border-radius:6px;background:var(--ok);transition:width .2s,background .2s}
+.util-num{font-size:13px;color:var(--text-2)}
+.dev-jobs{font-size:12px;color:var(--text-2);margin-top:6px;min-height:18px}
+.dev-jobs .chip{margin:1px 2px 1px 0}
+.queue{display:flex;flex-wrap:wrap;gap:8px;min-height:26px;align-items:center}
+.chip{color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;display:inline-block}
+.log{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+  max-height:180px;overflow-y:auto;margin:0;padding:0;list-style:none}
+.log li{padding:3px 0;border-bottom:1px solid var(--line);color:var(--text-2)}
+.log li:first-child{color:var(--text)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--text-2);font-weight:600}
+footer{text-align:center;color:var(--text-2);font-size:13px;
+  padding:24px 16px 40px;border-top:1px solid var(--line);margin-top:8px}
+</style>
+</head>
+<body>
+<header class="top"><a class="back" href="/503/">← Project 503</a></header>
+<main>
+  <h1>Load Balancer Simulator</h1>
+  <p class="lede">Jobs arrive with a load in percent. The load balancer sends each job to the device
+  with the lowest current utilization. Utilization is the sum of the loads of the jobs running on a
+  device. This is a local simulation only — everything runs in this page, no server, no network.</p>
+
+  <section class="card">
+    <div class="controls">
+      <button id="btnStart" type="button">Start</button>
+      <button id="btnStep" type="button">Step</button>
+      <button id="btnReset" type="button">Reset</button>
+      <button id="btnDemo" type="button">Load demo</button>
+      <button id="btnClear" type="button">Clear all</button>
+      <label class="speed">Algorithm
+        <select id="selAlgo">
+          <option value="least" selected>Least loaded (lowest utilization %)</option>
+          <option value="robin">Round robin</option>
+          <option value="random">Random</option>
+        </select>
+      </label>
+      <label class="speed">Speed
+        <select id="selSpeed">
+          <option value="900">Slow</option>
+          <option value="500" selected>Normal</option>
+          <option value="200">Fast</option>
+        </select>
+      </label>
+    </div>
+    <p id="status" class="status"></p>
+  </section>
+
+  <section class="card">
+    <h2>Add a device</h2>
+    <form id="formDev" class="form">
+      <input id="inDev" placeholder="Device name" maxlength="16" aria-label="Device name">
+      <button type="submit">Add device</button>
+    </form>
+    <p class="hint">A device is a worker with no fixed limit — its utilization is the sum of the loads
+    of the jobs it is running, shown as a percentage.</p>
+  </section>
+
+  <section class="card">
+    <h2>Add a job</h2>
+    <form id="formJob" class="form">
+      <input id="inJob" placeholder="Job name" maxlength="12" aria-label="Job name">
+      <input id="inLoad" type="number" min="1" max="100" step="1" value="25" aria-label="Load percent" title="Load (%)">
+      <input id="inDur" type="number" min="1" max="30" step="1" value="4" aria-label="Duration" title="Duration (time units)">
+      <button type="submit">Add job</button>
+    </form>
+    <p class="hint">Load = the utilization percentage the job adds to its device while running.
+    Duration = how many time units the job needs.</p>
+  </section>
+
+  <section class="card">
+    <h2>Devices</h2>
+    <div id="devices" class="devices"></div>
+    <p id="avgUtil" class="hint"></p>
+  </section>
+
+  <section class="card">
+    <h2>Waiting queue</h2>
+    <div id="queue" class="queue"></div>
+    <p class="hint">Jobs here are assigned on the next step, using the current utilization of each device.</p>
+  </section>
+
+  <section class="card">
+    <h2>Jobs</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Job</th><th>Load</th><th>Duration</th><th>Left</th><th>Device</th>
+          <th>Status</th><th>Assigned</th><th>Done</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p id="stats" class="hint"></p>
+  </section>
+
+  <section class="card">
+    <h2>Event log</h2>
+    <ul id="log" class="log"></ul>
+  </section>
+</main>
+<footer>Project #31 of 503 · Daniel Madac, D-CREATIONS</footer>
+<script>
+(function(){
+"use strict";
+var LS_KEY="p503lb.state.v1";
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function read(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function num(v,d){v=Number(v);return isFinite(v)?v:d;}
+
+var PALETTE=["#2e86ab","#e4572e","#3a9d23","#7b2d8b","#d9a404","#c2377a","#0a9396","#5a5ad6"];
+var DEMO_DEVICES=["Phone","Laptop","Server"];
+var DEMO_JOBS=[["Render",40,3],["Sync",20,5],["Backup",30,4],["Index",15,2],["Upload",50,3],["Scan",10,6]];
+
+var state={devices:[],jobs:[],clock:0,on:false,timer:null,speed:500,algo:"least",
+  rrIndex:0,nextId:1,log:[]};
+
+function devById(id){
+  for(var i=0;i<state.devices.length;i++){if(state.devices[i].id===id)return state.devices[i];}
+  return null;
+}
+function jobById(id){
+  for(var i=0;i<state.jobs.length;i++){if(state.jobs[i].id===id)return state.jobs[i];}
+  return null;
+}
+function utilOf(dev){
+  var s=0;
+  state.jobs.forEach(function(j){
+    if(j.status==="running"&&j.deviceId===dev.id)s+=j.load;
+  });
+  return s;
+}
+function waitingJobs(){
+  return state.jobs.filter(function(j){return j.status==="waiting";})
+    .sort(function(a,b){return a.id-b.id;});
+}
+function runningJobs(dev){
+  return state.jobs.filter(function(j){return j.status==="running"&&j.deviceId===dev.id;});
+}
+function addDevice(name){
+  name=(name||"").trim()||("D"+state.nextId);
+  var d={id:state.nextId++,name:name.slice(0,16),color:PALETTE[(state.nextId-2)%PALETTE.length]};
+  state.devices.push(d);
+  log("Device "+d.name+" added");
+  return d;
+}
+function addJob(name,load,dur){
+  var j={id:state.nextId++,name:(name||"").trim()||("J"+state.nextId),
+    load:Math.min(100,Math.max(1,Math.floor(num(load,25)))),
+    duration:Math.max(1,Math.floor(num(dur,4))),
+    remaining:Math.max(1,Math.floor(num(dur,4))),
+    deviceId:null,status:"waiting",assignedAt:null,doneAt:null,
+    color:PALETTE[(state.nextId-2)%PALETTE.length]};
+  j.name=j.name.slice(0,12);
+  state.jobs.push(j);
+  log("Job "+j.name+" arrived (load "+j.load+"%, duration "+j.duration+")");
+  return j;
+}
+function pickDevice(){
+  if(!state.devices.length)return null;
+  if(state.algo==="random"){
+    return state.devices[Math.floor(Math.random()*state.devices.length)];
+  }
+  if(state.algo==="robin"){
+    var d=state.devices[state.rrIndex%state.devices.length];
+    state.rrIndex++;
+    return d;
+  }
+  var best=state.devices[0];
+  for(var i=1;i<state.devices.length;i++){
+    var c=state.devices[i],uC=utilOf(c),uB=utilOf(best);
+    if(uC<uB||(uC===uB&&runningJobs(c).length<runningJobs(best).length))best=c;
+  }
+  return best;
+}
+function assign(){
+  var q=waitingJobs();
+  for(var i=0;i<q.length;i++){
+    var dev=pickDevice();
+    if(!dev)break;
+    var j=q[i];
+    j.status="running";j.deviceId=dev.id;j.assignedAt=state.clock;
+    log("t="+state.clock+": "+j.name+" ("+j.load+"%) → "+dev.name+
+      " (utilization "+utilOf(dev)+"%)");
+  }
+}
+function step(){
+  assign();
+  state.jobs.forEach(function(j){
+    if(j.status!=="running")return;
+    j.remaining--;
+    if(j.remaining<=0){
+      j.status="done";j.doneAt=state.clock+1;
+      var dev=devById(j.deviceId);
+      log("t="+(state.clock+1)+": "+j.name+" finished on "+(dev?dev.name:"?"));
+    }
+  });
+  state.clock++;
+}
+function allDone(){
+  return state.jobs.length>0&&state.jobs.every(function(j){return j.status==="done";});
+}
+function log(msg){
+  state.log.unshift(msg);
+  if(state.log.length>40)state.log.length=40;
+}
+function stopTimer(){
+  if(state.timer){clearInterval(state.timer);state.timer=null;}
+  state.on=false;
+}
+function reset(){
+  stopTimer();
+  state.clock=0;state.rrIndex=0;
+  state.jobs.forEach(function(j){
+    j.status="waiting";j.deviceId=null;j.assignedAt=null;j.doneAt=null;j.remaining=j.duration;
+  });
+  state.log=[];
+  render();
+}
+function save(){
+  var defs={devices:state.devices.map(function(d){return {name:d.name};}),
+    jobs:state.jobs.filter(function(j){return j.status!=="done";})
+      .map(function(j){return {name:j.name,load:j.load,duration:j.duration};})};
+  store(LS_KEY,JSON.stringify(defs));
+}
+function loadSaved(){
+  var raw=read(LS_KEY);
+  if(raw===null)return false;
+  try{
+    var o=JSON.parse(raw);
+    if(!o||!Array.isArray(o.devices))return false;
+    o.devices.forEach(function(d){if(d&&typeof d.name==="string")addDevice(d.name);});
+    if(Array.isArray(o.jobs)){
+      o.jobs.forEach(function(j){
+        if(j&&typeof j.name==="string")addJob(j.name,j.load,j.duration);
+      });
+    }
+    return true;
+  }catch(e){return false;}
+}
+function loadDemo(){
+  state.devices=[];state.jobs=[];state.nextId=1;state.rrIndex=0;state.log=[];
+  DEMO_DEVICES.forEach(addDevice);
+  DEMO_JOBS.forEach(function(d){addJob(d[0],d[1],d[2]);});
+  save();reset();
+}
+function removeDevice(id){
+  var idx=state.devices.findIndex(function(d){return d.id===id;});
+  if(idx<0)return;
+  var dev=state.devices[idx];
+  state.jobs.forEach(function(j){
+    if(j.deviceId===id&&j.status==="running"){
+      j.status="waiting";j.deviceId=null;j.assignedAt=null;j.remaining=j.duration;
+      log("Device "+dev.name+" removed; "+j.name+" back in queue");
+    }
+  });
+  state.devices.splice(idx,1);
+  save();render();
+}
+function utilColor(u){
+  return u>=80?"var(--bad)":(u>=50?"var(--warn)":"var(--ok)");
+}
+function renderDevices(){
+  var wrap=document.getElementById("devices");
+  wrap.innerHTML="";
+  if(!state.devices.length){
+    wrap.innerHTML='<span class="hint">No devices. Add one above or load the demo.</span>';
+  }
+  var sum=0;
+  state.devices.forEach(function(dev){
+    var u=utilOf(dev);sum+=u;
+    var box=document.createElement("div");
+    box.className="dev";
+    var jobs=runningJobs(dev);
+    var jobsHtml=jobs.length?
+      jobs.map(function(j){
+        return '<span class="chip" style="background:'+j.color+'">'+esc(j.name)+' '+j.load+'% · '+j.remaining+' left</span>';
+      }).join(""):'<span class="hint">Idle</span>';
+    box.innerHTML=
+      '<div class="dev-head"><span class="dev-name" style="color:'+dev.color+'">'+esc(dev.name)+'</span>'+
+      '<button class="small" type="button" data-dev="'+dev.id+'" title="Remove device">×</button></div>'+
+      '<div class="bar"><div class="bar-fill" style="width:'+Math.min(100,u)+'%;background:'+utilColor(u)+'"></div></div>'+
+      '<div class="util-num">'+u+'% utilized · '+jobs.length+' running</div>'+
+      '<div class="dev-jobs">'+jobsHtml+'</div>';
+    wrap.appendChild(box);
+  });
+  wrap.querySelectorAll("button[data-dev]").forEach(function(b){
+    b.addEventListener("click",function(){removeDevice(Number(b.getAttribute("data-dev")));});
+  });
+  document.getElementById("avgUtil").textContent=state.devices.length?
+    "Average utilization across "+state.devices.length+" device(s): "+
+    Math.round(sum/state.devices.length)+"%":"";
+}
+function renderQueue(){
+  var q=document.getElementById("queue");
+  q.innerHTML="";
+  var w=waitingJobs();
+  if(!w.length){q.innerHTML='<span class="hint">Empty</span>';return;}
+  w.forEach(function(j){
+    var s=document.createElement("span");
+    s.className="chip";s.style.background=j.color;
+    s.textContent=j.name+" · "+j.load+"% · "+j.duration+"u";
+    q.appendChild(s);
+  });
+}
+function renderTable(){
+  var tb=document.getElementById("tbody");
+  tb.innerHTML="";
+  var done=0;
+  state.jobs.forEach(function(j){
+    if(j.status==="done")done++;
+    var dev=j.deviceId!==null?devById(j.deviceId):null;
+    var tr=document.createElement("tr");
+    tr.innerHTML=
+      '<td><span class="chip" style="background:'+j.color+'">'+esc(j.name)+'</span></td>'+
+      '<td>'+j.load+'%</td><td>'+j.duration+'</td><td>'+
+      (j.status==="running"?j.remaining:'—')+'</td>'+
+      '<td>'+(dev?esc(dev.name):'—')+'</td>'+
+      '<td>'+j.status+'</td>'+
+      '<td>'+(j.assignedAt!==null?"t="+j.assignedAt:"—")+'</td>'+
+      '<td>'+(j.doneAt!==null?"t="+j.doneAt:"—")+'</td>';
+    tb.appendChild(tr);
+  });
+  document.getElementById("stats").textContent=state.jobs.length?
+    "Time t="+state.clock+" · Done "+done+" of "+state.jobs.length+" jobs":"";
+}
+function renderLog(){
+  var ul=document.getElementById("log");
+  ul.innerHTML="";
+  if(!state.log.length){
+    ul.innerHTML='<li>No events yet. Press Start or Step.</li>';return;
+  }
+  state.log.forEach(function(m){
+    var li=document.createElement("li");
+    li.textContent=m;
+    ul.appendChild(li);
+  });
+}
+function render(){
+  var st=document.getElementById("status");
+  if(state.jobs.length===0&&state.devices.length===0)
+    st.textContent="Empty. Load the demo or add devices and jobs.";
+  else if(allDone())
+    st.textContent="All jobs done at t="+state.clock+". Press Reset to run again.";
+  else
+    st.textContent="Time t="+state.clock+" · Waiting "+waitingJobs().length+
+      " · Running "+state.jobs.filter(function(j){return j.status==="running";}).length+
+      " · Devices "+state.devices.length;
+  document.getElementById("btnStart").textContent=state.on?"Pause":"Start";
+  document.getElementById("btnStep").disabled=allDone();
+  renderDevices();renderQueue();renderTable();renderLog();
+}
+function toggleStart(){
+  if(state.on){stopTimer();render();return;}
+  if(allDone()||(!state.devices.length&&!state.jobs.length))return;
+  state.on=true;
+  state.timer=setInterval(function(){
+    step();render();
+    if(allDone())stopTimer();
+  },state.speed);
+  render();
+}
+
+document.getElementById("btnStart").addEventListener("click",toggleStart);
+document.getElementById("btnStep").addEventListener("click",function(){
+  if(allDone())return;stopTimer();step();render();
+});
+document.getElementById("btnReset").addEventListener("click",reset);
+document.getElementById("btnDemo").addEventListener("click",loadDemo);
+document.getElementById("btnClear").addEventListener("click",function(){
+  stopTimer();
+  state.devices=[];state.jobs=[];state.nextId=1;state.clock=0;state.rrIndex=0;state.log=[];
+  save();render();
+});
+document.getElementById("selSpeed").addEventListener("change",function(e){
+  state.speed=Math.max(50,num(e.target.value,500));
+  if(state.on){stopTimer();state.on=true;
+    state.timer=setInterval(function(){step();render();if(allDone())stopTimer();},state.speed);}
+});
+document.getElementById("selAlgo").addEventListener("change",function(e){
+  state.algo=e.target.value||"least";
+});
+document.getElementById("formDev").addEventListener("submit",function(e){
+  e.preventDefault();
+  addDevice(document.getElementById("inDev").value);
+  save();render();
+  document.getElementById("inDev").value="";
+});
+document.getElementById("formJob").addEventListener("submit",function(e){
+  e.preventDefault();
+  addJob(document.getElementById("inJob").value,
+    document.getElementById("inLoad").value,
+    document.getElementById("inDur").value);
+  save();render();
+  document.getElementById("inJob").value="";
+});
+
+if(!loadSaved())loadDemo();
+render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Question Answer Extractor · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/081-question-answer-extractor/">
+<meta name="description" content="Paste any text and this tool pulls out potential questions and pairs each one with the most relevant surrounding sentences as its answer.">
+<style>
+:root{
+  --bg:#f4f4f2;
+  --card:#fff;
+  --text:#111;
+  --text-2:#5a5a5a;
+  --line:#e2e2de;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121212;
+    --card:#1c1c1c;
+    --text:#f2f2f2;
+    --text-2:#a8a8a8;
+    --line:#2c2c2c;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.55;
+  padding:16px;
+  max-width:760px;
+  margin:0 auto;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+a{color:var(--text)}
+.top-link{
+  display:inline-block;
+  font-size:14px;
+  color:var(--text-2);
+  text-decoration:none;
+  margin-bottom:20px;
+}
+.top-link:hover{color:var(--text);text-decoration:underline}
+h1{font-size:24px;margin-bottom:6px}
+.sub{color:var(--text-2);font-size:14px;margin-bottom:20px}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:16px;
+}
+label{display:block;font-size:14px;font-weight:600;margin-bottom:8px}
+textarea{
+  width:100%;
+  min-height:160px;
+  resize:vertical;
+  padding:10px;
+  font:inherit;
+  font-size:14px;
+  color:var(--text);
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:8px;
+}
+textarea:focus{outline:2px solid var(--text-2);outline-offset:1px}
+button{
+  font:inherit;
+  font-size:14px;
+  font-weight:600;
+  padding:10px 18px;
+  border-radius:8px;
+  border:1px solid var(--text);
+  background:var(--text);
+  color:var(--bg);
+  cursor:pointer;
+}
+button:hover{opacity:.85}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+button.secondary{
+  background:var(--card);
+  color:var(--text);
+  border:1px solid var(--line);
+}
+#status{font-size:14px;color:var(--text-2);margin-top:10px;min-height:1.2em}
+.qa{border-top:1px solid var(--line);padding:14px 0}
+.qa:first-of-type{border-top:none;padding-top:4px}
+.q{font-weight:600;margin-bottom:6px}
+.a{font-size:14px;color:var(--text-2)}
+.a mark{background:var(--line);color:var(--text);border-radius:3px;padding:0 2px}
+.tag{
+  display:inline-block;
+  font-size:12px;
+  color:var(--text-2);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:2px 10px;
+  margin-bottom:8px;
+}
+footer{
+  margin-top:auto;
+  padding-top:24px;
+  font-size:13px;
+  color:var(--text-2);
+  text-align:center;
+}
+</style>
+</head>
+<body>
+
+<a class="top-link" href="/503/">← Project 503</a>
+
+<h1>Question Answer Extractor</h1>
+<p class="sub">Paste text below. The tool finds sentences that read like questions and pairs each with the surrounding sentences that best answer it. Everything runs locally in your browser — no server, no network.</p>
+
+<div class="card">
+  <label for="input">Your text</label>
+  <textarea id="input" placeholder="Paste or type any text here…"></textarea>
+  <div class="actions">
+    <button id="extract">Extract questions</button>
+    <button id="sample" class="secondary">Load sample text</button>
+    <button id="clear" class="secondary">Clear</button>
+  </div>
+  <div id="status"></div>
+</div>
+
+<div class="card" id="results-card">
+  <label>Extracted questions and answers</label>
+  <div id="results"></div>
+</div>
+
+<footer>Project #81 of 503 · Daniel Madac, D-CREATIONS</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var input = document.getElementById("input");
+  var status = document.getElementById("status");
+  var results = document.getElementById("results");
+
+  var QUESTION_WORDS = ["what","why","how","when","where","who","whom","which","whose",
+    "is","are","was","were","do","does","did","can","could","will","would","shall","should",
+    "may","might","must","has","have","had"];
+
+  var STOP_WORDS = {
+    the:1,a:1,an:1,and:1,or:1,but:1,if:1,then:1,else:1,of:1,to:1,in:1,on:1,at:1,
+    for:1,with:1,about:1,as:1,by:1,from:1,that:1,this:1,these:1,those:1,it:1,its:1,
+    is:1,are:1,was:1,were:1,be:1,been:1,being:1,do:1,does:1,did:1,have:1,has:1,had:1,
+    i:1,you:1,he:1,she:1,we:1,they:1,me:1,him:1,her:1,us:1,them:1,my:1,your:1,our:1,their:1
+  };
+
+  function store(key, value){
+    try{ localStorage.setItem(key, value); }catch(e){}
+  }
+  function read(key){
+    try{ return localStorage.getItem(key); }catch(e){ return null; }
+  }
+
+  // Split text into sentences, keeping the original text of each.
+  function splitSentences(text){
+    var parts = text.match(/[^.!?]+[.!?]+["'”’)\]]*|[^.!?]+$/g);
+    if(!parts) return [];
+    return parts.map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 1; });
+  }
+
+  function words(sentence){
+    return sentence.toLowerCase()
+      .replace(/[^a-z0-9\s']/g, " ")
+      .split(/\s+/)
+      .filter(function(w){ return w.length > 2 && !STOP_WORDS[w]; });
+  }
+
+  function isQuestion(sentence){
+    var s = sentence.trim();
+    if(s.charAt(s.length - 1) === "?") return true;
+    var w = s.toLowerCase().replace(/[^a-z\s]/g, " ").trim().split(/\s+/);
+    if(w.length >= 3 && QUESTION_WORDS.indexOf(w[0]) !== -1) return true;
+    // "Name is …" style: question word in first three words
+    for(var i = 0; i < Math.min(3, w.length); i++){
+      if(QUESTION_WORDS.indexOf(w[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  // Score how relevant sentence b is to sentence a by shared content words.
+  function relevance(a, b){
+    var wa = words(a), wb = words(b);
+    if(!wa.length || !wb.length) return 0;
+    var setB = {};
+    wb.forEach(function(w){ setB[w] = 1; });
+    var hits = 0;
+    wa.forEach(function(w){ if(setB[w]) hits++; });
+    return hits / Math.sqrt(wa.length * wb.length);
+  }
+
+  function extract(text){
+    var sentences = splitSentences(text);
+    var out = [];
+    sentences.forEach(function(s, i){
+      if(!isQuestion(s)) return;
+      // Rank the other sentences by relevance; take the best two as the answer context.
+      var scored = [];
+      sentences.forEach(function(o, j){
+        if(j === i || isQuestion(o)) return; // never use another question as the answer
+        scored.push({ j: j, s: o, score: relevance(s, o) });
+      });
+      scored.sort(function(a, b){ return b.score - a.score; });
+      var answers = scored.filter(function(x){ return x.score > 0; }).slice(0, 2);
+      if(!answers.length){
+        // No word overlap: fall back to the neighbouring sentences.
+        [i - 1, i + 1].forEach(function(j){
+          if(j >= 0 && j < sentences.length && !isQuestion(sentences[j])){
+            answers.push({ s: sentences[j] });
+          }
+        });
+      }
+      out.push({ q: s, answers: answers.map(function(a){ return a.s; }) });
+    });
+    return { total: sentences.length, items: out };
+  }
+
+  function highlight(answer, question){
+    var qw = words(question);
+    if(!qw.length) return escapeHtml(answer);
+    var qset = {};
+    qw.forEach(function(w){ qset[w] = 1; });
+    return answer.replace(/[A-Za-z0-9']+/g, function(m){
+      return qset[m.toLowerCase()] ? "<mark>" + escapeHtml(m) + "</mark>" : escapeHtml(m);
+    });
+  }
+
+  function escapeHtml(s){
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+            .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+
+  function render(res){
+    results.innerHTML = "";
+    if(!res.items.length){
+      status.textContent = "Found " + res.total + " sentence(s), but no questions. Try text that asks something.";
+      return;
+    }
+    status.textContent = "Found " + res.items.length + " question(s) in " + res.total + " sentence(s).";
+    res.items.forEach(function(item, idx){
+      var div = document.createElement("div");
+      div.className = "qa";
+      var tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = "Question " + (idx + 1);
+      var q = document.createElement("p");
+      q.className = "q";
+      q.textContent = item.q;
+      var a = document.createElement("p");
+      a.className = "a";
+      a.innerHTML = item.answers.map(function(ans){
+        return highlight(ans, item.q);
+      }).join(" ");
+      div.appendChild(tag);
+      div.appendChild(q);
+      div.appendChild(a);
+      results.appendChild(div);
+    });
+  }
+
+  var sample = "Learning a new language takes time. Why do some people pick it up faster than others? "
+    + "Research suggests that daily practice matters more than talent. What is the best way to practice every day? "
+    + "Short, focused sessions work better than one long session per week. How long should each session be? "
+    + "Most teachers recommend twenty to thirty minutes. Can adults learn a language as easily as children? "
+    + "Adults often learn grammar faster, but children usually speak without an accent. "
+    + "Where should a beginner start? A good course or tutor helps, but consistency is the real key.";
+
+  document.getElementById("extract").addEventListener("click", function(){
+    var text = input.value.trim();
+    if(!text){
+      status.textContent = "Please enter some text first.";
+      return;
+    }
+    store("qae81_text", input.value);
+    render(extract(text));
+  });
+
+  document.getElementById("sample").addEventListener("click", function(){
+    input.value = sample;
+    store("qae81_text", input.value);
+    render(extract(input.value));
+  });
+
+  document.getElementById("clear").addEventListener("click", function(){
+    input.value = "";
+    results.innerHTML = "";
+    status.textContent = "";
+    store("qae81_text", "");
+    input.focus();
+  });
+
+  // Restore last input on load.
+  var saved = read("qae81_text");
+  if(saved){
+    input.value = saved;
+    render(extract(saved));
+  }
+})();
+</script>
+</body>
+</html>

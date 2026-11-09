@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text Diff Viewer · Project 503 · D-CREATIONS</title>
+<link rel="canonical" href="https://dcreations.fr/503/095-text-diff-viewer/">
+<meta name="description" content="Paste two texts and see a word-level diff with added words highlighted in green and removed words in red.">
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --card: #fff;
+    --text: #111;
+    --text-2: #5a5a5a;
+    --line: #e2e2de;
+    --add-bg: #e2f5e5;
+    --add-text: #146c2e;
+    --del-bg: #fce4e4;
+    --del-text: #b02222;
+    --btn-bg: #111;
+    --btn-text: #fff;
+    --btn-2-bg: #fff;
+    --btn-2-text: #111;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --card: #1c1c1c;
+      --text: #f2f2f2;
+      --text-2: #a8a8a8;
+      --line: #2c2c2c;
+      --add-bg: #1e3a26;
+      --add-text: #7ee2a0;
+      --del-bg: #3a2020;
+      --del-text: #ff9a9a;
+      --btn-bg: #f2f2f2;
+      --btn-text: #111;
+      --btn-2-bg: #1c1c1c;
+      --btn-2-text: #f2f2f2;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 16px; }
+  header.top { padding: 8px 0 20px; }
+  header.top a { color: var(--text-2); text-decoration: none; font-size: 14px; }
+  header.top a:hover { color: var(--text); text-decoration: underline; }
+  h1 { font-size: 24px; margin: 12px 0 4px; }
+  .sub { color: var(--text-2); font-size: 14px; margin: 0 0 20px; }
+  .panes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 640px) {
+    .panes { grid-template-columns: 1fr; }
+  }
+  .pane label { display: block; font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+  textarea {
+    width: 100%;
+    min-height: 160px;
+    resize: vertical;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  textarea:focus { outline: 2px solid var(--text-2); outline-offset: 1px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 20px; }
+  button {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  button.primary { background: var(--btn-bg); color: var(--btn-text); border-color: transparent; font-weight: 600; }
+  button.ghost { background: var(--btn-2-bg); color: var(--btn-2-text); }
+  button:hover { opacity: 0.85; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .stats { font-size: 14px; color: var(--text-2); margin: 0 0 12px; }
+  .stats .a { color: var(--add-text); font-weight: 600; }
+  .stats .d { color: var(--del-text); font-weight: 600; }
+  .diff {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0;
+  }
+  .tok-add { background: var(--add-bg); color: var(--add-text); border-radius: 4px; padding: 0 2px; }
+  .tok-del { background: var(--del-bg); color: var(--del-text); border-radius: 4px; padding: 0 2px; text-decoration: line-through; }
+  .legend { display: flex; gap: 16px; font-size: 13px; color: var(--text-2); margin-top: 12px; flex-wrap: wrap; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+  .legend .la::before { background: var(--add-bg); border: 1px solid var(--add-text); }
+  .legend .ld::before { background: var(--del-bg); border: 1px solid var(--del-text); }
+  .empty { color: var(--text-2); font-size: 14px; }
+  footer {
+    margin-top: 28px;
+    padding: 16px 0 24px;
+    border-top: 1px solid var(--line);
+    color: var(--text-2);
+    font-size: 13px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a href="/503/">← Project 503</a>
+    <h1>Text Diff Viewer</h1>
+    <p class="sub">Paste two texts below. Words only in the second text are green, words only in the first text are red.</p>
+  </header>
+
+  <main>
+    <div class="panes">
+      <div class="pane">
+        <label for="textA">First text (original)</label>
+        <textarea id="textA" placeholder="Paste the first text here…" spellcheck="false"></textarea>
+      </div>
+      <div class="pane">
+        <label for="textB">Second text (changed)</label>
+        <textarea id="textB" placeholder="Paste the second text here…" spellcheck="false"></textarea>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="compareBtn" type="button">Compare</button>
+      <button class="ghost" id="swapBtn" type="button">Swap texts</button>
+      <button class="ghost" id="clearBtn" type="button">Clear</button>
+    </div>
+
+    <section class="card" aria-live="polite">
+      <p class="stats" id="stats"></p>
+      <p class="diff" id="diff"><span class="empty">The word-level diff will appear here.</span></p>
+      <div class="legend">
+        <span class="la">added word</span>
+        <span class="ld">removed word</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>Project #95 of 503 · Daniel Madac, D-CREATIONS</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var MAX_DP_CELLS = 4000000; // cap for the LCS table; larger middles fall back to replace-all
+
+  var textA = document.getElementById("textA");
+  var textB = document.getElementById("textB");
+  var diffEl = document.getElementById("diff");
+  var statsEl = document.getElementById("stats");
+
+  function tokenize(text) {
+    return text.match(/\S+|\s+/g) || [];
+  }
+
+  // Word-level diff via LCS on the differing middle (common prefix/suffix trimmed).
+  // Returns an array of { type: "same" | "add" | "del", token }.
+  function diffTokens(a, b) {
+    var ops = [];
+    var start = 0;
+    var endA = a.length, endB = b.length;
+    while (start < endA && start < endB && a[start] === b[start]) { ops.push({ type: "same", token: a[start] }); start++; }
+    while (endA > start && endB > start && a[endA - 1] === b[endB - 1]) { endA--; endB--; }
+    var midA = a.slice(start, endA);
+    var midB = b.slice(start, endB);
+    var n = midA.length, m = midB.length;
+
+    if (n === 0 && m === 0) { return ops; }
+
+    if ((n + 0) * (m + 0) > MAX_DP_CELLS) {
+      for (var i = 0; i < n; i++) ops.push({ type: "del", token: midA[i] });
+      for (var j = 0; j < m; j++) ops.push({ type: "add", token: midB[j] });
+    } else {
+      // LCS length table: rows[r][c] = LCS length of midA[0..r) and midB[0..c).
+      var rows = [new Uint32Array(m + 1)];
+      for (var r = 1; r <= n; r++) {
+        var curr = new Uint32Array(m + 1);
+        for (var c = 1; c <= m; c++) {
+          if (midA[r - 1] === midB[c - 1]) curr[c] = rows[r - 1][c - 1] + 1;
+          else curr[c] = Math.max(rows[r - 1][c], curr[c - 1]);
+        }
+        rows.push(curr);
+      }
+      // Backtrack.
+      var bt = [];
+      var ri = n, ci = m;
+      while (ri > 0 && ci > 0) {
+        if (midA[ri - 1] === midB[ci - 1]) { bt.push({ type: "same", token: midA[ri - 1] }); ri--; ci--; }
+        else if (rows[ri - 1][ci] >= rows[ri][ci - 1]) { bt.push({ type: "del", token: midA[ri - 1] }); ri--; }
+        else { bt.push({ type: "add", token: midB[ci - 1] }); ci--; }
+      }
+      while (ri > 0) { bt.push({ type: "del", token: midA[ri - 1] }); ri--; }
+      while (ci > 0) { bt.push({ type: "add", token: midB[ci - 1] }); ci--; }
+      bt.reverse();
+      ops = ops.concat(bt);
+    }
+
+    var tail = [];
+    for (var k = endA; k < a.length; k++) tail.push({ type: "same", token: a[k] });
+    return ops.concat(tail);
+  }
+
+  function render() {
+    var a = tokenize(textA.value);
+    var b = tokenize(textB.value);
+    var ops = diffTokens(a, b);
+    var adds = 0, dels = 0;
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < ops.length; i++) {
+      var op = ops[i];
+      if (op.type === "same") {
+        frag.appendChild(document.createTextNode(op.token));
+      } else {
+        var span = document.createElement("span");
+        span.textContent = op.token;
+        if (op.type === "add") { span.className = "tok-add"; adds++; }
+        else { span.className = "tok-del"; dels++; }
+        frag.appendChild(span);
+      }
+    }
+    diffEl.textContent = "";
+    if (ops.length === 0) {
+      diffEl.innerHTML = '<span class="empty">Both texts are empty.</span>';
+      statsEl.textContent = "";
+    } else {
+      diffEl.appendChild(frag);
+      statsEl.textContent = "";
+      var s = document.createElement("span");
+      if (adds === 0 && dels === 0) {
+        s.textContent = "No differences — the texts are identical.";
+      } else {
+        var aSpan = document.createElement("span");
+        aSpan.className = "a";
+        aSpan.textContent = adds + " word" + (adds === 1 ? "" : "s") + " added";
+        var dSpan = document.createElement("span");
+        dSpan.className = "d";
+        dSpan.textContent = dels + " word" + (dels === 1 ? "" : "s") + " removed";
+        s.appendChild(aSpan);
+        s.appendChild(document.createTextNode(" · "));
+        s.appendChild(dSpan);
+      }
+      statsEl.appendChild(s);
+    }
+    save();
+  }
+
+  function save() {
+    try {
+      localStorage.setItem("tdv95.a", textA.value);
+      localStorage.setItem("tdv95.b", textB.value);
+    } catch (e) { /* storage unavailable; ignore */ }
+  }
+
+  function load() {
+    try {
+      var a = localStorage.getItem("tdv95.a");
+      var b = localStorage.getItem("tdv95.b");
+      if (a !== null) textA.value = a;
+      if (b !== null) textB.value = b;
+    } catch (e) { /* storage unavailable; ignore */ }
+  }
+
+  var timer = null;
+  function schedule() {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(render, 200);
+  }
+
+  document.getElementById("compareBtn").addEventListener("click", render);
+  document.getElementById("swapBtn").addEventListener("click", function () {
+    var tmp = textA.value;
+    textA.value = textB.value;
+    textB.value = tmp;
+    render();
+  });
+  document.getElementById("clearBtn").addEventListener("click", function () {
+    textA.value = "";
+    textB.value = "";
+    render();
+  });
+  textA.addEventListener("input", schedule);
+  textB.addEventListener("input", schedule);
+
+  load();
+  render();
+})();
+</script>
+</body>
+</html>

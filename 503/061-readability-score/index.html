@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Readability Score · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/061-readability-score/">
+  <meta name="description" content="Compute a readability score and display a plain-language grade level.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 768px;
+      margin: 0 auto;
+    }
+    header, footer {
+      text-align: center;
+      color: var(--text-2);
+    }
+    header a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    textarea, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      font-family: var(--font);
+      box-sizing: border-box;
+    }
+    button {
+      background-color: var(--card);
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .result {
+      margin-top: 1rem;
+      padding: 1rem;
+      background-color: var(--card);
+      border-left: 4px solid #007acc;
+    }
+    @media (max-width: 375px) {
+      body {
+        padding: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+    
+    <main>
+      <h1>Readability Score</h1>
+      <p>Enter text below to compute its readability score (Flesch-Kincaid or Gunning Fog) and get a plain-language grade level.</p>
+      
+      <textarea id="text-input" rows="8" placeholder="Paste your text here..."></textarea>
+      <button id="calculate-btn">Calculate Readability</button>
+      
+      <div class="result" id="result" style="display: none;"></div>
+    </main>
+    
+    <footer>
+      Project #61 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const textInput = document.getElementById('text-input');
+      const calculateBtn = document.getElementById('calculate-btn');
+      const resultDiv = document.getElementById('result');
+
+      // Load saved text from localStorage if available
+      try {
+        const savedText = localStorage.getItem('readabilityText');
+        if (savedText) {
+          textInput.value = savedText;
+        }
+      } catch (e) {}
+
+      calculateBtn.addEventListener('click', () => {
+        const text = textInput.value.trim();
+        
+        // Save to localStorage
+        try {
+          localStorage.setItem('readabilityText', text);
+        } catch (e) {}
+        
+        if (!text) {
+          resultDiv.style.display = 'none';
+          return;
+        }
+
+        const score = calculateReadability(text);
+        displayResult(score);
+      });
+
+      function calculateReadability(text) {
+        // Remove extra whitespace
+        text = text.replace(/\s+/g, ' ').trim();
+        
+        if (!text) return null;
+
+        // Count sentences (end with . ! ?)
+        const sentences = text.match(/[.!?]+/g);
+        const sentenceCount = sentences ? sentences.length : 0;
+        
+        // Count words (split by spaces and remove empty strings)
+        const words = text.split(/\s+/).filter(word => word.length > 0);
+        const wordCount = words.length;
+        
+        // Count syllables
+        let syllableCount = 0;
+        for (const word of words) {
+          syllableCount += countSyllables(word);
+        }
+
+        if (wordCount === 0 || sentenceCount === 0) return null;
+
+        // Flesch-Kincaid Grade Level
+        const flesch = 0.39 * (wordCount / sentenceCount) + 11.8 * (syllableCount / wordCount) - 15.59;
+        
+        // Gunning Fog Index
+        const avgSentLen = wordCount / sentenceCount;
+        const complexWords = words.filter(word => countSyllables(word) >= 3).length;
+        const fog = 0.4 * (avgSentLen + 100 * (complexWords / wordCount));
+
+        return {
+          flesch: Math.max(0, flesch),
+          fog: Math.max(0, fog)
+        };
+      }
+
+      function countSyllables(word) {
+        // Simple syllable counting
+        word = word.toLowerCase();
+        let syllableCount = 0;
+        const vowels = 'aeiouy';
+        
+        if (word.length === 0) return 0;
+        
+        // Handle silent 'e'
+        if (word.endsWith('e')) {
+          word = word.slice(0, -1);
+        }
+        
+        let prevWasVowel = false;
+        for (let i = 0; i < word.length; i++) {
+          const char = word[i];
+          const isVowel = vowels.includes(char);
+          
+          if (isVowel && !prevWasVowel) {
+            syllableCount++;
+          }
+          prevWasVowel = isVowel;
+        }
+        
+        // Every word has at least one syllable
+        return Math.max(1, syllableCount);
+      }
+
+      function displayResult(score) {
+        if (!score) {
+          resultDiv.style.display = 'none';
+          return;
+        }
+
+        const fleschLevel = getGradeLevel(score.flesch);
+        const fogLevel = getGradeLevel(score.fog);
+
+        resultDiv.innerHTML = `
+          <h2>Readability Results</h2>
+          <p><strong>Flesch-Kincaid Grade Level:</strong> ${fleschLevel}</p>
+          <p><strong>Gunning Fog Index:</strong> ${fogLevel}</p>
+          <p>These scores indicate the approximate grade level needed to understand your text.</p>
+        `;
+        resultDiv.style.display = 'block';
+      }
+
+      function getGradeLevel(score) {
+        if (score < 0) return 'Below 1st Grade';
+        if (score < 1) return 'Kindergarten';
+        if (score < 2) return '1st Grade';
+        if (score < 3) return '2nd Grade';
+        if (score < 4) return '3rd Grade';
+        if (score < 5) return '4th Grade';
+        if (score < 6) return '5th Grade';
+        if (score < 7) return '6th Grade';
+        if (score < 8) return '7th Grade';
+        if (score < 9) return '8th Grade';
+        if (score < 10) return '9th Grade';
+        if (score < 11) return '10th Grade';
+        if (score < 12) return '11th Grade';
+        if (score < 13) return '12th Grade';
+        if (score < 14) return 'College Freshman';
+        if (score < 15) return 'College Sophomore';
+        if (score < 16) return 'College Junior';
+        if (score < 17) return 'College Senior';
+        return 'Graduate Student';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Topic Model Lite · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/070-topic-model-lite/">
+  <meta name="description" content="Run a simplified LDA-like topic model on a set of documents and display the top words per topic.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    header, footer {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .card {
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    textarea, button {
+      width: 100%;
+      padding: 0.5rem;
+      font-family: var(--font);
+      box-sizing: border-box;
+    }
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    .topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .topic {
+      flex: 1 1 calc(50% - 0.5rem);
+      min-width: 200px;
+    }
+    .topic h3 {
+      margin-top: 0;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 0.25rem;
+    }
+    .words {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+    .word {
+      background-color: var(--line);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+    @media (max-width: 375px) {
+      body {
+        padding: 0.5rem;
+      }
+      .topic {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+
+    <main>
+      <div class="card">
+        <h2>Topic Model Lite</h2>
+        <p>Enter documents below. Each document on a new line.</p>
+        <textarea id="documents" placeholder="Document 1
+Document 2
+Document 3"></textarea>
+        <button id="run">Run Topic Model</button>
+      </div>
+
+      <div class="card">
+        <h2>Topics</h2>
+        <div id="topics" class="topics"></div>
+      </div>
+    </main>
+
+    <footer>
+      Project #70 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const documentsTextarea = document.getElementById('documents');
+    const runButton = document.getElementById('run');
+    const topicsContainer = document.getElementById('topics');
+
+    // Sample documents for initial load
+    const sampleDocs = [
+      "Machine learning algorithms are powerful tools for data analysis",
+      "Deep learning networks can recognize patterns in images and text",
+      "Natural language processing helps computers understand human language",
+      "Computer vision enables machines to interpret visual information",
+      "Artificial intelligence systems can make decisions based on data",
+      "Data science combines statistics with programming to extract insights",
+      "Neural networks are inspired by the structure of the human brain",
+      "Supervised learning requires labeled training data for predictions",
+      "Unsupervised learning finds hidden patterns in unlabeled data",
+      "Reinforcement learning agents learn through trial and error interactions"
+    ];
+
+    // Load saved documents or use sample
+    try {
+      const savedDocs = localStorage.getItem('topicModelDocs');
+      if (savedDocs) {
+        documentsTextarea.value = savedDocs;
+      } else {
+        documentsTextarea.value = sampleDocs.join('\n');
+      }
+    } catch (e) {
+      documentsTextarea.value = sampleDocs.join('\n');
+    }
+
+    // Simple topic modeling function
+    function runTopicModel() {
+      const docs = documentsTextarea.value.split('\n').filter(d => d.trim());
+      if (docs.length === 0) return;
+
+      try {
+        localStorage.setItem('topicModelDocs', documentsTextarea.value);
+      } catch (e) {}
+
+      // Simple word frequency analysis
+      const wordsPerDoc = docs.map(doc => {
+        return doc.toLowerCase().split(/\W+/).filter(w => w.length > 2);
+      });
+
+      // Aggregate word frequencies
+      const wordFreq = {};
+      wordsPerDoc.forEach(words => {
+        words.forEach(word => {
+          wordFreq[word] = (wordFreq[word] || 0) + 1;
+        });
+      });
+
+      // Sort by frequency
+      const sortedWords = Object.entries(wordFreq)
+        .sort((a, b) => b[1] - a[1])
+        .map(([word]) => word);
+
+      // Create topics from top words
+      const topics = [];
+      for (let i = 0; i < 4; i++) {
+        const start = i * 5;
+        const end = start + 5;
+        topics.push(sortedWords.slice(start, end));
+      }
+
+      // Render topics
+      topicsContainer.innerHTML = '';
+      topics.forEach((words, index) => {
+        const topicEl = document.createElement('div');
+        topicEl.className = 'topic';
+        topicEl.innerHTML = `
+          <h3>Topic ${index + 1}</h3>
+          <div class="words">
+            ${words.map(w => `<span class="word">${w}</span>`).join('')}
+          </div>
+        `;
+        topicsContainer.appendChild(topicEl);
+      });
+    }
+
+    runButton.addEventListener('click', runTopicModel);
+
+    // Run on load
+    runTopicModel();
+  </script>
+</body>
+</html>

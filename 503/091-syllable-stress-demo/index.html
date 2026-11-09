@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Syllable Stress Demo · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/091-syllable-stress-demo/">
+<meta name="description" content="A tiny offline demo that guesses the stressed syllable of an English word and draws its stress pattern.">
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --card: #fff;
+    --text: #111;
+    --text-2: #5a5a5a;
+    --line: #e2e2de;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --card: #1c1c1c;
+      --text: #f2f2f2;
+      --text-2: #a8a8a8;
+      --line: #2c2c2c;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  a { color: var(--text-2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .top { margin-bottom: 24px; }
+  main { flex: 1; max-width: 560px; width: 100%; margin: 0 auto; }
+  h1 { font-size: 1.4rem; margin-bottom: 8px; }
+  p.note { color: var(--text-2); font-size: 0.95rem; margin-bottom: 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  form { display: flex; gap: 8px; margin-bottom: 20px; }
+  input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    font-size: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+  }
+  button {
+    padding: 10px 16px;
+    font-size: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--text);
+    color: var(--bg);
+    cursor: pointer;
+  }
+  button:hover { opacity: 0.85; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .chips button {
+    background: var(--bg);
+    color: var(--text-2);
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border-radius: 999px;
+  }
+  .viz { display: flex; align-items: flex-end; gap: 12px; min-height: 120px; margin-bottom: 12px; flex-wrap: wrap; }
+  .syl { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .bar {
+    width: 44px;
+    border-radius: 6px 6px 0 0;
+    background: var(--line);
+    transition: height 0.2s ease;
+  }
+  .syl.stressed .bar { background: var(--text); }
+  .syl .label { font-size: 0.95rem; }
+  .syl .mark { font-size: 0.75rem; color: var(--text-2); min-height: 1em; }
+  .ipa { color: var(--text-2); font-size: 0.95rem; margin-bottom: 16px; min-height: 1.4em; }
+  .rule { color: var(--text-2); font-size: 0.85rem; border-top: 1px solid var(--line); padding-top: 12px; }
+  footer {
+    text-align: center;
+    color: var(--text-2);
+    font-size: 0.85rem;
+    padding: 24px 0 8px;
+  }
+</style>
+</head>
+<body>
+  <div class="top"><a href="/503/">← Project 503</a></div>
+  <main>
+    <h1>Syllable Stress Demo</h1>
+    <p class="note">Type an English word. A simple syllable heuristic splits it into syllables and marks the stressed one.</p>
+    <div class="card">
+      <form id="wordForm">
+        <input type="text" id="wordInput" placeholder="e.g. banana" autocomplete="off" maxlength="40">
+        <button type="submit">Show</button>
+      </form>
+      <div class="chips" id="chips">
+        <button type="button" data-word="banana">banana</button>
+        <button type="button" data-word="computer">computer</button>
+        <button type="button" data-word="record">record</button>
+        <button type="button" data-word="photograph">photograph</button>
+        <button type="button" data-word="elephant">elephant</button>
+      </div>
+      <div class="viz" id="viz"></div>
+      <div class="ipa" id="ipa"></div>
+      <div class="rule" id="rule"></div>
+    </div>
+  </main>
+  <footer>Project #91 of 503 · Daniel Madac, D-CREATIONS</footer>
+<script>
+(function () {
+  "use strict";
+
+  // Split a word into syllables by counting vowel groups (heuristic).
+  function syllables(word) {
+    var w = word.toLowerCase().replace(/[^a-z]/g, "");
+    if (!w) return [];
+    var groups = w.match(/[aeiouy]+/g);
+    if (!groups) return [w];
+    var count = groups.length;
+    // Silent trailing "e" does not make its own syllable.
+    if (w.length > 2 && w[w.length - 1] === "e" && !/[aeiouy]/.test(w[w.length - 2]) && count > 1) {
+      count -= 1;
+    }
+    if (count < 1) count = 1;
+    // Distribute the letters across the syllable count.
+    var result = [];
+    var per = w.length / count;
+    var start = 0;
+    for (var i = 0; i < count; i++) {
+      var end = (i === count - 1) ? w.length : Math.round(start + per);
+      if (end <= start) end = start + 1;
+      result.push(w.slice(start, end));
+      start = end;
+    }
+    return result;
+  }
+
+  // Heuristic stress: default to the first syllable (most English nouns/verbs
+  // stress the first syllable). Two-syllable words whose first syllable is a
+  // prefix (re-, de-, be-, pre-) often stress the second one instead.
+  function stressedIndex(syls, word) {
+    if (syls.length < 2) return 0;
+    var first = syls[0];
+    var prefixes = ["re", "de", "be", "pre", "un", "in", "im", "dis", "mis", "over", "under", "out"];
+    for (var i = 0; i < prefixes.length; i++) {
+      if (first === prefixes[i]) return 1;
+    }
+    return 0;
+  }
+
+  function render(word) {
+    var viz = document.getElementById("viz");
+    var ipa = document.getElementById("ipa");
+    var rule = document.getElementById("rule");
+    viz.innerHTML = "";
+    var syls = syllables(word);
+    if (!syls.length) {
+      ipa.textContent = "";
+      rule.textContent = "Enter a word made of English letters.";
+      return;
+    }
+    var stress = stressedIndex(syls, word.toLowerCase());
+    var maxH = 96;
+    syls.forEach(function (s, i) {
+      var stressed = i === stress;
+      var col = document.createElement("div");
+      col.className = "syl" + (stressed ? " stressed" : "");
+      var bar = document.createElement("div");
+      bar.className = "bar";
+      bar.style.height = (stressed ? maxH : Math.round(maxH * 0.45)) + "px";
+      var label = document.createElement("div");
+      label.className = "label";
+      label.textContent = s;
+      var mark = document.createElement("div");
+      mark.className = "mark";
+      mark.textContent = stressed ? "stressed" : "light";
+      col.appendChild(bar);
+      col.appendChild(label);
+      col.appendChild(mark);
+      viz.appendChild(col);
+    });
+    var marks = syls.map(function (_, i) { return i === stress ? "\u02C8" : "\u02CC"; });
+    ipa.textContent = "/" + marks.join("") + word.toLowerCase().replace(/[^a-z]/g, "") + "/  (" + syls.length + (syls.length === 1 ? " syllable" : " syllables") + ")";
+    if (syls.length === 1) {
+      rule.textContent = "One syllable: it carries the stress.";
+    } else if (stress === 1 && syls[0].length <= 3) {
+      rule.textContent = "Heuristic: the first part looks like a prefix, so the second syllable is stressed.";
+    } else {
+      rule.textContent = "Heuristic: English usually stresses the first syllable of a word.";
+    }
+    try {
+      localStorage.setItem("sydemo-last", word);
+    } catch (e) { /* storage unavailable; ignore */ }
+  }
+
+  var form = document.getElementById("wordForm");
+  var input = document.getElementById("wordInput");
+  form.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    render(input.value.trim());
+  });
+  document.getElementById("chips").addEventListener("click", function (ev) {
+    var w = ev.target && ev.target.getAttribute && ev.target.getAttribute("data-word");
+    if (w) { input.value = w; render(w); }
+  });
+
+  var last = "";
+  try {
+    last = localStorage.getItem("sydemo-last") || "";
+  } catch (e) { /* storage unavailable; ignore */ }
+  input.value = last || "banana";
+  render(input.value);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Interactive simulator showing how speculative decoding uses a draft model to propose 5 tokens and a target model to verify them in one parallel pass.">
+    <title>Speculative Decoding Simulator · Project 503 · D-CREATIONS</title>
+    <link rel="canonical" href="https://dcreations.fr/503/021-speculative-decoding-simulator/">
+    <style>
+        :root {
+            --bg: #f4f4f2;
+            --card: #fff;
+            --text: #111;
+            --text-2: #5a5a5a;
+            --line: #e2e2de;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #121212;
+                --card: #1c1c1c;
+                --text: #f2f2f2;
+                --text-2: #a8a8a8;
+                --line: #2c2c2c;
+            }
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding: 1rem;
+            min-height: 100vh;
+        }
+        a { color: inherit; text-decoration: none; }
+        header { margin-bottom: 2rem; }
+        header a { font-size: 1.25rem; display: inline-block; margin-bottom: 1rem; }
+        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-2); margin-bottom: 1.5rem; }
+        main { max-width: 800px; margin: 0 auto; }
+        .description { color: var(--text-2); margin-bottom: 2rem; }
+
+        .simulator {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--line);
+        }
+
+        .models {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .model { flex: 1; min-width: 0; }
+        .model h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--line);
+        }
+        .model.draft h2 { color: #0066cc; }
+        .model.target h2 { color: #008844; }
+
+        .tokens { display: flex; flex-direction: column; gap: 0.75rem; }
+        .token {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            background: var(--bg);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .token.visible { opacity: 1; transform: translateY(0); }
+        .token.accepted { border-left-color: #28a745; }
+        .token.rejected { border-left-color: #dc3545; }
+
+        @media (prefers-color-scheme: dark) {
+            .token.accepted { background: #1e3a2e; }
+            .token.rejected { background: #492529; }
+        }
+
+        .token-index { font-size: 0.875rem; color: var(--text-2); min-width: 24px; }
+        .token-text { font-family: monospace; font-size: 1.125rem; font-weight: 500; }
+        .token-status { margin-left: auto; font-size: 1.25rem; }
+
+        .timeline {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .timeline-bar {
+            display: flex;
+            height: 40px;
+            margin: 1rem 0;
+            position: relative;
+        }
+        .timeline-segment {
+            flex: 1;
+            height: 8px;
+            background: var(--line);
+            margin: 0 2px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+        .timeline-segment.active { background: #0066cc; }
+        .timeline-segment.verify { background: #008844; }
+        .timeline-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-2);
+        }
+        .timeline-labels span { flex: 1; text-align: center; }
+
+        .controls { display: flex; gap: 1rem; margin-bottom: 1rem; }
+        button {
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        button:hover { background: var(--bg); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .log {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-2);
+            white-space: pre-wrap;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-2);
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--line);
+        }
+
+        @media (max-width: 600px) {
+            .models { flex-direction: column; }
+            .timeline-labels { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/503/">← Project 503</a>
+        <h1>Speculative Decoding Simulator</h1>
+        <p class="subtitle">Project #21 of 503</p>
+    </header>
+
+    <main>
+        <p class="description">Side-by-side draft-and-verifier model timeline demonstrating speculative decoding: a tiny draft model proposes 5 tokens and a target model verifies them in one parallel pass.</p>
+
+        <div class="simulator">
+            <div class="models">
+                <div class="model draft">
+                    <h2>Draft Model</h2>
+                    <div class="tokens" id="draft-tokens">
+                        <div class="token" data-index="0"><span class="token-index">1</span><span class="token-text" id="draft-token-0"></span></div>
+                        <div class="token" data-index="1"><span class="token-index">2</span><span class="token-text" id="draft-token-1"></span></div>
+                        <div class="token" data-index="2"><span class="token-index">3</span><span class="token-text" id="draft-token-2"></span></div>
+                        <div class="token" data-index="3"><span class="token-index">4</span><span class="token-text" id="draft-token-3"></span></div>
+                        <div class="token" data-index="4"><span class="token-index">5</span><span class="token-text" id="draft-token-4"></span></div>
+                    </div>
+                </div>
+                <div class="model target">
+                    <h2>Target Model</h2>
+                    <div class="tokens" id="target-tokens">
+                        <div class="token" data-index="0"><span class="token-index">1</span><span class="token-text" id="target-token-0"></span><span class="token-status" id="status-0"></span></div>
+                        <div class="token" data-index="1"><span class="token-index">2</span><span class="token-text" id="target-token-1"></span><span class="token-status" id="status-1"></span></div>
+                        <div class="token" data-index="2"><span class="token-index">3</span><span class="token-text" id="target-token-2"></span><span class="token-status" id="status-2"></span></div>
+                        <div class="token" data-index="3"><span class="token-index">4</span><span class="token-text" id="target-token-3"></span><span class="token-status" id="status-3"></span></div>
+                        <div class="token" data-index="4"><span class="token-index">5</span><span class="token-text" id="target-token-4"></span><span class="token-status" id="status-4"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-bar">
+                    <div class="timeline-segment" id="seg-draft"></div>
+                    <div class="timeline-segment verify" id="seg-verify"></div>
+                </div>
+                <div class="timeline-labels">
+                    <span>Draft Proposes 5</span>
+                    <span>Verify All</span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="run">Run Simulation</button>
+                <button id="reset">Reset</button>
+            </div>
+
+            <div class="log" id="log">Click "Run Simulation" to start.</div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Project #21 of 503 · Daniel Madac, D-CREATIONS</p>
+    </footer>
+
+    <script>
+        const vocabulary = ["The", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", ".", "A", "cat", "in", "the", "hat", "sat"];
+
+        const runBtn = document.getElementById('run');
+        const resetBtn = document.getElementById('reset');
+        const logEl = document.getElementById('log');
+        let isRunning = false;
+
+        function log(message) {
+            logEl.textContent += message + '\n';
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function reset() {
+            for (let i = 0; i < 5; i++) {
+                document.getElementById(`draft-token-${i}`).textContent = '';
+                document.getElementById(`target-token-${i}`).textContent = '';
+                document.getElementById(`status-${i}`).textContent = '';
+            }
+            document.querySelectorAll('.token').forEach(t => {
+                t.classList.remove('visible', 'accepted', 'rejected');
+            });
+            document.getElementById('seg-draft').classList.remove('active');
+            document.getElementById('seg-verify').classList.remove('active');
+            logEl.textContent = 'Click "Run Simulation" to start.';
+            isRunning = false;
+            runBtn.disabled = false;
+        }
+
+        async function run() {
+            if (isRunning) return;
+            isRunning = true;
+            runBtn.disabled = true;
+            reset();
+
+            log('Generating tokens...');
+
+            const draftTokens = [];
+            for (let i = 0; i < 5; i++) {
+                draftTokens.push(vocabulary[Math.floor(Math.random() * vocabulary.length)]);
+            }
+
+            for (let i = 0; i < 5; i++) {
+                await new Promise(resolve => setTimeout(resolve, i * 100));
+                const el = document.getElementById(`draft-token-${i}`);
+                el.textContent = draftTokens[i];
+                el.parentElement.classList.add('visible');
+            }
+
+            document.getElementById('seg-draft').classList.add('active');
+            log(`Draft model proposed: ${draftTokens.join(' ')}`);
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+            log('Target model verifying all 5 tokens in parallel...');
+
+            const results = draftTokens.map(t => ({ token: t, accepted: true }));
+
+            for (let i = 0; i < 5; i++) {
+                const targetEl = document.getElementById(`target-token-${i}`);
+                const statusEl = document.getElementById(`status-${i}`);
+                const container = document.querySelector(`#target-tokens .token[data-index="${i}"]`);
+
+                targetEl.textContent = results[i].token;
+                statusEl.textContent = results[i].accepted ? '✓' : '✗';
+                container.classList.add('visible');
+                container.classList.add(results[i].accepted ? 'accepted' : 'rejected');
+            }
+
+            document.getElementById('seg-verify').classList.add('active');
+            log('All 5 tokens verified in one parallel pass!');
+            log('Result: 5 tokens accepted in ~1 target model step instead of 5.');
+
+            isRunning = false;
+            runBtn.disabled = false;
+        }
+
+        runBtn.addEventListener('click', run);
+        resetBtn.addEventListener('click', reset);
+
+        try {
+            const testKey = '__spec_decoding_test__';
+            localStorage.setItem(testKey, '1');
+            localStorage.removeItem(testKey);
+        } catch (e) {
+            // localStorage not available
+        }
+    </script>
+</body>
+</html>

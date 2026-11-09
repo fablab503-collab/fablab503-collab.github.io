@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Preemptive Scheduler · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/049-preemptive-scheduler/">
+  <meta name="description" content="Visualizes how preemptive scheduling temporarily pauses low-priority jobs for urgent ones.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --primary: #007bff;
+      --success: #28a745;
+      --warning: #ffc107;
+      --danger: #dc3545;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 1rem; line-height: 1.5; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { margin-bottom: 2rem; text-align: center; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .card { background-color: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .controls { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    button { background-color: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    button:hover { opacity: 0.9; }
+    .scheduler { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
+    .job { padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; text-align: center; font-weight: bold; }
+    .urgent { background-color: var(--danger); color: white; }
+    .normal { background-color: var(--warning); color: #111; }
+    .low { background-color: var(--success); color: white; }
+    .paused { opacity: 0.5; }
+    .timeline { display: flex; justify-content: space-between; margin-top: 1rem; }
+    .time-slot { text-align: center; padding: 0.25rem; border-radius: 4px; background-color: var(--line); }
+    .active { background-color: var(--primary); color: white; }
+    .status { margin-top: 1rem; font-weight: bold; }
+    footer { text-align: center; margin-top: 2rem; color: var(--text-2); font-size: 0.9rem; }
+    @media (max-width: 375px) {
+      body { padding: 0.5rem; }
+      .card { padding: 1rem; }
+      .controls { flex-direction: column; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+      <h1>Preemptive Scheduler</h1>
+      <p>Visualizes how preemptive scheduling temporarily pauses low-priority jobs for urgent ones.</p>
+    </header>
+
+    <div class="card">
+      <div class="controls">
+        <button id="startBtn">Start Simulation</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+      
+      <div class="scheduler" id="scheduler"></div>
+      
+      <div class="status" id="status">Ready to start simulation</div>
+    </div>
+
+    <footer>
+      Project #49 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const scheduler = document.getElementById('scheduler');
+    const statusEl = document.getElementById('status');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let jobs = [];
+    let intervalId = null;
+    let paused = false;
+    let currentTime = 0;
+
+    class Job {
+      constructor(id, priority, duration) {
+        this.id = id;
+        this.priority = priority; // urgent, normal, low
+        this.duration = duration;
+        this.remaining = duration;
+        this.isRunning = false;
+        this.isPaused = false;
+        this.startTime = 0;
+      }
+
+      getPriorityClass() {
+        switch(this.priority) {
+          case 'urgent': return 'urgent';
+          case 'normal': return 'normal';
+          case 'low': return 'low';
+          default: return '';
+        }
+      }
+
+      render() {
+        const jobEl = document.createElement('div');
+        jobEl.className = `job ${this.getPriorityClass()} ${this.isPaused ? 'paused' : ''}`;
+        jobEl.id = `job-${this.id}`;
+        jobEl.textContent = `${this.priority.charAt(0).toUpperCase() + this.priority.slice(1)} Job #${this.id} (${this.remaining}/${this.duration})`;
+        return jobEl;
+      }
+    }
+
+    function createJobs() {
+      jobs = [
+        new Job(1, 'urgent', 5),
+        new Job(2, 'normal', 8),
+        new Job(3, 'low', 6),
+        new Job(4, 'urgent', 4),
+        new Job(5, 'normal', 7)
+      ];
+    }
+
+    function renderScheduler() {
+      scheduler.innerHTML = '';
+      jobs.forEach(job => {
+        scheduler.appendChild(job.render());
+      });
+      
+      const timeline = document.createElement('div');
+      timeline.className = 'timeline';
+      for(let i = 0; i < 15; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'time-slot';
+        slot.textContent = i;
+        if(i === currentTime) slot.classList.add('active');
+        timeline.appendChild(slot);
+      }
+      scheduler.appendChild(timeline);
+    }
+
+    function updateStatus(message) {
+      statusEl.textContent = message;
+    }
+
+    function startSimulation() {
+      if(intervalId) return;
+      
+      createJobs();
+      renderScheduler();
+      updateStatus('Simulation running...');
+      
+      intervalId = setInterval(() => {
+        if(paused) return;
+        
+        currentTime++;
+        if(currentTime > 14) {
+          clearInterval(intervalId);
+          intervalId = null;
+          updateStatus('Simulation completed');
+          return;
+        }
+        
+        // Find highest priority job that's not paused
+        const runningJob = jobs.find(job => !job.isPaused && job.remaining > 0);
+        if(runningJob) {
+          runningJob.remaining--;
+          runningJob.isRunning = true;
+          runningJob.startTime = currentTime;
+        } else {
+          updateStatus('No active jobs');
+        }
+        
+        // Check for urgent jobs to preempt
+        const urgentJobs = jobs.filter(job => job.priority === 'urgent' && job.remaining > 0);
+        if(urgentJobs.length > 0) {
+          const highestPriorityJob = urgentJobs.reduce((prev, current) => 
+            (prev.remaining < current.remaining) ? prev : current
+          );
+          
+          // Pause lower priority jobs
+          jobs.forEach(job => {
+            if(job.priority === 'normal' || job.priority === 'low') {
+              if(job.isRunning && job !== highestPriorityJob) {
+                job.isPaused = true;
+                job.isRunning = false;
+              }
+            }
+          });
+        }
+        
+        renderScheduler();
+      }, 500);
+    }
+
+    function pauseSimulation() {
+      paused = !paused;
+      pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+      updateStatus(paused ? 'Paused' : 'Resumed');
+    }
+
+    function resetSimulation() {
+      if(intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      paused = false;
+      currentTime = 0;
+      startBtn.textContent = 'Start Simulation';
+      pauseBtn.textContent = 'Pause';
+      updateStatus('Ready to start simulation');
+      createJobs();
+      renderScheduler();
+    }
+
+    startBtn.addEventListener('click', startSimulation);
+    pauseBtn.addEventListener('click', pauseSimulation);
+    resetBtn.addEventListener('click', resetSimulation);
+
+    // Initialize
+    createJobs();
+    renderScheduler();
+  </script>
+</body>
+</html>

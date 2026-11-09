@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Paragraph Structure Viewer · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/066-paragraph-structure-viewer/">
+  <meta name="description" content="Split text into paragraphs, show word and sentence counts per paragraph, and flag unusually long ones.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      background-color: var(--card);
+      color: var(--text);
+      border: 1px solid var(--line);
+      padding: 0.5rem;
+      font-family: var(--font);
+      resize: vertical;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: var(--card);
+      color: var(--text);
+      border: 1px solid var(--line);
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    button:hover {
+      background-color: var(--line);
+    }
+    .result {
+      margin-top: 2rem;
+    }
+    .paragraph {
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .stats {
+      color: var(--text-2);
+      font-size: 0.9rem;
+    }
+    .long {
+      border-left: 4px solid #ff5252;
+    }
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      color: var(--text-2);
+      font-size: 0.9rem;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Paragraph Structure Viewer</h1>
+    <textarea id="input" placeholder="Paste your text here..."></textarea>
+    <button id="analyze">Analyze Paragraphs</button>
+    <div class="result" id="result"></div>
+  </main>
+  <footer>
+    <a href="/503/">← Project 503</a><br>
+    Project #66 of 503 · Daniel Madac, D-CREATIONS
+  </footer>
+
+  <script>
+    const input = document.getElementById('input');
+    const analyzeBtn = document.getElementById('analyze');
+    const resultDiv = document.getElementById('result');
+
+    function countWords(text) {
+      return text.trim() ? text.trim().split(/\s+/).length : 0;
+    }
+
+    function countSentences(text) {
+      return text.trim() ? text.trim().split(/[.!?]+/).filter(s => s.trim()).length : 0;
+    }
+
+    function analyzeText() {
+      const text = input.value;
+      if (!text.trim()) return;
+
+      const paragraphs = text.split('\n\n').filter(p => p.trim());
+      let html = '';
+
+      const avgWords = paragraphs.reduce((sum, p) => sum + countWords(p), 0) / paragraphs.length;
+      const threshold = avgWords * 1.5;
+
+      paragraphs.forEach((paragraph, index) => {
+        const wordCount = countWords(paragraph);
+        const sentenceCount = countSentences(paragraph);
+        const className = wordCount > threshold ? 'long' : '';
+        
+        html += `
+          <div class="paragraph ${className}">
+            <p>${paragraph}</p>
+            <div class="stats">
+              Paragraph ${index + 1}: ${wordCount} words, ${sentenceCount} sentences
+            </div>
+          </div>
+        `;
+      });
+
+      resultDiv.innerHTML = html;
+    }
+
+    analyzeBtn.addEventListener('click', analyzeText);
+
+    // Load saved text if exists
+    try {
+      const savedText = localStorage.getItem('paragraphViewerText');
+      if (savedText) input.value = savedText;
+    } catch (e) {}
+
+    // Save text on input change
+    input.addEventListener('input', () => {
+      try {
+        localStorage.setItem('paragraphViewerText', input.value);
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>

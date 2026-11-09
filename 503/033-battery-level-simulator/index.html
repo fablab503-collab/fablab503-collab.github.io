@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Battery Level Simulator · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/033-battery-level-simulator/">
+  <meta name="description" content="Simulate battery drain rates for different job types and show low-battery alerts at 20% and 5%.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --alert-20: #ff9500;
+      --alert-5: #ff3b30;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 1rem; min-height: 100vh; display: flex; flex-direction: column; }
+    .container { max-width: 375px; margin: 0 auto; width: 100%; }
+    header { text-align: center; margin-bottom: 2rem; }
+    a { color: var(--text); text-decoration: none; }
+    .project-link { position: absolute; top: 1rem; left: 1rem; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .battery-display { font-size: 4rem; text-align: center; margin: 1.5rem 0; }
+    .battery-level { height: 20px; background: var(--line); border-radius: 10px; overflow: hidden; margin: 1rem 0; }
+    .battery-fill { height: 100%; width: 100%; background: #4cd964; transition: width 0.5s ease; }
+    .alerts { margin-top: 1rem; }
+    .alert { padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; display: none; }
+    .alert-20 { background: var(--alert-20); color: white; }
+    .alert-5 { background: var(--alert-5); color: white; }
+    .jobs { display: grid; gap: 1rem; margin-top: 1rem; }
+    .job { padding: 1rem; border-radius: 6px; background: var(--line); cursor: pointer; transition: transform 0.2s; }
+    .job:hover { transform: translateY(-2px); }
+    .job.active { background: #007aff; color: white; }
+    .stats { display: flex; justify-content: space-between; margin-top: 1rem; font-size: 0.9rem; color: var(--text-2); }
+    footer { text-align: center; margin-top: auto; padding: 1rem 0; font-size: 0.9rem; color: var(--text-2); }
+  </style>
+</head>
+<body>
+  <a href="/503/" class="project-link">← Project 503</a>
+  <div class="container">
+    <header>
+      <h1>Battery Level Simulator</h1>
+    </header>
+    
+    <main>
+      <div class="card">
+        <div class="battery-display" id="batteryDisplay">100%</div>
+        <div class="battery-level">
+          <div class="battery-fill" id="batteryFill"></div>
+        </div>
+        <div class="alerts">
+          <div class="alert alert-20" id="alert20">Battery at 20% - Plug in your device</div>
+          <div class="alert alert-5" id="alert5">Battery at 5% - Emergency power needed</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Job Types</h2>
+        <div class="jobs" id="jobsContainer">
+          <!-- Jobs will be inserted here -->
+        </div>
+        <div class="stats">
+          <span>Current Job: <span id="currentJob">None</span></span>
+          <span>Drain Rate: <span id="drainRate">0%</span>/min</span>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      Project #33 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const jobs = [
+      { name: "Web Browsing", drain: 0.2, color: "#007aff" },
+      { name: "Video Streaming", drain: 0.8, color: "#ff9500" },
+      { name: "Gaming", drain: 1.2, color: "#ff3b30" },
+      { name: "Audio Recording", drain: 0.6, color: "#34c759" },
+      { name: "Photo Editing", drain: 1.0, color: "#5856d6" }
+    ];
+
+    let batteryLevel = 100;
+    let currentJob = null;
+    let intervalId = null;
+
+    const batteryDisplay = document.getElementById('batteryDisplay');
+    const batteryFill = document.getElementById('batteryFill');
+    const alert20 = document.getElementById('alert20');
+    const alert5 = document.getElementById('alert5');
+    const jobsContainer = document.getElementById('jobsContainer');
+    const currentJobEl = document.getElementById('currentJob');
+    const drainRateEl = document.getElementById('drainRate');
+
+    function updateBatteryDisplay() {
+      batteryDisplay.textContent = `${Math.round(batteryLevel)}%`;
+      batteryFill.style.width = `${batteryLevel}%`;
+      
+      if (batteryLevel <= 20) {
+        alert20.style.display = 'block';
+        if (batteryLevel <= 5) {
+          alert5.style.display = 'block';
+        } else {
+          alert5.style.display = 'none';
+        }
+      } else {
+        alert20.style.display = 'none';
+        alert5.style.display = 'none';
+      }
+    }
+
+    function startBatteryDrain() {
+      if (intervalId) clearInterval(intervalId);
+      
+      intervalId = setInterval(() => {
+        if (currentJob) {
+          batteryLevel -= currentJob.drain;
+          if (batteryLevel <= 0) batteryLevel = 0;
+          updateBatteryDisplay();
+        }
+      }, 1000);
+    }
+
+    function selectJob(job) {
+      currentJob = job;
+      currentJobEl.textContent = job.name;
+      drainRateEl.textContent = `${job.drain}%`;
+      
+      document.querySelectorAll('.job').forEach(el => el.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      startBatteryDrain();
+    }
+
+    function initJobs() {
+      jobsContainer.innerHTML = '';
+      jobs.forEach(job => {
+        const jobEl = document.createElement('div');
+        jobEl.className = 'job';
+        jobEl.textContent = job.name;
+        jobEl.style.backgroundColor = job.color;
+        jobEl.addEventListener('click', () => selectJob(job));
+        jobsContainer.appendChild(jobEl);
+      });
+    }
+
+    function loadState() {
+      try {
+        const savedLevel = localStorage.getItem('batteryLevel');
+        if (savedLevel) batteryLevel = parseFloat(savedLevel);
+        
+        const savedJob = localStorage.getItem('currentJob');
+        if (savedJob) {
+          currentJob = jobs.find(job => job.name === savedJob);
+          if (currentJob) {
+            currentJobEl.textContent = currentJob.name;
+            drainRateEl.textContent = `${currentJob.drain}%`;
+          }
+        }
+      } catch (e) {}
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem('batteryLevel', batteryLevel.toString());
+        localStorage.setItem('currentJob', currentJob ? currentJob.name : '');
+      } catch (e) {}
+    }
+
+    window.addEventListener('beforeunload', saveState);
+    loadState();
+    initJobs();
+    updateBatteryDisplay();
+  </script>
+</body>
+</html>

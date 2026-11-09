@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pronoun Tracker · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/079-pronoun-tracker/">
+<meta name="description" content="Paste any text and see a pie-chart breakdown of its pronouns by type: personal, possessive and reflexive.">
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --card: #fff;
+    --text: #111;
+    --text-2: #5a5a5a;
+    --line: #e2e2de;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --card: #1c1c1c;
+      --text: #f2f2f2;
+      --text-2: #a8a8a8;
+      --line: #2c2c2c;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .topbar { padding: 16px 20px; }
+  .topbar a { color: var(--text-2); text-decoration: none; font-size: 14px; }
+  .topbar a:hover { color: var(--text); text-decoration: underline; }
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 8px 20px 40px;
+  }
+  h1 { font-size: 26px; margin-bottom: 6px; }
+  .sub { color: var(--text-2); font-size: 15px; margin-bottom: 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    resize: vertical;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 15px;
+    padding: 12px;
+  }
+  textarea:focus { outline: 2px solid var(--text-2); outline-offset: 1px; }
+  .row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+  button {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.ghost {
+    background: transparent;
+    color: var(--text-2);
+    border: 1px solid var(--line);
+  }
+  button:hover { opacity: 0.85; }
+  .hint { color: var(--text-2); font-size: 13px; margin-top: 10px; }
+  .chart-wrap { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  canvas { flex-shrink: 0; }
+  .legend { list-style: none; font-size: 14px; }
+  .legend li { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; flex-shrink: 0; }
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .stat {
+    flex: 1;
+    min-width: 100px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .stat .num { font-size: 24px; font-weight: 700; }
+  .stat .lbl { color: var(--text-2); font-size: 13px; }
+  .empty { color: var(--text-2); font-size: 14px; padding: 20px 0; text-align: center; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 4px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { color: var(--text-2); font-weight: 600; font-size: 13px; }
+  footer {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-2);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+  <div class="topbar"><a href="/503/">← Project 503</a></div>
+  <main>
+    <h1>Pronoun Tracker</h1>
+    <p class="sub">Paste or type any text. It counts the pronouns and shows the breakdown by type in a pie chart.</p>
+
+    <div class="card">
+      <label for="text">Your text</label>
+      <textarea id="text" placeholder="Type or paste text here…"></textarea>
+      <div class="row">
+        <button id="analyze">Analyze</button>
+        <button id="sample" class="ghost">Load a sample</button>
+        <button id="clear" class="ghost">Clear</button>
+      </div>
+      <p class="hint">Your text is analyzed locally in the browser and saved only in this browser's localStorage. Nothing is sent anywhere.</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="num" id="total">0</div><div class="lbl">Total pronouns</div></div>
+      <div class="stat"><div class="num" id="personal">0</div><div class="lbl">Personal</div></div>
+      <div class="stat"><div class="num" id="possessive">0</div><div class="lbl">Possessive</div></div>
+      <div class="stat"><div class="num" id="reflexive">0</div><div class="lbl">Reflexive</div></div>
+    </div>
+
+    <div class="card">
+      <div id="chartArea">
+        <div class="empty" id="emptyMsg">Enter some text and press Analyze to see the chart.</div>
+        <div class="chart-wrap" id="chartWrap" style="display:none">
+          <canvas id="pie" width="200" height="200"></canvas>
+          <ul class="legend" id="legend"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="wordsCard" style="display:none">
+      <label>Pronouns found</label>
+      <table id="wordsTable">
+        <thead><tr><th>Pronoun</th><th>Type</th><th>Count</th></tr></thead>
+        <tbody id="wordsBody"></tbody>
+      </table>
+    </div>
+  </main>
+  <footer>Project #79 of 503 · Daniel Madac, D-CREATIONS</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var TYPES = {
+    personal:   ["i","me","you","he","him","she","her","it","we","us","they","them"],
+    possessive: ["my","mine","your","yours","his","hers","its","our","ours","their","theirs"],
+    reflexive:  ["myself","yourself","himself","herself","itself","ourselves","yourselves","themselves"]
+  };
+  var TYPE_ORDER = ["personal", "possessive", "reflexive"];
+  var COLORS = { personal: "#4a7fd4", possessive: "#e0a13c", reflexive: "#5cb87a" };
+  var LABELS = { personal: "Personal", possessive: "Possessive", reflexive: "Reflexive" };
+
+  var PRONOUN_MAP = {};
+  TYPE_ORDER.forEach(function (t) {
+    TYPES[t].forEach(function (w) {
+      if (!PRONOUN_MAP[w]) PRONOUN_MAP[w] = t;
+    });
+  });
+  // "her" is both an object pronoun (personal) and a possessive determiner.
+  // Count it as personal, the more common reading, by re-pinning it.
+  PRONOUN_MAP["her"] = "personal";
+
+  var SAMPLE = "When I read a book, I underline the sentences that move me. My sister reads hers at the same time, and we compare notes. You can borrow my copy if you promise to return it — yourself, not through someone else. They say their favourite chapters are the ones where the characters talk to themselves. He once told himself to stay calm, and she told herself the same. It is ours, really: we wrote it together, and the ideas are ours alone.";
+
+  var textEl = document.getElementById("text");
+  var analyzeBtn = document.getElementById("analyze");
+  var sampleBtn = document.getElementById("sample");
+  var clearBtn = document.getElementById("clear");
+  var pieCanvas = document.getElementById("pie");
+  var legendEl = document.getElementById("legend");
+  var emptyMsg = document.getElementById("emptyMsg");
+  var chartWrap = document.getElementById("chartWrap");
+  var wordsCard = document.getElementById("wordsCard");
+  var wordsBody = document.getElementById("wordsBody");
+  var totalEl = document.getElementById("total");
+  var personalEl = document.getElementById("personal");
+  var possessiveEl = document.getElementById("possessive");
+  var reflexiveEl = document.getElementById("reflexive");
+
+  function loadSaved() {
+    try {
+      var saved = window.localStorage.getItem("pronoun-tracker-text");
+      if (saved) textEl.value = saved;
+    } catch (e) { /* localStorage unavailable; ignore */ }
+  }
+
+  function saveText() {
+    try {
+      window.localStorage.setItem("pronoun-tracker-text", textEl.value);
+    } catch (e) { /* localStorage unavailable; ignore */ }
+  }
+
+  function analyze(text) {
+    var counts = { personal: 0, possessive: 0, reflexive: 0 };
+    var wordCounts = {};
+    var matches = text.toLowerCase().match(/[a-z']+/g) || [];
+    matches.forEach(function (raw) {
+      var w = raw.replace(/^'+|'+$/g, "");
+      var type = PRONOUN_MAP[w];
+      if (type) {
+        counts[type]++;
+        if (!wordCounts[w]) wordCounts[w] = { type: type, count: 0 };
+        wordCounts[w].count++;
+      }
+    });
+    return { counts: counts, wordCounts: wordCounts, total: counts.personal + counts.possessive + counts.reflexive };
+  }
+
+  function drawPie(canvas, counts) {
+    var ctx = canvas.getContext("2d");
+    var total = counts.personal + counts.possessive + counts.reflexive;
+    var cx = canvas.width / 2, cy = canvas.height / 2, r = Math.min(cx, cy) - 8;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (total === 0) {
+      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue("--line");
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+    var start = -Math.PI / 2;
+    TYPE_ORDER.forEach(function (t) {
+      var v = counts[t];
+      if (v === 0) return;
+      var angle = (v / total) * Math.PI * 2;
+      ctx.fillStyle = COLORS[t];
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, start, start + angle);
+      ctx.closePath();
+      ctx.fill();
+      start += angle;
+    });
+    // White hole for a donut look
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue("--card");
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.55, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue("--text");
+    ctx.font = "bold 22px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(total), cx, cy);
+  }
+
+  function render(result) {
+    var c = result.counts;
+    totalEl.textContent = result.total;
+    personalEl.textContent = c.personal;
+    possessiveEl.textContent = c.possessive;
+    reflexiveEl.textContent = c.reflexive;
+
+    if (result.total === 0) {
+      emptyMsg.style.display = "block";
+      emptyMsg.textContent = "No pronouns found in this text.";
+      chartWrap.style.display = "none";
+      wordsCard.style.display = "none";
+      return;
+    }
+    emptyMsg.style.display = "none";
+    chartWrap.style.display = "flex";
+    drawPie(pieCanvas, c);
+
+    legendEl.innerHTML = "";
+    TYPE_ORDER.forEach(function (t) {
+      if (c[t] === 0) return;
+      var li = document.createElement("li");
+      var pct = Math.round((c[t] / result.total) * 100);
+      li.innerHTML = '<span class="swatch" style="background:' + COLORS[t] + '"></span>' +
+        LABELS[t] + " — " + c[t] + " (" + pct + "%)";
+      legendEl.appendChild(li);
+    });
+
+    var rows = Object.keys(result.wordCounts).map(function (w) {
+      return { word: w, type: result.wordCounts[w].type, count: result.wordCounts[w].count };
+    }).sort(function (a, b) { return b.count - a.count || a.word.localeCompare(b.word); });
+
+    wordsBody.innerHTML = "";
+    rows.forEach(function (r) {
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + r.word + "</td><td>" + LABELS[r.type] + "</td><td>" + r.count + "</td>";
+      wordsBody.appendChild(tr);
+    });
+    wordsCard.style.display = "block";
+  }
+
+  function runAnalysis() {
+    saveText();
+    render(analyze(textEl.value));
+  }
+
+  analyzeBtn.addEventListener("click", runAnalysis);
+  sampleBtn.addEventListener("click", function () {
+    textEl.value = SAMPLE;
+    runAnalysis();
+  });
+  clearBtn.addEventListener("click", function () {
+    textEl.value = "";
+    saveText();
+    render({ counts: { personal: 0, possessive: 0, reflexive: 0 }, wordCounts: {}, total: 0 });
+    emptyMsg.textContent = "Enter some text and press Analyze to see the chart.";
+  });
+  textEl.addEventListener("input", saveText);
+
+  loadSaved();
+  if (textEl.value.trim()) {
+    render(analyze(textEl.value));
+  }
+})();
+</script>
+</body>
+</html>

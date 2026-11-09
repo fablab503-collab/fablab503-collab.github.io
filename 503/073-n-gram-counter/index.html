@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>N Gram Counter · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/073-n-gram-counter/">
+  <meta name="description" content="Extract and rank all unigrams, bigrams, or trigrams from the input text with configurable n.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      margin: 0;
+      padding: 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header, footer {
+      text-align: center;
+      padding: 1rem 0;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    textarea, select, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--line);
+      background-color: var(--card);
+      color: var(--text);
+      font-family: var(--font);
+    }
+    button {
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .results {
+      margin-top: 1rem;
+    }
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .count {
+      color: var(--text-2);
+    }
+    footer {
+      margin-top: auto;
+      font-size: 0.9rem;
+      color: var(--text-2);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/503/">← Project 503</a>
+  </header>
+  
+  <main>
+    <h1>N Gram Counter</h1>
+    
+    <textarea id="inputText" placeholder="Enter your text here..." rows="6">The quick brown fox jumps over the lazy dog. The quick brown fox is very quick and brown.</textarea>
+    
+    <select id="nValue">
+      <option value="1">Unigrams (1)</option>
+      <option value="2">Bigrams (2)</option>
+      <option value="3">Trigrams (3)</option>
+    </select>
+    
+    <button id="analyzeBtn">Analyze Text</button>
+    
+    <div class="results" id="results"></div>
+  </main>
+  
+  <footer>
+    Project #73 of 503 · Daniel Madac, D-CREATIONS
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const inputText = document.getElementById('inputText');
+      const nValue = document.getElementById('nValue');
+      const analyzeBtn = document.getElementById('analyzeBtn');
+      const resultsDiv = document.getElementById('results');
+
+      function getNGrams(text, n) {
+        const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+        const ngrams = [];
+        
+        for (let i = 0; i <= words.length - n; i++) {
+          const ngram = words.slice(i, i + n).join(' ');
+          ngrams.push(ngram);
+        }
+        
+        return ngrams;
+      }
+
+      function countNGrams(ngrams) {
+        const counts = {};
+        for (const ngram of ngrams) {
+          counts[ngram] = (counts[ngram] || 0) + 1;
+        }
+        return counts;
+      }
+
+      function sortCounts(counts) {
+        return Object.entries(counts)
+          .sort((a, b) => b[1] - a[1])
+          .map(([ngram, count]) => ({ ngram, count }));
+      }
+
+      function displayResults(sortedCounts) {
+        resultsDiv.innerHTML = '';
+        
+        if (sortedCounts.length === 0) {
+          resultsDiv.textContent = 'No results found.';
+          return;
+        }
+        
+        sortedCounts.forEach(({ ngram, count }) => {
+          const item = document.createElement('div');
+          item.className = 'result-item';
+          item.innerHTML = `
+            <span>${ngram}</span>
+            <span class="count">${count}</span>
+          `;
+          resultsDiv.appendChild(item);
+        });
+      }
+
+      function analyze() {
+        try {
+          const text = inputText.value;
+          const n = parseInt(nValue.value);
+          
+          if (text.trim() === '') {
+            resultsDiv.textContent = 'Please enter some text.';
+            return;
+          }
+          
+          const ngrams = getNGrams(text, n);
+          const counts = countNGrams(ngrams);
+          const sortedCounts = sortCounts(counts);
+          
+          displayResults(sortedCounts);
+        } catch (error) {
+          console.error('Analysis error:', error);
+          resultsDiv.textContent = 'Error analyzing text.';
+        }
+      }
+
+      analyzeBtn.addEventListener('click', analyze);
+
+      // Load saved text from localStorage
+      try {
+        const savedText = localStorage.getItem('ngram_text');
+        if (savedText) inputText.value = savedText;
+        
+        const savedN = localStorage.getItem('ngram_n');
+        if (savedN) nValue.value = savedN;
+      } catch (e) {
+        console.error('localStorage error:', e);
+      }
+
+      // Save text to localStorage on input
+      inputText.addEventListener('input', () => {
+        try {
+          localStorage.setItem('ngram_text', inputText.value);
+        } catch (e) {
+          console.error('localStorage error:', e);
+        }
+      });
+
+      nValue.addEventListener('change', () => {
+        try {
+          localStorage.setItem('ngram_n', nValue.value);
+        } catch (e) {
+          console.error('localStorage error:', e);
+        }
+      });
+
+      // Initial analysis
+      analyze();
+    });
+  </script>
+</body>
+</html>

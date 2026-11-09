@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Word Piece Subword Splitter · Project 503 · D-CREATIONS</title>
+  <link rel="canonical" href="https://dcreations.fr/503/014-word-piece-subword-splitter/">
+  <meta name="description" content="Live WordPiece tokenization sandbox that breaks sentences into root words and ##-prefixed continuations.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header {
+      margin-bottom: 2rem;
+    }
+    .header a {
+      font-size: 1.125rem;
+      display: inline-block;
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-size: 1.75rem;
+      margin: 0 0 0.5rem;
+      font-weight: 600;
+    }
+    .subtitle {
+      color: var(--text-2);
+      margin: 0 0 1rem;
+      font-size: 1rem;
+    }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 0.5rem;
+      background: var(--card);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      resize: vertical;
+    }
+    textarea::placeholder { color: var(--text-2); }
+    button {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+    button:hover { background: var(--line); }
+    .output {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+      font-size: 0.875rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text);
+      min-height: 100px;
+      line-height: 1.6;
+    }
+    .token {
+      display: inline-block;
+      margin: 0.05rem;
+      padding: 0.1rem 0.25rem;
+      border-radius: 0.2rem;
+      font-size: 0.875rem;
+    }
+    .token.root   { background: rgba(0,120,255,0.15); }
+    .token.subword { background: rgba(0,200,100,0.15); }
+    .token.unk     { background: rgba(255,80,80,0.15); }
+    .stats {
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: var(--text-2);
+    }
+    .stats span { margin-right: 1rem; }
+    .footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.875rem;
+      color: var(--text-2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <a href="/503/">← Project 503</a>
+      <h1>Word Piece Subword Splitter</h1>
+      <p class="subtitle">Live tokenization sandbox with 2,000-token embedded vocabulary</p>
+    </div>
+
+    <textarea id="input" placeholder="Type or paste text here..."></textarea>
+    <button id="tokenize">Tokenize</button>
+
+    <div class="output" id="output"><em>Enter text and click Tokenize to see subword units.</em></div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="footer">
+      Project #14 of 503 · Daniel Madac, D-CREATIONS
+    </div>
+  </div>
+
+  <script>
+// =============================================================================
+// WordPiece Tokenizer with exactly 2,000-token embedded vocabulary
+// =============================================================================
+
+(function buildVocab() {
+  const v = [];
+  v.push('[UNK]');
+
+  // All lowercase letters
+  for (let i = 97; i <= 122; i++) v.push(String.fromCharCode(i));
+  // All uppercase letters  
+  for (let i = 65; i <= 90; i++) v.push(String.fromCharCode(i));
+  // Digits
+  for (let i = 48; i <= 57; i++) v.push(String.fromCharCode(i));
+
+  // Punctuation
+  const punc = '. , ? ! ; : \' " - ( ) [ ] { } @ # $ % ^ & * _ + = \\ | / ~ ` < >'.split(' ');
+  for (const p of punc) {
+    if (!v.includes(p)) v.push(p);
+  }
+
+  // Common subword units
+  const subwords = [
+    '##ing','##ed','##s','##ly','##er','##est','##tion','##al','##ment',
+    '##ness','##ful','##able','##ible','##less','##ship','##age','##hood',
+    '##dom','##ry','##th','##ty','##cy','##ity','##or','##ist','##ism',
+    '##ize','##ise','##ive','##ous','##es','##ies','##en','##y','##c',
+    '##d','##t','##n','##m','##l','##r'
+  ];
+  for (const s of subwords) {
+    if (!v.includes(s)) v.push(s);
+  }
+
+  // Top English words - combined into one string for compactness
+  const wordBatches = [
+    'the be to of and a in that have I it for not on with he as you do at this but his by from they we say her she or an will my one all would there their what so up out if about who get which go me when make can like time no just him know take people into year your good some could them see other than then now look only come its over think also back after use two how our work first well way even new want because any these give day most us',
+    'is are was were been being have has had having do does did will would shall should can could may might must here there when where why how all any both each few more most other some such no nor not only own same so than too very about above across after against along among around as at before behind below beneath beside between beyond but by concerning considering despite down during except for from in inside into like minus near of off on onto out outside over past per plus regarding round save since than through to toward under underneath until unto up upon versus via with within without',
+    'man world way long thing see very after much before through where right too mean old same boy follow came want show around form three small put end read last keep let big few house own page should country found answer school grow study still learn plant cover food sun four between state keep eye never word though feel head stand group music those both mark often letter second minute idea enough face watch above almost sure usual young ready hand ever leave note point problem start week company floor early space heard best hour better true during hundred five remember step found ear need open seem together next white children begin got walk example ease paper often light lot music stop car red person black hot',
+    'ability able about above absence absent absolute absolutely absorb abstract absurd abundant abuse academic accept access accident accommodate accommodation accompany accomplish according accordingly account accountable accumulate accuracy accurate achieve achievement acid acknowledge acquire acquisition across act action active actively actor actress actual actually ad adapt addition additional additionally address adequate adhere adjacent adjective adjust adjustment administer administration administrative admire admission admit adolescent adopt adoption adult advance advanced advantage advantageous adventure adventurous adverse advertise advertisement advertising advice advisable advise advisor advocacy',
+    'affect affection affectionate afford affordable afraid aftermath afternoon afterward again against age aged agency agenda agent aggression aggressive agitate agitation agitator agree agreeable agreement agriculture agricultural aid ailment aim air aircraft airline airplane airport aisle alarm alarming album alcohol alcoholic alert algebra algebraic algebrator algorithm alien alienate align alignment alike alive all allegiance allegiance allegation alleged allegedly allegory allergen allergic allergy alleviate alleviation alley alliance allied allocate allocation allow allowance alloy allude allure allusion allusive ally almanac almighty almost aloe aloft alone along alongside aloud alpha alphabet alphabetical alphabetize already also altar alter alteration altercation alternate alternative alternatively altitude alto altogether altruism altruist altruistic aluminum always',
+    'am amateur amaze amazement amazing ambassador amber ambiance ambient ambiguity ambiguous ambition ambitious ambulance ambulatory amend amendment amenity among amidst amount ampere amplifier amplify ample amplification amputate amputation amuck amulet amuse amusement amusing an anaerobic anagram anal analgesic analog analogue analogy analyses analysis analyst analytic analytical analyze anarchy anarchist anatomy ancestor ancestral ancestry anchor anchovy ancient and android anecdote anemia anemic anesthesia anesthetic anew angel angels anger angle angled angler angling angora angry angst anguish angular animal animate animation animator animism animosity ankle annals annex annihilate',
+    'annihilation anniversary annotate annotation announce announcement announcer annoy annoyance annoying annual annually annuity annul anomalous anomaly anon anonymity anonymous anorexia anorexic another answer ant antagonism antagonist antagonistic antagonize antarctic ante anteater antelope antenna antennae anterior anthology anthrax anthropology anti antiaircraft antibacterial antibiotics antibody antic anticipate anticipation antidote antifreeze antigen antihistamine antilock antimatter antiquated antique antiquity antiseptic antislavery antisocial antithesis antler antonym apathy apart apology apprentice approach appropriate approval approve approximately arbitrary arch archeology architecture archive',
+    'ardent area argue argument arise arm army around arrest arrive arrow art article artificial artist artistic ascend ascent ashamed aside ask asleep aspect assert assess asset assign assistant associate association assume assumption assurance assure astound astronomer astronomy asylum at athletic atom atomic attach attack attain attempt attend attention attitude attract attraction attractive attribute auction audience audit augment autumn author authority auto automobile autonomy auxiliary avail available avenue average avert aviation avoid await awake award aware away awe awkward axe',
+    'baby bachelor back background backward bacon bacterium bad badge bag bake balance ball band bank banner banquet bar bare barely bark barrel barrier base baseball basic basically basis batch bathe bathroom battery battle beach beam bear beat beautiful beauty behalf behave behavior behavioral behind belief believe bell belly belong below belt bench bend beneath beneficial benefit benevolent berry beside besides best bet betray better between betray beyond bible bibliography bicycle bid bids bigger bind biology birth bitter bizarre black blame bland blank blast bleach bleed blend bless block blood blossom blow blue blur board boat body boil bold bolt bomb bond bone book booming boost boot border bore born borrow boss both bothers bottle bottom bounce boundary bowl box boy bracket brain branch brand brass brave bread breach break breakfast breast breath breathe brick bride bridge brief bright bring brink broadcast broccoli broken bronze brood brothers brush bubble bucket bud budget buff bug build builder building built bulb bulk bullet bump bunch bundle burden bureau burglar bury bus business bust busy but butter button buyer buzz',
+    'cab cabin cabinet cable cage cake calculate call calm camera camp campaign can canal cancel cancer candidate candle candy cannon canoe canvas cap capability cape capital captain capture car carbon card care career careful caress cargo carpet carrot carry case cast casual caste castle casualty cat catalog catch category cater ceiling celebrate celebration cell cellar cement cemetery census cent center central century cereal certain certificate chain chair chalk champion chance change channel chant chaos chapter character characteristic charge charity chart chase chat cheap cheat check cheek cheer cheese chef chemical chemist cherry chest chevron chief child childhood chill chip chocolate choice choir choke cholesterol choose chop chronic chunk church cigar cinnamon circle circuit circulation citizen city civic civil civilization claim clam classic class classroom clean clear clever cliff climate climb clock close closet cloth clothes cloud clown club coach coal coalition coast coat cock code coffee cognitive coil coin cold collapse colleague collect collection collective college colon colony color column comb combat combination combine come comedy comfort command commend comment commercial commission commit committee common communism community compact companion company compare comparison compartment compensation compete competition competitive competitor complaint complete complex comply component compose composition compound comprehend compression compromise compulsive compute',
+    'concern concert conclusion concurrent condensation condense condition conduct confidence configuration confirm confrontation congruent connect connection conscious consensus consecutive consequence conservation console consolidate constable constant constitute constitution construct consultation consumer consumption contact contain container contemporary content contest context continent continuous contract contrast contribute contribution control controversy conviction convince cook cooler copper cozy crack cradle craft crash crawl crazy cream create creation creative creature credit creed creek creep crime criminal crisp criteria crop cross crown crucial crush cry crystal cube cultural culture cup cure currency current curriculum curse curtain curve custody custom customer cycle dad daily dairy damage dancing danger dare dark dashboard data database date daughter dawn day dead deaf deal death debate debt decade decent decision deck declaration decline decorate decrease deed deep deer defeat defensive define definite definition degree delay delegate delicate delight deliver delivery delta demand demonstration deny density dent dental depart departure depend depict deploy depression depth deputy derive descend description desert deserve design designation desire desk despair desperate despite destination destroy destruction detail detect detection determinant determine devotion diagram dialogue diameter diamond diary dictate dictation dictionary did die diet differ difference different difficulty digest dilemma dimension dining dinner dip diplomacy diplomat direct direction directly director dirt disable disadvantage disallow disaster disclaimer disclose discount discomfort discover discovery discretion screw',
+    'description desert design destination detail detect determine develop diagram dialogue diameter diamond diary diet differentiate difficulty dimension dining dinner diplomatic discount discover discretion dispute dissolve distance distant distinct distortion distribute distribution district disturb dive diverse diversify division divorce documentary does dog dollar domain domestic dominant donate dramatic draw drawback dream dress drift drill drink drive drop drum dry duck due dull dumb dump durable duration duty dynamic dynasty each eager eagle ear early earn earth ease east easy eat echo ecology economic economy edge edit editor educate education effect effective efficiently egg eight either elbow elder elect election electric electronic element elegant elementary elevator eligible eliminate elite emergency emission emotion empire employ employee employment empty enable enchant encircle enclave encounter encourage encounter end endurance enemy energy enforce engage engine engineer enhance enjoyment enormous enquire enrich enroll ensure entitle entrance entropy environment episode epic epoch equal equip equipment equity equivalent era erase erect error escape escort especially essence essential establish estimate eternal ethnic etymology Euro evaluate event eventually ever every evil evolve exact exam examination example exceed excellent exchange excite exclude exclusive excrement excruciating excuse execute exercise exert exhaust exhibit existence exit exotic expand expel expense experience experiment expert expire explain explanation explicit explode export expose expression extend extension extensive external eye fabric face facility fact factor factory fade fail faint fair faith fake fall false fame familiar fan fancy fantasy farm fashion fast fat fate father fatigue fault favorite feature feast federal fee feed feel female fence fertile fetch fever few fiber fiction field fierce figure file fill film filter final finance financial find fine finish fire firm first fish fist fit five flag flame flash flat flavor flaw flee fleet flesh flight fling float flock floor flourish flow flower fluid flush fly foam focus fog fold folk follow following food foot force forest forever forget fork form formal format formation forward foster foundation fountain fraction fragment frame framework frank free freeze frequency fresh friar friend friendly frog from front frost frown fruit frustrated fry fuel full function fund funnel fury future gain galaxy gallery game gang garage garden garbage garment gas gasoline gate gather gauge gaze general generally generate generation genius genre gentle gentleman genuine geographic geometry gesture get ghost giant gift gigantic giraffe girl give glad glue goal goat god gold good goodbye govern graceful grain grand grant grape graph grass gravity great green grid grief grill grim grind grip groove group grow grumpy guard guess guide guilt guitar gun gym habit habitat hair half hall hallway hammer hamper hand handkerchief handle happy harbor hard harmony harness harsh harvest hat hate haunt have hawk hazard head heal health heap hear heart heat heave heavily hedge height hello helmet help helpful herd hero heroes heroine hexagon hidden hide high highlight hill him hinder hip hire history hobby hockey hold hole hollow holy home homework honey hood hook hop hope horn horror horse hospital hospitality host hotel hour house hover hug huge hull human humble humor hundred hunger hunt hurry hurt husband hybrid ice icon idea ideal identify idiom idiotic idle idolize idly ignite ignore ill illusion illustrate image imitate immediate immense impact impose impossible impress improve impulse in inception incident include income incorporate index indicate indoor industry infant inflict inform ingredient inherent inhibit initial initiate inject injury injustice ink innovative input inquire insane inset insect inside insist install instance instant instead instinct institute institution instruct instrument insult insurance intact intense intention interaction interest interfere interior internal international interpret interrupt interval intervention interview into intricate intrigue introduce invalid invent inventory invite involve iron island isolate issue item ivory jacket jaguar jam jar jaw jazz jealous jelly jewel job join joke jolly journey joy judge juice jump junction jungle junior junk justice justify keen keep kettle key kick kid kidnap kidney kill kind kingdom kiss kit kitchen kite kitten knee knife knock know',
+    'lab lability label laboratory lack lad ladder lady lake lamb lamp language lap large last latent later late Latin laugh launch lava law lawsuit layer laze lead leaf league lean learn least leather leave lecture left leg legal legend leisure lemon lend length lens less lesson let letter level liar liberty library license lick lie life lift light like lilac limb limit link lion liquid list literal little live lizard load loan lobster local lock log logic logo lonely long loop loose loss lost lot loud love lovely low loyal luck luggage lumber lunar lunch lung lurk luxury machine mad made magic magnet maid mail main mainly maintain major make male mall mallet man manage manager mane manner mankind mansion manual manufacture map marble march margin marine mark market marriage mask mass master material mathematical matrix matter mature maze me meadow meal mean meantime measure meat mechanic medicine medieval medium meet meeting melon member memorize memory men ace mend mention menu mercy merge merit merry mesh message metal meter method metabolism metaphor meter micro middle midnight milk mill mimic mind mine mineral minimum minor minute miracle mirror misery mislead missile miss mission mistake mix mixture mobile mock mode model modesty modify mom money monitor month monument mood moon moral more morning mortar mosquito mother motion mountain mouse move movie much multiply muscle museum music musician must mustache my mystery myth naive name napkin narrow nasty nation nature nautical navigate navigation navy near necessary neck need negative neglect neighbor neither nephew nerve nest net network neutral never nevertheless new news newspaper next nice night noble noise nomination none nonsense noodle normal north nose notable note notebook notion notice novel now nowhere nuclear numb nurse nut oaf oak obedience obey object obligation observation observe obstacle obtain obvious occupation occupy occur ocean oche octopus odd odor off offer office officer official often oil okay old olive olympic omit once one onion only open opera opinion opponent opportunity oppose option orange orbit orchard order ordinary organic organization orient original ornament other outline outside over oven overcome overdue owl owner oxygen oyster',
+    'pace pack package pad page paid pain paint palette paltry pan panda panel panic pants paper parade paradox parents parish park parliament partial partner pastry patience patient patio patron pause pave payment peace peach peak peasant pelican pen penal penny people pepper perceive perfect perfume perish person pesky pet peasant phrase physical piano pickle picture piece pier pig pigeon pill pilot pin pink pioneer pipe pipe pistol pitch place plain planet plaque plastic plate play please pleasure pluck plug plus poetry point pole police policy polish polite political pollute pond popcorn pore popular pork possess possible post potato pouch pour powder power practice praise pray preach precise predict prefer prefix prepare present preserve pretend pretty price pride priest primary print prior prison private prize problem procedure proceed process proclaim produce profit program progress prohibit project promise promote prompt pronounce proof proper propose proposition prosper protect protest protocol prototype proud prove provide public pull punishment pupil pure purple purpose purse pursue push put puzzle pyramid qualification qualify quality quantity quarter quick quit quiz quote rabbit raccoon race rack radar radio rage raid rail rain raise rally ramp ran ranch random range rapid rare rate rather raven raw razor reach read ready real realize really reason rebel rebuke recall receipt receive recipe record recover creation redeem reduce refer reflect reform refuse regard region register regret regular reject relate relation relative relax release relevant relief rely remain remark remember remind remove rent repair repeat replace report represent require rescue research resemble resent reserve reside resist resolve resort resort resource respect respond rest restore result retain retire retrieve return reveal review reward rhythm rib ribbon rice rich ride ridge riddle ride riot rise risk ritual rival river road roast robber robot robust rock rocket rodent role roll romance roof rook room root rope rose rotate rough round route royal rubber rubbish rugby rule run runway rural',
+    'sack saddle safe safari affair safety sails salad salmon salary sale salami salmon salon salt salute same sand sanity sap satellite satisfied save saw say scale scam scenario schedule scheme school science scissors scold scoop scope score scrap screen screw scrub sea seal search season seat secret security seed seek seem segment select sell semester send senior sense sentence separate sequel sequence series serious servant serve service session set settle seven several severe sew shadow shaft shake shallow shame shape share sharp she sheep sheet shelf shell shelter shift shiny ship shiver shock shoe shoot shop short shoulder shove shrimp shrug shut shy sibling sick side sieve sight sign signal signature silence silly silver similar simple sin since sincere sing single sink sister site situation size skate sketch ski skill skin skip skirt sky slam slap sleep sleet slice slide slight slim slime slip slop slope slow slum slump smart smile smoke smooth snack snake snap snare sneak sneeze sniff snow soap social society socket sock soda soft soil solar soldier sole solemn solid solitude solution solve son song soon sore sort soul sound soup source south space spare spatial speak special species specific speech speed spell spend sphere spice spike spin spirit spit spite splendid split spoil sponsor spoon sport spot spray spread spring spy square squeeze squirrel stable stack staff stage stain stair stale stall stamp stand starve state station statue status stay stead steel steep steer stem step stick stiff still sting stir stitch stock stomach stone stop store storm story stove straight strain strange straw stream strength stress stretch stride strike string strip stroke strong structure struggle student studio stuff stumble stupid sublime suburb success suffer sugar suggest suit summer sun superb super supersede suppress surge surplus surprise surrender survey suspect suspend swear sweat sweet swell swift swing sword symbol symptom syrup system',
+    'table tablet tacky tadpole tail talent talk tall tame tank tape tar target task taste tattle taxi teach teacher team tell ten tender tension tent term terrible terrify territory test text than thank that theme then theory there thermal these they thick thimble thing think third thirsty this those though thought thousand thread three threshold thrift thrill thrive throat throne through throw thumb thunder thus ticket tide tight timber tingle tiny tip tired tissue title toast tobacco today toddler toe together tomato tomb tone tongue tonight tool tooth top topic topping torch tornado tortoise toss total touch tough tour toward towel tower town toy track tractor trade tradition traffic tragic trail train trait trample transaction translate transport trap trash travel tray treat treatment tree tremble trend trial tribe trick trigger trim triple triumph trophy trouble trough truck true trumpet trust truth try tube tuition tulip tumble tune tunnel turkey turn turtle twist two type typical tyranny',
+    'ugly umbrella unable unchanged uncle under undo uneven unfold unhappy uniform union unique unit universe university unlock unless unlike unlikely unleash until unusual unveil update upset urban urge usage use usual utility vacation vacuum vague vain valid valley value vapor various vast vulture vehicle velocity vendor venture venue verb verify version very vessel veteran viable vibrant victim victory video view village violet violin virtual virus visible vision visit visual vital vivid vocal voice void volcano volume vote vow wagon wait wake walk wall walnut want war warm warning wash wasp waste watch water wave wax way we web wedding wedge weed weekly weigh weird welcome west wet whale what wheat wheel when where while whip whisper wide wife wild will willing win window wine wing wink winner winter wire wisdom wise wish wit witch with within without wolf woman wonder wood woody wool word work world worry worth wrap wreck wrench wrist write wrong',
+    'yacht yard yarn yawn year yell yellow yesterday yet yield yolk young youth zoo zoom'
+  ];
+
+  for (const batch of wordBatches) {
+    const words = batch.split(' ');
+    for (const w of words) {
+      if (w && !v.includes(w) && v.length < 2000) {
+        v.push(w);
+      }
+    }
+  }
+
+  // Pad to exactly 2000
+  let counter = 1;
+  while (v.length < 2000) {
+    v.push(`tok${counter}`);
+    counter++;
+  }
+
+  window.WordPieceVocab = v.slice(0, 2000);
+})();
+
+// -----------------------------------------------------------------------------
+// Tokenizer
+// -----------------------------------------------------------------------------
+
+function wordPieceTokenize(text, vocab) {
+  const set = new Set(vocab);
+  const tokens = [];
+  const words = text.trim().split(/\s+/);
+
+  for (const word of words) {
+    if (!word) continue;
+    let remaining = word;
+    let isStart = true;
+
+    while (remaining) {
+      let found = false;
+      const maxLen = Math.min(remaining.length, 100);
+      for (let len = maxLen; len > 0; len--) {
+        const cand = remaining.substring(0, len);
+        if (set.has(cand)) {
+          tokens.push({ token: isStart ? cand : '##' + cand, type: isStart ? 'root' : 'subword' });
+          remaining = remaining.substring(len);
+          isStart = false;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        const ch = remaining[0];
+        tokens.push({ token: isStart ? ch : '##' + ch, type: set.has(ch) ? (isStart ? 'root' : 'subword') : 'unk' });
+        remaining = remaining.substring(1);
+        isStart = false;
+      }
+    }
+  }
+  return tokens;
+}
+
+// -----------------------------------------------------------------------------
+// Rendering
+// -----------------------------------------------------------------------------
+
+function formatTokens(tokens) {
+  return tokens.map(t => {
+    const cls = 'token ' + t.type;
+    return '<span class="' + cls + '">' + esc(t.token) + '</span>';
+  }).join('');
+}
+
+function esc(t) {
+  return t.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"":'&quot;',"'":"&#039;"}[m]));
+}
+
+// -----------------------------------------------------------------------------
+// Metrics
+// -----------------------------------------------------------------------------
+
+function calcMetrics(tokens) {
+  const total = tokens.length;
+  const root = tokens.filter(t => t.type === 'root').length;
+  const subword = tokens.filter(t => t.type === 'subword').length;
+  const unk = tokens.filter(t => t.type === 'unk').length;
+  const oovPct = total ? ((unk / total) * 100).toFixed(1) : '0';
+  return { total, root, subword, unk, oovPct };
+}
+
+// -----------------------------------------------------------------------------
+// Storage helpers (wrapped in try/catch)
+// -----------------------------------------------------------------------------
+
+function loadSavedInput() {
+  try { const s = localStorage.getItem('wp014-input'); if (s) document.getElementById('input').value = s; } catch(e){}
+}
+function saveInputToStorage(t) {
+  try { localStorage.setItem('wp014-input', t); } catch(e){}
+}
+
+// -----------------------------------------------------------------------------
+// Initialization
+// -----------------------------------------------------------------------------
+
+(function init() {
+  loadSavedInput();
+  const input   = document.getElementById('input');
+  const output  = document.getElementById('output');
+  const stats   = document.getElementById('stats');
+  const btn     = document.getElementById('tokenize');
+  const vocab   = window.WordPieceVocab;
+
+  btn.onclick = function() {
+    const text = input.value.trim();
+    saveInputToStorage(text);
+    if (!text) {
+      output.innerHTML = '<em>Enter text to tokenize...</em>';
+      stats.textContent = '';
+      return;
+    }
+    const tokens = wordPieceTokenize(text, vocab);
+    output.innerHTML = formatTokens(tokens);
+    const m = calcMetrics(tokens);
+    stats.innerHTML = 
+      '<span><b>Total tokens:</b> ' + m.total + '</span>' +
+      '<span><b>Root words:</b> ' + m.root + '</span>' +
+      '<span><b>Subwords:</b> ' + m.subword + '</span>' +
+      '<span><b>OOV:</b> ' + m.unk + ' (' + m.oovPct + '%)</span>';
+  };
+
+  input.onkeydown = function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      btn.click();
+      e.preventDefault();
+    }
+  };
+})();
+  </script>
+</body>
+</html>

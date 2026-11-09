@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Positional Encoding Wave Viewer · Project 503 · D-CREATIONS</title>
+  <link rel="canonical" href="https://dcreations.fr/503/018-positional-encoding-wave-viewer/">
+  <meta name="description" content="Interactive sine and cosine positional encoding explorer with RoPE rotation sliders.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      min-height: 100vh;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    h1 {
+      font-size: 1.4em;
+      margin: 8px 0;
+    }
+    p {
+      color: var(--text-2);
+      font-size: 0.9em;
+      margin-bottom: 16px;
+    }
+    .header-link {
+      display: inline-block;
+      margin-bottom: 8px;
+      font-size: 0.9em;
+    }
+    .controls {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .slider-group {
+      margin-bottom: 10px;
+    }
+    .slider-group:last-child {
+      margin-bottom: 0;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85em;
+      margin-bottom: 4px;
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: var(--line);
+      border-radius: 3px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      background: var(--text);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      background: var(--text);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+    #waveCanvas {
+      width: 100%;
+      height: 400px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: block;
+    }
+    footer {
+      margin-top: 16px;
+      font-size: 0.8em;
+      color: var(--text-2);
+      text-align: center;
+    }
+    @media (max-width: 400px) {
+      #waveCanvas {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="/503/" class="header-link">← Project 503</a>
+  <h1>Positional Encoding Wave Viewer</h1>
+  <p>Interactive sine and cosine positional encoding explorer with RoPE rotation.</p>
+
+  <div class="controls">
+    <div class="slider-group">
+      <label>
+        <span>Sequence Length</span>
+        <span id="seqLenValue">50</span>
+      </label>
+      <input type="range" id="seqLen" min="10" max="200" value="50">
+    </div>
+    <div class="slider-group">
+      <label>
+        <span>Dimensions</span>
+        <span id="dimValue">8</span>
+      </label>
+      <input type="range" id="dim" min="2" max="32" step="2" value="8">
+    </div>
+    <div class="slider-group">
+      <label>
+        <span>Base</span>
+        <span id="baseValue">10000</span>
+      </label>
+      <input type="range" id="base" min="100" max="100000" step="100" value="10000">
+    </div>
+    <div class="slider-group">
+      <label>
+        <span>Rotation</span>
+        <span id="rotValue">0</span>
+      </label>
+      <input type="range" id="rot" min="0" max="360" value="0">
+    </div>
+    <div class="slider-group">
+      <label>
+        <span>Scale</span>
+        <span id="scaleValue">1.0</span>
+      </label>
+      <input type="range" id="scale" min="0.1" max="2" step="0.1" value="1">
+    </div>
+  </div>
+
+  <canvas id="waveCanvas"></canvas>
+
+  <footer>
+    Project #18 of 503 · Daniel Madac, D-CREATIONS
+  </footer>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const canvas = document.getElementById('waveCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // Slider elements
+      const seqLenSlider = document.getElementById('seqLen');
+      const dimSlider = document.getElementById('dim');
+      const baseSlider = document.getElementById('base');
+      const rotSlider = document.getElementById('rot');
+      const scaleSlider = document.getElementById('scale');
+
+      // Value displays
+      const seqLenValue = document.getElementById('seqLenValue');
+      const dimValue = document.getElementById('dimValue');
+      const baseValue = document.getElementById('baseValue');
+      const rotValue = document.getElementById('rotValue');
+      const scaleValue = document.getElementById('scaleValue');
+
+      // Color helpers - canvas accepts hex colors directly
+      function getComputedColor(cssVar) {
+        const root = document.documentElement;
+        const value = getComputedStyle(root).getPropertyValue(cssVar).trim();
+        return value || '#000';
+      }
+
+      // Generate hue-based colors for dimensions
+      function getColorForDim(index, total) {
+        const hue = (index * 30) % 360;
+        return `hsl(${hue}, 70%, 50%)`;
+      }
+
+      // Calculate positional encoding value using standard RoPE formula
+      // For dimension dim: pair index i = floor(dim/2)
+      // PE(pos, 2i) = sin(pos / base^(2i/totalDims))
+      // PE(pos, 2i+1) = cos(pos / base^(2i/totalDims))
+      function calculatePE(pos, dim, totalDims, base, rotation, scale) {
+        const pairIndex = Math.floor(dim / 2);
+        const exponent = (2 * pairIndex / totalDims) * scale;
+        const denominator = Math.pow(base, exponent);
+        const angle = pos / denominator;
+        
+        // Apply rotation as phase shift
+        const rotatedAngle = angle + (rotation * Math.PI / 180);
+        
+        // Within each pair: first is sine, second is cosine
+        return (dim % 2 === 0) ? Math.sin(rotatedAngle) : Math.cos(rotatedAngle);
+      }
+
+      // Main draw function
+      function draw() {
+        const seqLen = parseInt(seqLenSlider.value);
+        const numDims = parseInt(dimSlider.value);
+        const base = parseInt(baseSlider.value);
+        const rotation = parseInt(rotSlider.value);
+        const scale = parseFloat(scaleSlider.value);
+
+        // Update displayed values
+        seqLenValue.textContent = seqLen;
+        dimValue.textContent = numDims;
+        baseValue.textContent = base;
+        rotValue.textContent = rotation;
+        scaleValue.textContent = scale.toFixed(1);
+
+        // Set canvas dimensions
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
+
+        // Get colors from CSS variables (canvas accepts hex directly)
+        const bgColor = getComputedColor('--card');
+        const textColor = getComputedColor('--text');
+        const lineColor = getComputedColor('--line');
+
+        // Clear canvas
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, width, height);
+
+        // Padding and draw area - leave room for legend on right
+        const legendWidth = Math.min(80, width * 0.2);
+        const padding = { top: 20, right: legendWidth, bottom: 40, left: 50 };
+        const drawWidth = width - padding.left - padding.right;
+        const drawHeight = height - padding.top - padding.bottom;
+        const x0 = padding.left;
+        const y0 = padding.top;
+
+        // Draw axes
+        ctx.strokeStyle = textColor;
+        ctx.lineWidth = 1;
+        
+        // X-axis (Position)
+        ctx.beginPath();
+        ctx.moveTo(x0, y0 + drawHeight);
+        ctx.lineTo(x0 + drawWidth, y0 + drawHeight);
+        ctx.stroke();
+
+        // Y-axis
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x0, y0 + drawHeight);
+        ctx.stroke();
+
+        // Draw grid lines
+        ctx.strokeStyle = lineColor;
+        ctx.lineWidth = 0.5;
+
+        // Horizontal grid (Y-axis values)
+        for (let i = -1; i <= 1; i += 0.5) {
+          const y = y0 + drawHeight * (1 - ((i + 1) / 2));
+          ctx.beginPath();
+          ctx.moveTo(x0, y);
+          ctx.lineTo(x0 + drawWidth, y);
+          ctx.stroke();
+
+          // Label
+          ctx.fillStyle = textColor;
+          ctx.font = '10px system-ui';
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(i.toFixed(1), x0 - 8, y);
+        }
+
+        // Vertical grid (Position labels - show a few)
+        const numXLabels = 5;
+        for (let i = 0; i <= numXLabels; i++) {
+          const pos = Math.floor((i / numXLabels) * seqLen);
+          const x = x0 + (i / numXLabels) * drawWidth;
+          ctx.beginPath();
+          ctx.moveTo(x, y0);
+          ctx.lineTo(x, y0 + drawHeight);
+          ctx.stroke();
+
+          // Label
+          ctx.fillStyle = textColor;
+          ctx.font = '10px system-ui';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText(pos, x, y0 + drawHeight + 8);
+        }
+
+        // Draw each dimension's wave
+        ctx.lineWidth = 2;
+        
+        // Calculate max legend items that fit
+        const legendItemHeight = 14;
+        const maxLegendItems = Math.floor(drawHeight / legendItemHeight) - 1;
+        const showLegend = legendWidth > 40;
+
+        for (let dim = 0; dim < numDims; dim++) {
+          ctx.strokeStyle = getColorForDim(dim, numDims);
+          ctx.beginPath();
+
+          for (let pos = 0; pos < seqLen; pos++) {
+            const peValue = calculatePE(pos, dim, numDims, base, rotation, scale);
+            
+            // Map position to x coordinate
+            const x = x0 + (pos / (seqLen - 1)) * drawWidth;
+            
+            // Map PE value (-1 to 1) to y coordinate (1 at top, -1 at bottom)
+            const y = y0 + drawHeight * (1 - ((peValue + 1) / 2));
+
+            if (pos === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+
+          ctx.stroke();
+
+          // Add legend if there's space
+          if (showLegend && dim < maxLegendItems) {
+            const legendX = x0 + drawWidth + 10;
+            const legendY = y0 + 20 + (dim * legendItemHeight);
+            ctx.fillStyle = getColorForDim(dim, numDims);
+            ctx.font = '11px system-ui';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`d=${dim}`, legendX, legendY);
+          }
+        }
+
+        // Title
+        ctx.fillStyle = textColor;
+        ctx.font = 'bold 12px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('Positional Encoding Waves', width / 2, y0 - 8);
+
+        // X-axis label
+        ctx.font = '10px system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('Position', width / 2, y0 + drawHeight + 20);
+
+        // Y-axis label - positioned in left padding area
+        ctx.save();
+        ctx.translate(padding.left / 2, y0 + drawHeight / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Encoding Value', 0, 0);
+        ctx.restore();
+      }
+
+      // Event listeners
+      function update() {
+        try {
+          draw();
+        } catch (e) {
+          console.error('Error drawing:', e);
+        }
+      }
+
+      seqLenSlider.addEventListener('input', update);
+      dimSlider.addEventListener('input', update);
+      baseSlider.addEventListener('input', update);
+      rotSlider.addEventListener('input', update);
+      scaleSlider.addEventListener('input', update);
+
+      // Initialize with color scheme preference
+      // Check if user has a preference stored
+      let colorScheme = 'system';
+      try {
+        colorScheme = localStorage.getItem('colorScheme') || 'system';
+      } catch (e) {
+        // localStorage access failed, use system
+      }
+
+      // Apply color scheme if needed
+      // For now, the CSS media query handles it automatically
+
+      // Initial draw
+      update();
+
+      // Redraw on resize
+      window.addEventListener('resize', function() {
+        // Use requestAnimationFrame to avoid multiple rapid redraws
+        if (window.resizeTimer) {
+          clearTimeout(window.resizeTimer);
+        }
+        window.resizeTimer = setTimeout(update, 100);
+      });
+
+      // Observe color scheme changes
+      const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      darkModeQuery.addEventListener('change', update);
+    })();
+  </script>
+</body>
+</html>

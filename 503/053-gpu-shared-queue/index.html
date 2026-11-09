@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GPU Shared Queue · Project 503 · D-CREATIONS</title>
+  <meta name="description" content="Demonstrates a shared queue where multiple jobs can use a single GPU in time slices.">
+  <link rel="canonical" href="https://dcreations.fr/503/053-gpu-shared-queue/">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --shadow: rgba(0,0,0,.1);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); line-height: 1.5; padding: 1rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header, footer { text-align: center; padding: 1rem 0; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px var(--shadow); }
+    h1, h2, h3 { margin-bottom: 1rem; }
+    .queue-list { list-style: none; }
+    .queue-item { padding: 1rem; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+    .queue-item:last-child { border-bottom: none; }
+    .status { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem; }
+    .status.waiting { background: #ffeb3b; color: #111; }
+    .status.running { background: #4caf50; color: white; }
+    .status.completed { background: #2196f3; color: white; }
+    .controls { display: flex; gap: 0.5rem; margin-top: 1rem; }
+    button { padding: 0.5rem 1rem; border: none; border-radius: 4px; background: var(--text); color: var(--card); cursor: pointer; }
+    button:hover { opacity: 0.9; }
+    .job-form { display: flex; gap: 0.5rem; margin-top: 1rem; }
+    input, select { padding: 0.5rem; border: 1px solid var(--line); border-radius: 4px; background: var(--card); color: var(--text); flex: 1; }
+    .info { font-size: 0.875rem; color: var(--text-2); margin-top: 0.5rem; }
+    .gpu-status { display: flex; justify-content: space-between; padding: 1rem; background: var(--card); border-radius: 8px; margin-top: 1rem; }
+    .gpu-status span { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+
+    <main>
+      <h1>GPU Shared Queue</h1>
+      <p>Demonstrates a shared queue where multiple jobs can use a single GPU in time slices.</p>
+
+      <div class="card">
+        <h2>Add Job</h2>
+        <form id="jobForm" class="job-form">
+          <input type="text" id="jobName" placeholder="Job name" required>
+          <select id="priority">
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+          </select>
+          <button type="submit">Add Job</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Queue</h2>
+        <ul id="queueList" class="queue-list"></ul>
+        <div class="info">Jobs are processed in time slices. High priority jobs run first.</div>
+      </div>
+
+      <div class="card">
+        <h2>GPU Status</h2>
+        <div class="gpu-status">
+          <span id="currentJob">Idle</span>
+          <span id="queueCount">0 jobs queued</span>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Project #53 of 503 · Daniel Madac, D-CREATIONS</p>
+    </footer>
+  </div>
+
+  <script>
+    const queue = [];
+    let currentJob = null;
+    let isProcessing = false;
+
+    const jobForm = document.getElementById('jobForm');
+    const queueList = document.getElementById('queueList');
+    const currentJobEl = document.getElementById('currentJob');
+    const queueCountEl = document.getElementById('queueCount');
+
+    function saveQueue() {
+      try {
+        localStorage.setItem('gpuQueue', JSON.stringify(queue));
+        localStorage.setItem('currentJob', JSON.stringify(currentJob));
+      } catch (e) {}
+    }
+
+    function loadQueue() {
+      try {
+        const savedQueue = localStorage.getItem('gpuQueue');
+        if (savedQueue) queue.push(...JSON.parse(savedQueue));
+        
+        const savedCurrent = localStorage.getItem('currentJob');
+        if (savedCurrent) currentJob = JSON.parse(savedCurrent);
+      } catch (e) {}
+    }
+
+    function renderQueue() {
+      queueList.innerHTML = '';
+      queue.forEach((job, index) => {
+        const li = document.createElement('li');
+        li.className = 'queue-item';
+        li.innerHTML = `
+          <div>
+            <strong>${job.name}</strong> <span style="color: var(--text-2);">(${job.priority})</span>
+          </div>
+          <span class="status ${job.status}">${job.status}</span>
+        `;
+        queueList.appendChild(li);
+      });
+      
+      queueCountEl.textContent = `${queue.length} job${queue.length !== 1 ? 's' : ''} queued`;
+    }
+
+    function updateGPUStatus() {
+      currentJobEl.textContent = currentJob ? currentJob.name : 'Idle';
+    }
+
+    function addJob(name, priority) {
+      const job = {
+        id: Date.now(),
+        name,
+        priority,
+        status: 'waiting'
+      };
+      queue.push(job);
+      saveQueue();
+      renderQueue();
+      updateGPUStatus();
+      
+      if (!isProcessing) {
+        processQueue();
+      }
+    }
+
+    function processQueue() {
+      if (queue.length === 0 || isProcessing) return;
+      
+      isProcessing = true;
+      
+      // Sort by priority: high first
+      queue.sort((a, b) => {
+        if (a.priority === 'high' && b.priority === 'normal') return -1;
+        if (b.priority === 'high' && a.priority === 'normal') return 1;
+        return 0;
+      });
+      
+      const job = queue[0];
+      job.status = 'running';
+      currentJob = job;
+      saveQueue();
+      renderQueue();
+      updateGPUStatus();
+      
+      // Simulate processing time
+      setTimeout(() => {
+        job.status = 'completed';
+        queue.shift();
+        currentJob = null;
+        saveQueue();
+        renderQueue();
+        updateGPUStatus();
+        isProcessing = false;
+        
+        if (queue.length > 0) {
+          processQueue();
+        }
+      }, 3000);
+    }
+
+    jobForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('jobName').value;
+      const priority = document.getElementById('priority').value;
+      
+      addJob(name, priority);
+      
+      document.getElementById('jobName').value = '';
+      document.getElementById('priority').value = 'normal';
+    });
+
+    loadQueue();
+    renderQueue();
+    updateGPUStatus();
+  </script>
+</body>
+</html>

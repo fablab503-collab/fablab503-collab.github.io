@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script>
+window.__p503 = [];
+addEventListener('error', function (e) { __p503.push('JS error: ' + e.message); });
+addEventListener('unhandledrejection', function (e) { __p503.push('Promise error: ' + (e.reason && e.reason.message || e.reason)); });
+addEventListener('load', function () {
+  setTimeout(function () {
+    try {
+      document.querySelectorAll('textarea, input[type=text], input:not([type])').forEach(function (el) {
+        el.value = el.value || 'Hello world, this is a test 123.';
+        el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      document.querySelectorAll('input[type=range], input[type=number]').forEach(function (el) {
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      document.querySelectorAll('button').forEach(function (b) { if (!/reset|clear|delete/i.test(b.textContent)) b.click(); });
+    } catch (e) { __p503.push('JS error during use: ' + e.message); }
+    setTimeout(function () {
+      var d = document.createElement('pre'); d.id = '__p503'; d.textContent = 'P503RESULT' + JSON.stringify(__p503) + 'P503END';
+      document.body.appendChild(d);
+    }, 1500);
+  }, 800);
+});
+</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bpe Tokenizer Playground · Project 503 · D-CREATIONS</title>
+  <meta name="description" content="Interactive byte-pair encoding visualizer that splits user text into subword tokens and displays compression ratios.">
+  <link rel="canonical" href="https://dcreations.fr/503/013-bpe-tokenizer-playground/">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      margin: 0;
+      padding: 1rem;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.5;
+      min-width: 375px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      padding: 0.5rem;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--text);
+      font-family: var(--font);
+      resize: vertical;
+    }
+    button {
+      margin-top: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-family: var(--font);
+      cursor: pointer;
+    }
+    button:hover {
+      background: var(--line);
+    }
+    .output {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border: 1px solid var(--line);
+      background: var(--card);
+    }
+    .tokens {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-top: 0.5rem;
+    }
+    .token {
+      padding: 0.25rem 0.5rem;
+      background: var(--line);
+      border-radius: 4px;
+    }
+    .stats {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: var(--text-2);
+    }
+    .merge-steps {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border: 1px solid var(--line);
+      background: var(--card);
+    }
+    .step {
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .step:last-child {
+      border-bottom: none;
+    }
+    .highlight {
+      background: #ffeb3b;
+    }
+    .dark-mode-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+    }
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-2);
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/503/" class="back-link">← Project 503</a>
+    <h1>Bpe Tokenizer Playground</h1>
+    <textarea id="input-text" placeholder="Enter text to tokenize...">Hello world, this is a test of byte-pair encoding.</textarea>
+    <button id="tokenize-btn">Tokenize Text</button>
+    <div class="output">
+      <div id="tokens-output"></div>
+      <div id="stats-output" class="stats"></div>
+    </div>
+    <div id="merge-steps" class="merge-steps"></div>
+  </div>
+  <footer>
+    Project #13 of 503 · Daniel Madac, D-CREATIONS
+  </footer>
+
+  <script>
+    const inputText = document.getElementById('input-text');
+    const tokenizeBtn = document.getElementById('tokenize-btn');
+    const tokensOutput = document.getElementById('tokens-output');
+    const statsOutput = document.getElementById('stats-output');
+    const mergeSteps = document.getElementById('merge-steps');
+
+    // Initialize vocabulary with basic characters
+    let vocab = new Map();
+    let merges = [];
+
+    function initializeVocab(text) {
+      vocab.clear();
+      merges = [];
+      
+      // Add all unique characters as initial tokens
+      for (let char of text) {
+        if (!vocab.has(char)) {
+          const id = vocab.size;
+          vocab.set(char, id);
+        }
+      }
+      
+      // Add special tokens
+      vocab.set('<unk>', vocab.size);
+      vocab.set('<pad>', vocab.size);
+    }
+
+    function getVocabSize() {
+      return vocab.size;
+    }
+
+    function encode(text) {
+      // Simple BPE-like encoding
+      const tokens = [];
+      const words = text.split(/\s+/).filter(w => w.length > 0);
+      
+      for (const word of words) {
+        let chars = [...word];
+        if (chars.length === 0) continue;
+        
+        // Start with character-level tokens
+        let tokenList = chars.map(c => vocab.get(c));
+        
+        // Apply merges step by step
+        const steps = [];
+        while (tokenList.length > 1) {
+          let minPair = null;
+          let minCount = Infinity;
+          
+          for (let i = 0; i < tokenList.length - 1; i++) {
+            const pair = `${tokenList[i]}_${tokenList[i+1]}`;
+            if (merges.includes(pair)) {
+              const count = merges.filter(p => p === pair).length;
+              if (count < minCount) {
+                minCount = count;
+                minPair = [i, i + 1];
+              }
+            }
+          }
+          
+          if (!minPair) break;
+          
+          const [i, j] = minPair;
+          const newToken = `${tokenList[i]}_${tokenList[j]}`;
+          merges.push(newToken);
+          steps.push({
+            from: [tokenList[i], tokenList[j]],
+            to: newToken
+          });
+          
+          // Replace pair with new token
+          tokenList.splice(i, 2, tokenList[i] + '_' + tokenList[j]);
+        }
+        
+        tokens.push(...tokenList);
+      }
+      
+      return { tokens, steps };
+    }
+
+    function tokenize() {
+      const text = inputText.value.trim();
+      if (!text) return;
+      
+      initializeVocab(text);
+      const result = encode(text);
+      
+      // Display tokens
+      tokensOutput.innerHTML = '';
+      const tokenContainer = document.createElement('div');
+      tokenContainer.className = 'tokens';
+      
+      result.tokens.forEach(token => {
+        const span = document.createElement('span');
+        span.className = 'token';
+        span.textContent = token;
+        tokenContainer.appendChild(span);
+      });
+      
+      tokensOutput.appendChild(tokenContainer);
+      
+      // Display stats
+      const originalLength = text.length;
+      const tokenCount = result.tokens.length;
+      const compressionRatio = (originalLength / tokenCount).toFixed(2);
+      
+      statsOutput.innerHTML = `
+        Original length: ${originalLength} characters<br>
+        Token count: ${tokenCount}<br>
+        Compression ratio: ${compressionRatio}:1
+      `;
+      
+      // Display merge steps
+      mergeSteps.innerHTML = '<h3>Merge Steps</h3>';
+      result.steps.forEach((step, index) => {
+        const stepDiv = document.createElement('div');
+        stepDiv.className = 'step';
+        stepDiv.textContent = `Step ${index + 1}: Merge ${step.from[0]} and ${step.from[1]} into ${step.to}`;
+        mergeSteps.appendChild(stepDiv);
+      });
+    }
+
+    tokenizeBtn.addEventListener('click', tokenize);
+
+    // Initialize on load
+    window.addEventListener('load', () => {
+      try {
+        const savedText = localStorage.getItem('bpe_text');
+        if (savedText) inputText.value = savedText;
+      } catch (e) {}
+      
+      tokenize();
+    });
+
+    // Save text to localStorage
+    inputText.addEventListener('input', () => {
+      try {
+        localStorage.setItem('bpe_text', inputText.value);
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>

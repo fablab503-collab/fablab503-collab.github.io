@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Text Summariser · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/058-text-summariser/">
+  <meta name="description" content="Extract key sentences from input text using extractive summarisation with a score-based ranking algorithm.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 1rem; }
+    main { max-width: 800px; margin: 0 auto; }
+    h1 { margin-bottom: 1rem; font-size: 1.5rem; }
+    textarea, button, output { width: 100%; padding: 0.75rem; border: 1px solid var(--line); border-radius: 4px; }
+    textarea { min-height: 200px; resize: vertical; background-color: var(--card); color: var(--text); }
+    button { background-color: var(--card); cursor: pointer; font-weight: bold; margin-top: 0.5rem; }
+    output { margin-top: 1rem; min-height: 100px; padding: 1rem; background-color: var(--card); border: 1px solid var(--line); }
+    .info { color: var(--text-2); font-size: 0.9rem; margin-top: 0.5rem; }
+    footer { margin-top: 2rem; text-align: center; color: var(--text-2); font-size: 0.9rem; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="/503/">← Project 503</a>
+    <h1>Text Summariser</h1>
+    <p>Enter text to extract key sentences using extractive summarisation.</p>
+    <textarea id="input" placeholder="Paste your text here..."></textarea>
+    <button id="summarize">Summarise</button>
+    <output id="output"></output>
+    <div class="info">Summary uses a score-based ranking algorithm to select key sentences.</div>
+  </main>
+  <footer>
+    Project #58 of 503 · Daniel Madac, D-CREATIONS
+  </footer>
+
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const button = document.getElementById('summarize');
+
+    function scoreSentence(sentence, wordFreq) {
+      const words = sentence.toLowerCase().match(/\w+/g) || [];
+      return words.reduce((score, word) => score + (wordFreq[word] || 0), 0);
+    }
+
+    function getWordFrequency(text) {
+      const words = text.toLowerCase().match(/\w+/g) || [];
+      const freq = {};
+      words.forEach(word => freq[word] = (freq[word] || 0) + 1);
+      return freq;
+    }
+
+    function summarizeText(text, numSentences = 3) {
+      if (!text.trim()) return '';
+      
+      const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+      const wordFreq = getWordFrequency(text);
+      
+      const scored = sentences.map(sentence => ({
+        sentence: sentence.trim(),
+        score: scoreSentence(sentence, wordFreq)
+      })).sort((a, b) => b.score - a.score);
+      
+      return scored.slice(0, numSentences).map(s => s.sentence).join(' ');
+    }
+
+    button.addEventListener('click', () => {
+      try {
+        const summary = summarizeText(input.value);
+        output.textContent = summary || 'No summary generated.';
+        
+        // Save to localStorage
+        localStorage.setItem('summaryText', input.value);
+        localStorage.setItem('summaryResult', summary);
+      } catch (e) {
+        console.error(e);
+        output.textContent = 'Error generating summary.';
+      }
+    });
+
+    // Load saved text on page load
+    try {
+      const savedText = localStorage.getItem('summaryText');
+      if (savedText) input.value = savedText;
+    } catch (e) {
+      console.error(e);
+    }
+  </script>
+</body>
+</html>

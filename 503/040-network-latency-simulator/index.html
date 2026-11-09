@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Network Latency Simulator · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/040-network-latency-simulator/">
+  <meta name="description" content="Simulate inter-device communication latency and its impact on distributed inference.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --primary: #007bff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 1rem; line-height: 1.5; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header, footer { text-align: center; padding: 1rem 0; }
+    header a { color: var(--primary); text-decoration: none; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    input, button { padding: 0.5rem; border: 1px solid var(--line); border-radius: 4px; background: var(--card); color: var(--text); }
+    button { cursor: pointer; font-weight: bold; }
+    .controls { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+    .latency-display { font-size: 1.2rem; text-align: center; margin: 1rem 0; }
+    .simulation { height: 200px; display: flex; align-items: center; justify-content: center; background: var(--card); border: 1px solid var(--line); border-radius: 8px; margin: 1rem 0; }
+    .device { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .server { background: #007bff; color: white; }
+    .client { background: #28a745; color: white; }
+    .latency-bar { height: 10px; background: var(--line); border-radius: 5px; margin: 1rem 0; overflow: hidden; }
+    .latency-fill { height: 100%; background: #007bff; width: 0%; transition: width 0.3s ease; }
+    .status { text-align: center; padding: 1rem; font-weight: bold; color: var(--primary); }
+    footer { border-top: 1px solid var(--line); margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+    
+    <main>
+      <h1>Network Latency Simulator</h1>
+      
+      <div class="card">
+        <div class="controls">
+          <input type="range" id="latency" min="0" max="500" value="100">
+          <label for="latency">Latency: <span id="latency-value">100</span>ms</label>
+        </div>
+        
+        <div class="latency-display">
+          <p>Current latency: <span id="current-latency">100</span>ms</p>
+        </div>
+        
+        <div class="latency-bar">
+          <div class="latency-fill" id="latency-fill"></div>
+        </div>
+        
+        <button id="start-btn">Start Simulation</button>
+        <button id="reset-btn">Reset</button>
+      </div>
+      
+      <div class="card">
+        <h2>Simulation</h2>
+        <div class="simulation" id="simulation">
+          <div class="device server">Server</div>
+          <div class="device client">Client</div>
+        </div>
+        <div class="status" id="status">Ready to start simulation</div>
+      </div>
+    </main>
+    
+    <footer>
+      Project #40 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const latencySlider = document.getElementById('latency');
+    const latencyValue = document.getElementById('latency-value');
+    const currentLatency = document.getElementById('current-latency');
+    const latencyFill = document.getElementById('latency-fill');
+    const startBtn = document.getElementById('start-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const simulation = document.getElementById('simulation');
+    const statusEl = document.getElementById('status');
+
+    let latency = 100;
+    let isRunning = false;
+
+    function updateLatencyDisplay() {
+      latency = parseInt(latencySlider.value);
+      latencyValue.textContent = latency;
+      currentLatency.textContent = latency;
+      latencyFill.style.width = `${(latency / 500) * 100}%`;
+    }
+
+    function simulateInference() {
+      if (isRunning) return;
+      
+      isRunning = true;
+      statusEl.textContent = "Sending request...";
+      
+      const startTime = Date.now();
+      const duration = latency + Math.random() * 50; // Add some randomness
+      
+      setTimeout(() => {
+        const endTime = Date.now();
+        const actualDuration = endTime - startTime;
+        
+        statusEl.textContent = `Response received in ${actualDuration.toFixed(0)}ms (latency: ${latency}ms)`;
+        isRunning = false;
+      }, duration);
+    }
+
+    function resetSimulation() {
+      statusEl.textContent = "Ready to start simulation";
+      isRunning = false;
+    }
+
+    latencySlider.addEventListener('input', updateLatencyDisplay);
+    startBtn.addEventListener('click', simulateInference);
+    resetBtn.addEventListener('click', resetSimulation);
+
+    // Load saved settings
+    try {
+      const savedLatency = localStorage.getItem('latencySimulatorLatency');
+      if (savedLatency) {
+        latencySlider.value = savedLatency;
+        updateLatencyDisplay();
+      }
+    } catch (e) {}
+
+    // Save settings on change
+    latencySlider.addEventListener('change', () => {
+      try {
+        localStorage.setItem('latencySimulatorLatency', latencySlider.value);
+      } catch (e) {}
+    });
+
+    updateLatencyDisplay();
+  </script>
+</body>
+</html>

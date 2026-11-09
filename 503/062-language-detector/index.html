@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Language Detector · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/062-language-detector/">
+  <meta name="description" content="Detect the language of text by analyzing character n-gram frequencies.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    header {
+      margin-bottom: 2rem;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    h1 {
+      margin-top: 0;
+    }
+    textarea, button {
+      width: 100%;
+      padding: 0.75rem;
+      font-family: inherit;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background-color: var(--card);
+      color: var(--text);
+      box-sizing: border-box;
+    }
+    button {
+      cursor: pointer;
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+    .result {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+    }
+    .lang-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+    .lang-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .lang-item:last-child {
+      border-bottom: none;
+    }
+    footer {
+      margin-top: auto;
+      text-align: center;
+      color: var(--text-2);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+    
+    <main>
+      <h1>Language Detector</h1>
+      <p>Enter text below to detect its language by analyzing character n-gram frequencies.</p>
+      
+      <textarea id="input" rows="6" placeholder="Paste your text here..."></textarea>
+      <button id="detect">Detect Language</button>
+      
+      <div class="result" id="result" style="display: none;">
+        <h2>Detected Languages</h2>
+        <ul class="lang-list" id="langList"></ul>
+      </div>
+    </main>
+    
+    <footer>
+      Project #62 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const languages = {
+      "English": [
+        "e", "t", "a", "o", "i", "n", "s", "h", "r", "d", "l", "u", "c", "m", "w", "f", "g", "y", "p", "b", "v", "k", "j", "x", "q", "z"
+      ],
+      "French": [
+        "e", "a", "i", "s", "n", "t", "r", "l", "u", "o", "d", "c", "p", "m", "g", "v", "f", "b", "h", "q", "j", "x", "z", "w", "y", "k"
+      ],
+      "German": [
+        "e", "n", "i", "s", "r", "a", "t", "d", "h", "u", "l", "c", "g", "m", "o", "b", "f", "w", "k", "z", "p", "v", "j", "x", "y", "q"
+      ],
+      "Spanish": [
+        "e", "a", "o", "i", "n", "s", "r", "l", "u", "d", "t", "c", "m", "p", "b", "g", "v", "f", "h", "q", "y", "j", "z", "w", "x", "k"
+      ],
+      "Italian": [
+        "e", "a", "i", "o", "n", "l", "r", "s", "t", "u", "d", "c", "m", "p", "g", "v", "f", "b", "h", "z", "q", "w", "y", "x", "j", "k"
+      ]
+    };
+
+    const ngrams = {
+      "English": [
+        "th", "he", "in", "er", "an", "re", "on", "at", "to", "nt", "ha", "es", "st", "en", "ed", "nd", "ha", "ne", "se", "le",
+        "or", "be", "hi", "ng", "co", "me", "de", "ro", "to", "it", "ta", "al", "li", "el", "ma", "ri", "ve", "is", "as", "of"
+      ],
+      "French": [
+        "le", "de", "re", "en", "te", "la", "et", "on", "se", "nt", "ai", "er", "es", "an", "ra", "ir", "ie", "is", "in", "ne",
+        "ou", "me", "mo", "ca", "de", "le", "en", "te", "la", "et", "on", "se", "nt", "ai", "er", "es", "an", "ra", "ir", "ie"
+      ],
+      "German": [
+        "er", "en", "de", "te", "ch", "ei", "nd", "ie", "in", "un", "ge", "he", "be", "al", "da", "an", "st", "au", "se", "es",
+        "it", "or", "ei", "er", "en", "de", "te", "ch", "ei", "nd", "ie", "in", "un", "ge", "he", "be", "al", "da", "an", "st"
+      ],
+      "Spanish": [
+        "de", "la", "en", "que", "y", "se", "no", "es", "lo", "al", "el", "un", "por", "con", "para", "como", "pero", "sin", "más",
+        "son", "había", "hasta", "desde", "entre", "sobre", "antes", "después", "durante", "mediante", "tras", "según", "cuando"
+      ],
+      "Italian": [
+        "re", "le", "di", "la", "ne", "te", "se", "in", "co", "an", "de", "ra", "to", "li", "mo", "ca", "si", "no", "po", "ve",
+        "da", "al", "et", "or", "es", "en", "te", "la", "di", "re", "le", "ne", "se", "in", "co", "an", "de", "ra", "to", "li"
+      ]
+    };
+
+    const input = document.getElementById('input');
+    const detectBtn = document.getElementById('detect');
+    const resultDiv = document.getElementById('result');
+    const langList = document.getElementById('langList');
+
+    function getNgrams(text) {
+      const freq = {};
+      const lowerText = text.toLowerCase();
+      for (let i = 0; i < lowerText.length - 1; i++) {
+        const bigram = lowerText.substring(i, i + 2);
+        freq[bigram] = (freq[bigram] || 0) + 1;
+      }
+      return freq;
+    }
+
+    function calculateSimilarity(textFreq, langFreq) {
+      let score = 0;
+      for (const bigram in textFreq) {
+        if (langFreq.includes(bigram)) {
+          score += textFreq[bigram];
+        }
+      }
+      return score;
+    }
+
+    function detectLanguage() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      const textNgrams = getNgrams(text);
+      const results = [];
+
+      for (const [lang, langNgrams] of Object.entries(ngrams)) {
+        const similarity = calculateSimilarity(textNgrams, langNgrams);
+        results.push({ language: lang, score: similarity });
+      }
+
+      results.sort((a, b) => b.score - a.score);
+
+      langList.innerHTML = '';
+      results.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'lang-item';
+        li.innerHTML = `<span>${item.language}</span><span>${item.score}</span>`;
+        langList.appendChild(li);
+      });
+
+      resultDiv.style.display = 'block';
+    }
+
+    detectBtn.addEventListener('click', detectLanguage);
+
+    // Load saved text
+    try {
+      const savedText = localStorage.getItem('languageDetectorText');
+      if (savedText) input.value = savedText;
+    } catch (e) {}
+
+    // Save text on input
+    input.addEventListener('input', () => {
+      try {
+        localStorage.setItem('languageDetectorText', input.value);
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>

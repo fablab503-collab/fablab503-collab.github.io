@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive VRAM estimator that computes KV-cache footprint from layer count, head dimension, context length, batch size, and quantization bit-width.">
+  <link rel="canonical" href="https://dcreations.fr/503/022-kv-cache-memory-calculator/">
+  <title>Kv Cache Memory Calculator · Project 503 · D-CREATIONS</title>
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .nav {
+      margin-bottom: 24px;
+    }
+    .nav a {
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 0 24px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .field {
+      margin-bottom: 16px;
+    }
+    .field:last-child {
+      margin-bottom: 0;
+    }
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .field-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .field-value {
+      font-size: 15px;
+      color: var(--text-2);
+    }
+    input[type="number"], select {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text);
+    }
+    input[type="number"]:focus, select:focus {
+      outline: none;
+      border-color: var(--text);
+    }
+    .result {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+    .result-label {
+      font-size: 14px;
+      color: var(--text-2);
+      margin-bottom: 8px;
+    }
+    .result-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .footer {
+      margin-top: 32px;
+      font-size: 14px;
+      color: var(--text-2);
+      text-align: center;
+    }
+    @media (max-width: 375px) {
+      body { padding: 16px; }
+      h1 { font-size: 20px; }
+      input[type="number"], select { padding: 8px 10px; font-size: 15px; }
+      .result-value { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <a href="/503/">← Project 503</a>
+  </div>
+
+  <h1>Kv Cache Memory Calculator</h1>
+
+  <div class="card">
+    <div class="field">
+      <div class="field-label">
+        <span class="field-name">Layer count</span>
+        <span class="field-value" id="layer-value">32</span>
+      </div>
+      <input type="number" id="layer-input" min="1" max="1000" value="32">
+    </div>
+
+    <div class="field">
+      <div class="field-label">
+        <span class="field-name">Head dimension</span>
+        <span class="field-value" id="head-dim-value">4096</span>
+      </div>
+      <input type="number" id="head-dim-input" min="1" max="100000" value="4096">
+    </div>
+
+    <div class="field">
+      <div class="field-label">
+        <span class="field-name">Context length</span>
+        <span class="field-value" id="context-value">1024</span>
+      </div>
+      <input type="number" id="context-input" min="1" max="1000000" value="1024">
+    </div>
+
+    <div class="field">
+      <div class="field-label">
+        <span class="field-name">Batch size</span>
+        <span class="field-value" id="batch-value">1</span>
+      </div>
+      <input type="number" id="batch-input" min="1" max="1000" value="1">
+    </div>
+
+    <div class="field">
+      <div class="field-label">
+        <span class="field-name">Quantization</span>
+        <span class="field-value" id="quant-value">16-bit float</span>
+      </div>
+      <select id="quant-input">
+        <option value="32">32-bit float</option>
+        <option value="16" selected>16-bit float</option>
+        <option value="8">8-bit int</option>
+        <option value="4">4-bit int</option>
+      </select>
+    </div>
+
+    <div class="result">
+      <div class="result-label">KV cache memory</div>
+      <div class="result-value" id="result">0.00 MB</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Project #22 of 503 · Daniel Madac, D-CREATIONS
+  </div>
+
+  <script>
+    const inputs = {
+      layer: document.getElementById('layer-input'),
+      headDim: document.getElementById('head-dim-input'),
+      context: document.getElementById('context-input'),
+      batch: document.getElementById('batch-input'),
+      quant: document.getElementById('quant-input')
+    };
+
+    const values = {
+      layer: document.getElementById('layer-value'),
+      headDim: document.getElementById('head-dim-value'),
+      context: document.getElementById('context-value'),
+      batch: document.getElementById('batch-value'),
+      quant: document.getElementById('quant-value')
+    };
+
+    const resultEl = document.getElementById('result');
+
+    function calculate() {
+      const layerCount = Math.max(0, parseInt(inputs.layer.value) || 0);
+      const headDim = Math.max(0, parseInt(inputs.headDim.value) || 0);
+      const contextLen = Math.max(0, parseInt(inputs.context.value) || 0);
+      const batchSize = Math.max(0, parseInt(inputs.batch.value) || 0);
+      const bitWidth = parseInt(inputs.quant.value) || 16;
+
+      // KV cache (MB) = (layers * 2 * batch * context * head_dim * bit_width) / (8 * 1024 * 1024)
+      const bytes = layerCount * 2 * batchSize * contextLen * headDim * (bitWidth / 8);
+      const mb = bytes / (1024 * 1024);
+      const gb = mb / 1024;
+
+      if (mb >= 1024) {
+        resultEl.textContent = gb.toFixed(2) + ' GB';
+      } else if (mb >= 1) {
+        resultEl.textContent = mb.toFixed(2) + ' MB';
+      } else {
+        resultEl.textContent = (mb * 1024).toFixed(2) + ' KB';
+      }
+
+      values.layer.textContent = inputs.layer.value;
+      values.headDim.textContent = inputs.headDim.value;
+      values.context.textContent = inputs.context.value;
+      values.batch.textContent = inputs.batch.value;
+      values.quant.textContent = inputs.quant.options[inputs.quant.selectedIndex].text;
+
+      try {
+        localStorage.setItem('kv-cache-calc', JSON.stringify({
+          layer: inputs.layer.value,
+          headDim: inputs.headDim.value,
+          context: inputs.context.value,
+          batch: inputs.batch.value,
+          quant: inputs.quant.value
+        }));
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem('kv-cache-calc');
+        if (saved) {
+          const state = JSON.parse(saved);
+          inputs.layer.value = state.layer || 32;
+          inputs.headDim.value = state.headDim || 4096;
+          inputs.context.value = state.context || 1024;
+          inputs.batch.value = state.batch || 1;
+          inputs.quant.value = state.quant || 16;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    loadState();
+    calculate();
+
+    inputs.layer.addEventListener('input', calculate);
+    inputs.headDim.addEventListener('input', calculate);
+    inputs.context.addEventListener('input', calculate);
+    inputs.batch.addEventListener('input', calculate);
+    inputs.quant.addEventListener('change', calculate);
+  </script>
+</body>
+</html>

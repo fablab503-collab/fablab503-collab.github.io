@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Job Timeout Tester · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/035-job-timeout-tester/">
+  <meta name="description" content="Demonstrates job timeout behavior with configurable durations and retry logic.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --border-radius: 4px;
+      --transition: all 0.3s ease;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 1rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2rem; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card { background-color: var(--card); border: 1px solid var(--line); border-radius: var(--border-radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+    h1, h2 { margin-bottom: 1rem; }
+    input, button { padding: 0.5rem; border: 1px solid var(--line); border-radius: var(--border-radius); background-color: var(--card); color: var(--text); }
+    input { width: 100%; margin-bottom: 1rem; }
+    button { cursor: pointer; transition: var(--transition); }
+    button:hover { opacity: 0.8; }
+    .status { padding: 0.5rem; border-radius: var(--border-radius); margin: 0.5rem 0; }
+    .success { background-color: #d4edda; color: #155724; }
+    .error { background-color: #f8d7da; color: #721c24; }
+    .info { background-color: #d1ecf1; color: #0c5460; }
+    .controls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .log { font-family: monospace; white-space: pre-wrap; overflow: auto; max-height: 200px; }
+    footer { text-align: center; margin-top: 2rem; color: var(--text-2); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+      <h1>Job Timeout Tester</h1>
+    </header>
+
+    <main>
+      <div class="card">
+        <h2>Configuration</h2>
+        <input type="number" id="timeout" placeholder="Timeout in ms (e.g. 2000)" value="2000">
+        <input type="number" id="retries" placeholder="Retry attempts (0 = no retries)" value="3">
+        <div class="controls">
+          <button id="start">Start Job</button>
+          <button id="stop">Stop Job</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Status</h2>
+        <div id="status" class="status info">Ready to start job</div>
+      </div>
+
+      <div class="card">
+        <h2>Log</h2>
+        <div id="log" class="log">No logs yet</div>
+      </div>
+    </main>
+
+    <footer>
+      Project #35 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const timeoutInput = document.getElementById('timeout');
+    const retriesInput = document.getElementById('retries');
+    const startButton = document.getElementById('start');
+    const stopButton = document.getElementById('stop');
+    const statusDiv = document.getElementById('status');
+    const logDiv = document.getElementById('log');
+
+    let jobInterval;
+    let jobTimeout;
+    let isRunning = false;
+
+    function updateStatus(message, type = 'info') {
+      statusDiv.textContent = message;
+      statusDiv.className = `status ${type}`;
+    }
+
+    function addLog(message) {
+      const now = new Date();
+      logDiv.textContent += `[${now.toLocaleTimeString()}] ${message}\n`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function simulateJob(timeout, retries) {
+      if (!isRunning) return;
+
+      const startTime = Date.now();
+      addLog(`Starting job with timeout ${timeout}ms and ${retries} retries`);
+
+      const attempt = () => {
+        if (!isRunning) return;
+
+        const duration = Math.floor(Math.random() * 1000) + 500;
+        const success = Math.random() > 0.3; // 70% success rate
+
+        addLog(`Attempt: ${duration}ms, Success: ${success}`);
+
+        if (success) {
+          const elapsed = Date.now() - startTime;
+          updateStatus(`Job completed successfully in ${elapsed}ms`, 'success');
+          addLog(`Job completed successfully in ${elapsed}ms`);
+          return;
+        }
+
+        if (retries > 0) {
+          retries--;
+          addLog(`Retrying... ${retries} attempts left`);
+          setTimeout(attempt, 500);
+        } else {
+          updateStatus('Job failed after all retries', 'error');
+          addLog('Job failed after all retries');
+        }
+      };
+
+      attempt();
+    }
+
+    startButton.addEventListener('click', () => {
+      if (isRunning) return;
+
+      const timeout = parseInt(timeoutInput.value) || 2000;
+      const retries = parseInt(retriesInput.value) || 3;
+
+      isRunning = true;
+      updateStatus('Job started', 'info');
+
+      try {
+        localStorage.setItem('timeout', timeout);
+        localStorage.setItem('retries', retries);
+      } catch (e) {}
+
+      simulateJob(timeout, retries);
+    });
+
+    stopButton.addEventListener('click', () => {
+      isRunning = false;
+      updateStatus('Job stopped', 'info');
+      addLog('Job manually stopped');
+    });
+
+    // Load saved settings
+    try {
+      const savedTimeout = localStorage.getItem('timeout');
+      const savedRetries = localStorage.getItem('retries');
+      if (savedTimeout) timeoutInput.value = savedTimeout;
+      if (savedRetries) retriesInput.value = savedRetries;
+    } catch (e) {}
+  </script>
+</body>
+</html>

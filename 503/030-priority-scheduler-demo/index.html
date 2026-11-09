@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Priority Scheduler Demo · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/030-priority-scheduler-demo/">
+<meta name="description" content="Interactive demo of preemptive priority scheduling: high-priority jobs interrupt lower-priority ones, shown live on a Gantt chart.">
+<style>
+:root{
+  --bg:#f4f4f2; --card:#fff; --text:#111; --text-2:#5a5a5a; --line:#e2e2de;
+  --high:#c0392b; --mid:#b9770e; --low:#1e8449;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121212; --card:#1c1c1c; --text:#f2f2f2; --text-2:#a8a8a8; --line:#2c2c2c;
+    --high:#ff7a66; --mid:#e5b567; --low:#5fd39a;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.5}
+header.top{padding:16px 20px}
+a.back{color:var(--text-2);text-decoration:none;font-size:14px}
+a.back:hover{color:var(--text)}
+main{max-width:880px;margin:0 auto;padding:0 16px 32px}
+h1{font-size:24px;margin:8px 0 6px}
+.lede{color:var(--text-2);margin:0 0 18px;max-width:64ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:16px;margin-bottom:16px}
+.card h2{font-size:16px;margin:0 0 10px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input{font:inherit;color:var(--text)}
+button{padding:8px 14px;border:1px solid var(--line);border-radius:8px;
+  background:var(--bg);cursor:pointer}
+button:hover{background:var(--line)}
+button:disabled{opacity:.5;cursor:default}
+label.speed{display:flex;align-items:center;gap:6px;color:var(--text-2);font-size:14px}
+select,input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.form{display:flex;flex-wrap:wrap;gap:8px}
+#inName{width:110px}
+#inArrival,#inBurst{width:86px}
+.hint{color:var(--text-2);font-size:13px;margin:10px 0 0}
+.status{font-weight:600;margin:12px 0 0}
+.gantt-wrap{overflow-x:auto;padding-bottom:4px}
+.gantt{display:flex;gap:2px}
+.cell{width:36px;height:36px;flex:0 0 auto;border-radius:6px;color:#fff;font-size:10px;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.gantt.time{margin-top:4px}
+.gantt.time .cell{background:transparent;color:var(--text-2);height:14px;
+  text-shadow:none;font-size:10px}
+.queue{display:flex;flex-wrap:wrap;gap:8px;min-height:26px;align-items:center}
+.chip{color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;display:inline-block}
+.prio{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+.prio.high{color:var(--high);border-color:var(--high)}
+.prio.mid{color:var(--mid);border-color:var(--mid)}
+.prio.low{color:var(--low);border-color:var(--low)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--text-2);font-weight:600}
+footer{text-align:center;color:var(--text-2);font-size:13px;
+  padding:24px 16px 40px;border-top:1px solid var(--line);margin-top:8px}
+</style>
+</head>
+<body>
+<header class="top"><a class="back" href="/503/">← Project 503</a></header>
+<main>
+  <h1>Priority Scheduler Demo</h1>
+  <p class="lede">Preemptive priority scheduling: when a high-priority job arrives, it interrupts
+  (preempts) the running lower-priority job. The interrupted job keeps its remaining time and resumes
+  later. This is a local simulation only — everything runs in this page, no server, no network.</p>
+
+  <section class="card">
+    <div class="controls">
+      <button id="btnStart" type="button">Start</button>
+      <button id="btnStep" type="button">Step</button>
+      <button id="btnReset" type="button">Reset</button>
+      <button id="btnDemo" type="button">Load demo jobs</button>
+      <button id="btnClear" type="button">Clear jobs</button>
+      <label class="speed">Speed
+        <select id="selSpeed">
+          <option value="900">Slow</option>
+          <option value="500" selected>Normal</option>
+          <option value="200">Fast</option>
+        </select>
+      </label>
+    </div>
+    <p id="status" class="status"></p>
+  </section>
+
+  <section class="card">
+    <h2>Add a job</h2>
+    <form id="form" class="form">
+      <input id="inName" placeholder="Name" maxlength="12" aria-label="Job name">
+      <input id="inArrival" type="number" min="0" step="1" value="0" aria-label="Arrival time" title="Arrival time">
+      <input id="inBurst" type="number" min="1" step="1" value="4" aria-label="Burst" title="Burst (time units needed)">
+      <select id="inPrio" aria-label="Priority">
+        <option value="1">High</option>
+        <option value="2" selected>Medium</option>
+        <option value="3">Low</option>
+      </select>
+      <button type="submit">Add job</button>
+    </form>
+    <p class="hint">Arrival = the time the job appears. Burst = the time units it needs. A lower priority
+    number runs first; on a tie, the earlier arrival runs first.</p>
+  </section>
+
+  <section class="card">
+    <h2>Gantt chart</h2>
+    <div class="gantt-wrap"><div id="gantt" class="gantt"></div></div>
+    <div class="gantt-wrap"><div id="ganttTime" class="gantt time"></div></div>
+  </section>
+
+  <section class="card">
+    <h2>Ready queue</h2>
+    <div id="queue" class="queue"></div>
+    <p class="hint">Running: <span id="runningChip">—</span> · Preemptions: <span id="preemptCount">0</span></p>
+  </section>
+
+  <section class="card">
+    <h2>Jobs</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Job</th><th>Priority</th><th>Arrival</th><th>Burst</th><th>Left</th>
+          <th>Status</th><th>Turnaround</th><th>Waiting</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p id="avg" class="hint"></p>
+  </section>
+</main>
+<footer>Project #30 of 503 · Daniel Madac, D-CREATIONS</footer>
+<script>
+(function(){
+"use strict";
+var LS_KEY="p503sched.jobs.v1";
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function read(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function num(v,d){v=Number(v);return isFinite(v)?v:d;}
+
+var PALETTE=["#e4572e","#2e86ab","#7b2d8b","#3a9d23","#d9a404","#c2377a","#0a9396","#5a5ad6"];
+var PRIO={1:{label:"High",cls:"high"},2:{label:"Medium",cls:"mid"},3:{label:"Low",cls:"low"}};
+var DEMO=[["J1",0,5,3],["J2",1,3,1],["J3",2,2,2],["J4",4,2,1],["J5",3,4,3]];
+
+var state={jobs:[],ready:[],running:null,clock:0,timeline:[],preemptions:0,
+  on:false,timer:null,speed:500,nextId:1};
+
+function jobById(id){
+  for(var i=0;i<state.jobs.length;i++){if(state.jobs[i].id===id)return state.jobs[i];}
+  return null;
+}
+function prioNum(p){return PRIO[p]?p:2;}
+function finished(){
+  return state.jobs.length>0 && state.jobs.every(function(j){return j.remaining<=0;});
+}
+function addJob(o){
+  var burst=Math.max(1,Math.floor(num(o.burst,1)));
+  var arrival=Math.max(0,Math.floor(num(o.arrival,0)));
+  if(state.clock>0 && arrival<state.clock)arrival=state.clock;
+  var id=state.nextId++;
+  var j={id:id,name:(o.name||("J"+id)).slice(0,12),arrival:arrival,burst:burst,
+    remaining:burst,priority:prioNum(o.priority),
+    color:PALETTE[(id-1)%PALETTE.length],doneAt:null,turnaround:null,waiting:null};
+  state.jobs.push(j);
+  return j;
+}
+function saveJobs(){
+  var defs=state.jobs.map(function(j){
+    return {id:j.id,name:j.name,arrival:j.arrival,burst:j.burst,priority:j.priority};
+  });
+  store(LS_KEY,JSON.stringify(defs));
+}
+function loadJobs(){
+  var raw=read(LS_KEY);
+  if(raw===null)return false;
+  try{
+    var arr=JSON.parse(raw);
+    if(!Array.isArray(arr))return false;
+    arr.forEach(function(d){
+      if(!d||typeof d.name!=="string")return;
+      var j=addJob({name:d.name,arrival:num(d.arrival,0),burst:num(d.burst,1),
+        priority:prioNum(d.priority)});
+      if(typeof d.id==="number" && d.id>=state.nextId)state.nextId=d.id+1;
+      j.id=typeof d.id==="number"?d.id:state.nextId-1;
+    });
+    return true;
+  }catch(e){return false;}
+}
+function loadDemo(){
+  state.jobs=[];state.nextId=1;
+  DEMO.forEach(function(d){addJob({name:d[0],arrival:d[1],burst:d[2],priority:d[3]});});
+  saveJobs();
+}
+function stopTimer(){
+  if(state.timer){clearInterval(state.timer);state.timer=null;}
+  state.on=false;
+}
+function reset(){
+  stopTimer();
+  state.clock=0;state.timeline=[];state.ready=[];state.running=null;state.preemptions=0;
+  state.jobs.forEach(function(j){j.remaining=j.burst;j.doneAt=null;j.turnaround=null;j.waiting=null;});
+  render();
+}
+function pickBest(){
+  if(!state.ready.length)return null;
+  var best=state.ready[0];
+  for(var i=1;i<state.ready.length;i++){
+    var c=jobById(state.ready[i]),b=jobById(best);
+    if(c.priority<b.priority||
+      (c.priority===b.priority&&(c.arrival<b.arrival||
+       (c.arrival===b.arrival&&c.id<b.id))))best=state.ready[i];
+  }
+  return best;
+}
+function step(){
+  var t=state.clock,i,j;
+  for(i=0;i<state.jobs.length;i++){
+    j=state.jobs[i];
+    if(j.arrival<=t&&j.doneAt===null&&j.id!==state.running&&state.ready.indexOf(j.id)<0)
+      state.ready.push(j.id);
+  }
+  var best=pickBest();
+  if(state.running!==null){
+    var r=jobById(state.running);
+    if(best!==null&&jobById(best).priority<r.priority){
+      state.ready.push(r.id);
+      state.running=best;
+      state.preemptions++;
+    }
+  }else if(best!==null){
+    state.running=best;
+  }
+  if(state.running!==null){
+    i=state.ready.indexOf(state.running);
+    if(i>=0)state.ready.splice(i,1);
+    var run=jobById(state.running);
+    run.remaining--;
+    state.timeline.push({id:run.id,t:t});
+    if(run.remaining<=0){
+      run.doneAt=t+1;
+      run.turnaround=run.doneAt-run.arrival;
+      run.waiting=run.turnaround-run.burst;
+      state.running=null;
+    }
+  }
+  state.clock=t+1;
+}
+function toggleStart(){
+  if(state.on){stopTimer();render();return;}
+  if(finished()||state.jobs.length===0)return;
+  state.on=true;
+  state.timer=setInterval(function(){
+    step();render();
+    if(finished())stopTimer();
+  },state.speed);
+  render();
+}
+function renderQueue(){
+  var q=document.getElementById("queue");
+  q.innerHTML="";
+  var sorted=state.ready.slice().sort(function(a,b){
+    var x=jobById(a),y=jobById(b);
+    return x.priority-y.priority||x.arrival-y.arrival||x.id-y.id;
+  });
+  if(!sorted.length){q.innerHTML='<span class="hint">Empty</span>';return;}
+  sorted.forEach(function(id){
+    var j=jobById(id);
+    var s=document.createElement("span");
+    s.className="chip";s.style.background=j.color;
+    s.textContent=j.name+" · "+PRIO[j.priority].label+" · left "+j.remaining;
+    q.appendChild(s);
+  });
+}
+function renderGantt(){
+  var g=document.getElementById("gantt"),gt=document.getElementById("ganttTime");
+  g.innerHTML="";gt.innerHTML="";
+  if(!state.timeline.length){
+    g.innerHTML='<span class="hint">Press Start or Step to run the simulation.</span>';
+    return;
+  }
+  state.timeline.forEach(function(seg){
+    var j=jobById(seg.id);
+    var c=document.createElement("div");
+    c.className="cell";c.style.background=j.color;c.textContent=j.name;
+    c.title=j.name+" · time "+seg.t+"–"+(seg.t+1)+" · "+PRIO[j.priority].label;
+    g.appendChild(c);
+    var n=document.createElement("div");
+    n.className="cell";n.textContent=seg.t;
+    gt.appendChild(n);
+  });
+}
+function statusOf(j){
+  if(j.doneAt!==null)return "Done";
+  if(state.running===j.id)return "Running";
+  if(state.ready.indexOf(j.id)>=0)return "Ready";
+  return "Waiting";
+}
+function renderTable(){
+  var tb=document.getElementById("tbody");
+  tb.innerHTML="";
+  var done=0,sumW=0,sumT=0;
+  state.jobs.forEach(function(j){
+    var tr=document.createElement("tr");
+    var st=statusOf(j);
+    tr.innerHTML=
+      '<td><span class="chip" style="background:'+j.color+'">'+esc(j.name)+'</span></td>'+
+      '<td><span class="prio '+PRIO[j.priority].cls+'">'+PRIO[j.priority].label+'</span></td>'+
+      '<td>'+j.arrival+'</td><td>'+j.burst+'</td><td>'+j.remaining+'</td>'+
+      '<td>'+st+'</td>'+
+      '<td>'+(j.turnaround!==null?j.turnaround:'—')+'</td>'+
+      '<td>'+(j.waiting!==null?j.waiting:'—')+'</td>';
+    tb.appendChild(tr);
+    if(j.doneAt!==null){done++;sumW+=j.waiting;sumT+=j.turnaround;}
+  });
+  document.getElementById("avg").textContent=done>0?
+    "Average over "+done+" finished job"+(done>1?"s":"")+": waiting "+
+    (sumW/done).toFixed(1)+" · turnaround "+(sumT/done).toFixed(1):"";
+}
+function render(){
+  var run=state.running!==null?jobById(state.running):null;
+  var st=document.getElementById("status");
+  if(finished())st.textContent="Finished at time "+state.clock+". Press Reset to run again.";
+  else if(state.jobs.length===0)st.textContent="No jobs yet. Load the demo jobs or add your own.";
+  else st.textContent="Time "+state.clock+" · Running: "+
+    (run?run.name+" ("+PRIO[run.priority].label+")":"—")+" · Preemptions: "+state.preemptions;
+  document.getElementById("btnStart").textContent=state.on?"Pause":"Start";
+  document.getElementById("btnStep").disabled=finished()||state.jobs.length===0;
+  var rc=document.getElementById("runningChip");
+  if(run)rc.innerHTML='<span class="chip" style="background:'+run.color+'">'+esc(run.name)+'</span>';
+  else rc.textContent="—";
+  document.getElementById("preemptCount").textContent=state.preemptions;
+  renderQueue();renderGantt();renderTable();
+}
+
+document.getElementById("btnStart").addEventListener("click",toggleStart);
+document.getElementById("btnStep").addEventListener("click",function(){
+  if(finished())return;stopTimer();step();render();
+});
+document.getElementById("btnReset").addEventListener("click",reset);
+document.getElementById("btnDemo").addEventListener("click",function(){loadDemo();reset();});
+document.getElementById("btnClear").addEventListener("click",function(){
+  state.jobs=[];state.nextId=1;saveJobs();reset();
+});
+document.getElementById("selSpeed").addEventListener("change",function(e){
+  state.speed=Math.max(50,num(e.target.value,500));
+  if(state.on){stopTimer();state.on=true;
+    state.timer=setInterval(function(){step();render();if(finished())stopTimer();},state.speed);}
+});
+document.getElementById("form").addEventListener("submit",function(e){
+  e.preventDefault();
+  addJob({name:document.getElementById("inName").value.trim(),
+    arrival:document.getElementById("inArrival").value,
+    burst:document.getElementById("inBurst").value,
+    priority:Number(document.getElementById("inPrio").value)});
+  saveJobs();render();
+  document.getElementById("inName").value="";
+});
+
+var hadSaved=loadJobs();
+if(!hadSaved)loadDemo();
+render();
+})();
+</script>
+</body>
+</html>

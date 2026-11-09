@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Text Diff Viewer · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/063-text-diff-viewer/">
+  <meta name="description" content="Compare two text passages side by side and highlight added, removed, and changed words.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 1rem; line-height: 1.5; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 1.5rem; }
+    .input-group { margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; color: var(--text-2); }
+    textarea { width: 100%; height: 120px; padding: 0.75rem; background: var(--card); border: 1px solid var(--line); border-radius: 4px; color: var(--text); resize: vertical; }
+    button { background: var(--card); color: var(--text); border: 1px solid var(--line); padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 0.5rem 0; }
+    button:hover { background: var(--line); }
+    .diff-container { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
+    .diff-column { flex: 1; min-width: 300px; }
+    .diff-column h2 { margin-bottom: 0.75rem; color: var(--text-2); }
+    .diff-content { background: var(--card); padding: 1rem; border-radius: 4px; border: 1px solid var(--line); min-height: 200px; }
+    .word-added { background-color: #d4edda; color: #155724; }
+    .word-removed { background-color: #f8d7da; color: #721c24; text-decoration: line-through; }
+    .word-changed { background-color: #fff3cd; color: #856404; }
+    .footer { margin-top: 2rem; text-align: center; color: var(--text-2); font-size: 0.9rem; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .project-link { position: absolute; top: 1rem; left: 1rem; }
+  </style>
+</head>
+<body>
+  <a href="/503/" class="project-link">← Project 503</a>
+  <div class="container">
+    <h1>Text Diff Viewer</h1>
+    <div class="input-group">
+      <label for="text1">Original Text:</label>
+      <textarea id="text1" placeholder="Enter the original text here..."></textarea>
+    </div>
+    <div class="input-group">
+      <label for="text2">Modified Text:</label>
+      <textarea id="text2" placeholder="Enter the modified text here..."></textarea>
+    </div>
+    <button id="diffBtn">Compare Texts</button>
+    <div class="diff-container">
+      <div class="diff-column">
+        <h2>Original</h2>
+        <div id="originalDiff" class="diff-content"></div>
+      </div>
+      <div class="diff-column">
+        <h2>Modified</h2>
+        <div id="modifiedDiff" class="diff-content"></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    Project #63 of 503 · Daniel Madac, D-CREATIONS
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const text1 = document.getElementById('text1');
+      const text2 = document.getElementById('text2');
+      const diffBtn = document.getElementById('diffBtn');
+      const originalDiff = document.getElementById('originalDiff');
+      const modifiedDiff = document.getElementById('modifiedDiff');
+
+      // Load saved texts
+      try {
+        const savedText1 = localStorage.getItem('text1');
+        const savedText2 = localStorage.getItem('text2');
+        if (savedText1) text1.value = savedText1;
+        if (savedText2) text2.value = savedText2;
+      } catch (e) {}
+
+      diffBtn.addEventListener('click', () => {
+        try {
+          localStorage.setItem('text1', text1.value);
+          localStorage.setItem('text2', text2.value);
+        } catch (e) {}
+
+        const t1 = text1.value.trim();
+        const t2 = text2.value.trim();
+
+        if (!t1 && !t2) return;
+
+        const words1 = t1.split(/\s+/).filter(w => w);
+        const words2 = t2.split(/\s+/).filter(w => w);
+
+        const diff = diffWords(words1, words2);
+        renderDiff(diff, originalDiff, modifiedDiff);
+      });
+
+      function diffWords(a, b) {
+        const matrix = [];
+        const rows = a.length + 1;
+        const cols = b.length + 1;
+
+        for (let i = 0; i < rows; i++) matrix[i] = [0];
+        for (let j = 0; j < cols; j++) matrix[0][j] = 0;
+
+        for (let i = 1; i < rows; i++) {
+          for (let j = 1; j < cols; j++) {
+            if (a[i - 1] === b[j - 1]) {
+              matrix[i][j] = matrix[i - 1][j - 1] + 1;
+            } else {
+              matrix[i][j] = Math.max(matrix[i - 1][j], matrix[i][j - 1]);
+            }
+          }
+        }
+
+        const result = { original: [], modified: [] };
+        let i = rows - 1;
+        let j = cols - 1;
+
+        while (i > 0 || j > 0) {
+          if (i > 0 && j > 0 && a[i - 1] === b[j - 1]) {
+            result.original.unshift(a[i - 1]);
+            result.modified.unshift(b[j - 1]);
+            i--;
+            j--;
+          } else if (j > 0 && (i === 0 || matrix[i][j - 1] >= matrix[i - 1][j])) {
+            result.modified.unshift(b[j - 1]);
+            j--;
+          } else {
+            result.original.unshift(a[i - 1]);
+            i--;
+          }
+        }
+
+        return result;
+      }
+
+      function renderDiff(diff, origEl, modEl) {
+        const origWords = diff.original;
+        const modWords = diff.modified;
+
+        let origHtml = '';
+        let modHtml = '';
+
+        for (let i = 0; i < Math.max(origWords.length, modWords.length); i++) {
+          const origWord = origWords[i];
+          const modWord = modWords[i];
+
+          if (origWord === undefined) {
+            modHtml += `<span class="word-added">${modWord}</span> `;
+          } else if (modWord === undefined) {
+            origHtml += `<span class="word-removed">${origWord}</span> `;
+          } else if (origWord !== modWord) {
+            origHtml += `<span class="word-changed">${origWord}</span> `;
+            modHtml += `<span class="word-changed">${modWord}</span> `;
+          } else {
+            origHtml += `${origWord} `;
+            modHtml += `${modWord} `;
+          }
+        }
+
+        origEl.innerHTML = origHtml || '&nbsp;';
+        modEl.innerHTML = modHtml || '&nbsp;';
+      }
+    });
+  </script>
+</body>
+</html>

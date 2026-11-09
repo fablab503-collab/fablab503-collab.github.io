@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Summarise To Bullets · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/072-summarise-to-bullets/">
+  <meta name="description" content="Convert a paragraph of prose into a bulleted list of key points using sentence scoring.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --border-radius: 4px;
+      --padding: 16px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.5; padding: 16px; }
+    main { max-width: 768px; margin: 0 auto; }
+    header, footer { text-align: center; padding: 16px 0; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    h1 { font-size: 1.5rem; margin-bottom: 16px; }
+    textarea, button { width: 100%; padding: 12px; border-radius: var(--border-radius); border: 1px solid var(--line); }
+    textarea { min-height: 150px; resize: vertical; background-color: var(--card); color: var(--text); }
+    button { background-color: var(--text); color: var(--card); font-weight: bold; cursor: pointer; margin-top: 8px; }
+    button:hover { opacity: 0.9; }
+    #output { margin-top: 16px; padding: var(--padding); background-color: var(--card); border-radius: var(--border-radius); }
+    ul { list-style-type: disc; padding-left: 20px; margin-top: 8px; }
+    li { margin-bottom: 8px; }
+    footer { font-size: 0.9rem; color: var(--text-2); }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+    
+    <h1>Summarise To Bullets</h1>
+    
+    <textarea id="input" placeholder="Paste your paragraph here..."></textarea>
+    <button id="summarize">Convert to Bullets</button>
+    
+    <div id="output" style="display: none;"></div>
+    
+    <footer>
+      Project #72 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('input');
+      const summarizeBtn = document.getElementById('summarize');
+      const output = document.getElementById('output');
+
+      // Load saved text from localStorage
+      try {
+        const savedText = localStorage.getItem('summarizeText');
+        if (savedText) input.value = savedText;
+      } catch (e) {}
+
+      summarizeBtn.addEventListener('click', () => {
+        const text = input.value.trim();
+        if (!text) return;
+
+        // Save to localStorage
+        try {
+          localStorage.setItem('summarizeText', text);
+        } catch (e) {}
+
+        // Simple sentence scoring algorithm
+        const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+        const scores = sentences.map(sentence => {
+          const words = sentence.trim().split(/\s+/);
+          const wordCount = words.length;
+          const avgWordLength = words.reduce((sum, word) => sum + word.length, 0) / wordCount;
+          const hasNumbers = /\d/.test(sentence);
+          const hasPunctuation = /[.,;:]/.test(sentence);
+          
+          let score = 0;
+          if (wordCount > 5) score += 1;
+          if (avgWordLength > 4) score += 1;
+          if (hasNumbers) score += 1;
+          if (hasPunctuation) score += 1;
+          
+          return { sentence: sentence.trim(), score };
+        });
+
+        // Sort by score descending and take top 3
+        scores.sort((a, b) => b.score - a.score);
+        const topScores = scores.slice(0, 3);
+
+        // Display results
+        output.innerHTML = '<ul>' + topScores.map(item => `<li>${item.sentence}</li>`).join('') + '</ul>';
+        output.style.display = 'block';
+      });
+    });
+  </script>
+</body>
+</html>

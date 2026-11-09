@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Device Blacklist Manager · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/036-device-blacklist-manager/">
+  <meta name="description" content="Manage device blacklists and job rerouting automatically.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --border-radius: 4px;
+      --transition: all 0.3s ease;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.5; padding: 1rem; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .card { background-color: var(--card); border: 1px solid var(--line); border-radius: var(--border-radius); padding: 1.25rem; margin-bottom: 1.5rem; }
+    .device-list { list-style: none; }
+    .device-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
+    .device-item:last-child { border-bottom: none; }
+    .device-info { flex-grow: 1; }
+    .device-name { font-weight: 600; }
+    .device-status { font-size: 0.875rem; color: var(--text-2); }
+    .toggle-btn { background-color: var(--line); border: none; border-radius: var(--border-radius); padding: 0.375rem 0.75rem; cursor: pointer; transition: var(--transition); }
+    .toggle-btn:hover { background-color: var(--text-2); color: var(--card); }
+    .blacklisted { background-color: #ffebee; }
+    .blacklisted .device-name { color: #c62828; }
+    .job-rerouting { margin-top: 1rem; padding: 0.75rem; background-color: #e8f5e9; border-radius: var(--border-radius); }
+    footer { text-align: center; margin-top: 2rem; color: var(--text-2); font-size: 0.875rem; }
+    @media (max-width: 375px) {
+      body { padding: 0.75rem; }
+      .card { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/503/">← Project 503</a>
+  </header>
+
+  <main>
+    <h1>Device Blacklist Manager</h1>
+    
+    <div class="card">
+      <h2>Devices</h2>
+      <ul class="device-list" id="deviceList">
+        <!-- Devices will be added here dynamically -->
+      </ul>
+    </div>
+
+    <div class="card job-rerouting">
+      <h2>Job Rerouting</h2>
+      <p>When a device is blacklisted, jobs will automatically be rerouted to available devices.</p>
+      <p><strong>Simulated system:</strong> Blacklisted devices are marked with red text and background. Jobs are rerouted automatically in this demo.</p>
+    </div>
+  </main>
+
+  <footer>
+    Project #36 of 503 · Daniel Madac, D-CREATIONS
+  </footer>
+
+  <script>
+    const devices = [
+      { id: 'dev1', name: 'Printer Alpha', status: 'available' },
+      { id: 'dev2', name: 'Scanner Beta', status: 'available' },
+      { id: 'dev3', name: 'Copier Gamma', status: 'available' },
+      { id: 'dev4', name: 'Fax Delta', status: 'available' }
+    ];
+
+    const deviceList = document.getElementById('deviceList');
+
+    function loadDevices() {
+      try {
+        const saved = localStorage.getItem('blacklistedDevices');
+        if (saved) {
+          const blacklisted = JSON.parse(saved);
+          devices.forEach(device => {
+            device.blacklisted = blacklisted.includes(device.id);
+          });
+        }
+      } catch (e) {}
+    }
+
+    function saveBlacklist() {
+      try {
+        const blacklisted = devices.filter(d => d.blacklisted).map(d => d.id);
+        localStorage.setItem('blacklistedDevices', JSON.stringify(blacklisted));
+      } catch (e) {}
+    }
+
+    function renderDevices() {
+      deviceList.innerHTML = '';
+      devices.forEach(device => {
+        const li = document.createElement('li');
+        li.className = 'device-item';
+        if (device.blacklisted) li.classList.add('blacklisted');
+        
+        li.innerHTML = `
+          <div class="device-info">
+            <div class="device-name">${device.name}</div>
+            <div class="device-status">${device.status}${device.blacklisted ? ' (Blacklisted)' : ''}</div>
+          </div>
+          <button class="toggle-btn" data-id="${device.id}">
+            ${device.blacklisted ? 'Unblacklist' : 'Blacklist'}
+          </button>
+        `;
+        
+        deviceList.appendChild(li);
+      });
+    }
+
+    function toggleDevice(id) {
+      const device = devices.find(d => d.id === id);
+      if (device) {
+        device.blacklisted = !device.blacklisted;
+        saveBlacklist();
+        renderDevices();
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('toggle-btn')) {
+        toggleDevice(e.target.dataset.id);
+      }
+    });
+
+    loadDevices();
+    renderDevices();
+  </script>
+</body>
+</html>

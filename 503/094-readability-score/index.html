@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Readability Score · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/094-readability-score/">
+<meta name="description" content="Paste any text to see its Flesch Reading Ease score and Flesch-Kincaid grade level, with a plain-language explanation of both.">
+<style>
+:root {
+  --bg: #f4f4f2;
+  --card: #fff;
+  --text: #111;
+  --text-2: #5a5a5a;
+  --line: #e2e2de;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121212;
+    --card: #1c1c1c;
+    --text: #f2f2f2;
+    --text-2: #a8a8a8;
+    --line: #2c2c2c;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.55;
+}
+.wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px 16px 32px;
+}
+.top-link {
+  display: inline-block;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+.top-link:hover { color: var(--text); text-decoration: underline; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 20px;
+}
+h1 { font-size: 24px; margin: 0 0 6px; }
+.lede { color: var(--text-2); margin: 0 0 18px; font-size: 15px; }
+textarea {
+  width: 100%;
+  min-height: 160px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--bg);
+}
+textarea:focus { outline: 2px solid var(--text-2); outline-offset: 1px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+button {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+}
+button:hover { border-color: var(--text-2); }
+.scores {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+@media (max-width: 480px) { .scores { grid-template-columns: 1fr; } }
+.score {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+.score .num { font-size: 34px; font-weight: 700; margin: 0; }
+.score .name { font-size: 13px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.score .what { font-size: 14px; margin: 8px 0 0; }
+.stats { color: var(--text-2); font-size: 13px; margin-top: 14px; }
+.empty { color: var(--text-2); font-size: 14px; margin-top: 18px; }
+footer {
+  text-align: center;
+  color: var(--text-2);
+  font-size: 13px;
+  margin-top: 28px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="top-link" href="/503/">← Project 503</a>
+  <div class="card">
+    <h1>Readability Score</h1>
+    <p class="lede">Paste or type any English text. This page computes its Flesch Reading Ease and Flesch-Kincaid grade level right here in your browser — nothing is sent anywhere.</p>
+    <textarea id="input" placeholder="Type or paste your text here…" aria-label="Text to analyse"></textarea>
+    <div class="row">
+      <button id="sample" type="button">Load a sample text</button>
+      <button id="clear" type="button">Clear</button>
+    </div>
+    <div id="results">
+      <div class="scores">
+        <div class="score">
+          <p class="name">Flesch Reading Ease</p>
+          <p class="num" id="fre-num">–</p>
+          <p class="what" id="fre-what">Higher is easier to read. 0–100 scale.</p>
+        </div>
+        <div class="score">
+          <p class="name">Flesch-Kincaid Grade</p>
+          <p class="num" id="fk-num">–</p>
+          <p class="what" id="fk-what">US school grade needed to understand it.</p>
+        </div>
+      </div>
+      <p class="stats" id="stats"></p>
+    </div>
+    <p class="empty" id="empty">Enter some text to see the scores.</p>
+  </div>
+  <footer>Project #94 of 503 · Daniel Madac, D-CREATIONS</footer>
+</div>
+<script>
+(function () {
+  "use strict";
+
+  var input = document.getElementById("input");
+  var freNum = document.getElementById("fre-num");
+  var freWhat = document.getElementById("fre-what");
+  var fkNum = document.getElementById("fk-num");
+  var fkWhat = document.getElementById("fk-what");
+  var stats = document.getElementById("stats");
+  var empty = document.getElementById("empty");
+
+  var STORAGE_KEY = "dcreations-503-094-text";
+
+  function saveText() {
+    try { localStorage.setItem(STORAGE_KEY, input.value); } catch (e) { /* storage unavailable */ }
+  }
+  function loadText() {
+    try {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) input.value = saved;
+    } catch (e) { /* storage unavailable */ }
+  }
+
+  function countSyllables(word) {
+    word = word.toLowerCase().replace(/[^a-zà-ÿ]/g, "");
+    if (!word) return 0;
+    if (word.length <= 3) return 1;
+    word = word.replace(/(?:[^laeiouyà-ÿ]es|ed|[^laeiouyà-ÿ]e)$/, "");
+    word = word.replace(/^y/, "");
+    var m = word.match(/[aeiouyà-ÿ]{1,2}/g);
+    return m ? m.length : 1;
+  }
+
+  function analyse(text) {
+    var words = text.match(/[A-Za-zÀ-ÿ0-9'’\-]+/g) || [];
+    var sentenceParts = text.split(/[.!?]+/).filter(function (s) {
+      return /[A-Za-zÀ-ÿ0-9]/.test(s);
+    });
+    var wordCount = words.length;
+    var sentenceCount = sentenceParts.length;
+    if (wordCount === 0) return null;
+    if (sentenceCount === 0) sentenceCount = 1;
+    var syllables = 0;
+    for (var i = 0; i < words.length; i++) syllables += countSyllables(words[i]);
+    var asl = wordCount / sentenceCount;          // words per sentence
+    var asw = syllables / wordCount;              // syllables per word
+    var fre = 206.835 - 1.015 * asl - 84.6 * asw;
+    var fk = 0.39 * asl + 11.8 * asw - 15.59;
+    return { fre: fre, fk: fk, words: wordCount, sentences: sentenceCount, syllables: syllables };
+  }
+
+  function freLabel(s) {
+    if (s >= 90) return "Very easy to read. Almost anyone can follow it.";
+    if (s >= 80) return "Easy to read. Clear for most adults.";
+    if (s >= 70) return "Fairly easy. Plain English for most adults.";
+    if (s >= 60) return "Standard. Comfortable for general readers.";
+    if (s >= 50) return "Fairly difficult. Needs some schooling to follow.";
+    if (s >= 30) return "Difficult. Best for college-level readers.";
+    return "Very difficult. Best understood by university graduates.";
+  }
+
+  function fkLabel(g) {
+    if (g < 1) return "Below US grade 1. Very simple sentences.";
+    if (g < 6) return "US grades 1–5. Easy for children and young teens.";
+    if (g < 8) return "US grades 6–7. Clear for most teenagers.";
+    if (g < 10) return "US grades 8–9. Standard adult reading level.";
+    if (g < 12) return "US grades 10–11. Fairly demanding for adults.";
+    if (g < 14) return "US grades 12–13. College-ready reading.";
+    if (g < 16) return "College level. Typical of university reading.";
+    return "College graduate level or higher.";
+  }
+
+  function render() {
+    var r = analyse(input.value);
+    if (!r) {
+      freNum.textContent = "–";
+      fkNum.textContent = "–";
+      freWhat.textContent = "Higher is easier to read. 0–100 scale.";
+      fkWhat.textContent = "US school grade needed to understand it.";
+      stats.textContent = "";
+      empty.style.display = "";
+      return;
+    }
+    empty.style.display = "none";
+    freNum.textContent = Math.round(r.fre);
+    freWhat.textContent = freLabel(r.fre);
+    fkNum.textContent = "Grade " + (Math.round(r.fk * 10) / 10);
+    fkWhat.textContent = fkLabel(r.fk);
+    stats.textContent = r.words + " words · " + r.sentences + " sentences · " + r.syllables + " syllables";
+  }
+
+  input.addEventListener("input", function () { saveText(); render(); });
+  document.getElementById("clear").addEventListener("click", function () {
+    input.value = "";
+    saveText();
+    render();
+    input.focus();
+  });
+  document.getElementById("sample").addEventListener("click", function () {
+    input.value = "The cat sat on the mat. It was a sunny day, and the cat was happy. " +
+      "Reading easy text is good for everyone. Short words and short sentences help the reader. " +
+      "When you write in plain English, more people can understand your message the first time they read it.";
+    saveText();
+    render();
+  });
+
+  loadText();
+  render();
+})();
+</script>
+</body>
+</html>

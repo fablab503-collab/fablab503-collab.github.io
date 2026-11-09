@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Part Of Speech Tagger · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/069-part-of-speech-tagger/">
+  <meta name="description" content="Tag every word with a POS label using a rule-based tagger.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 1rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2rem; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    textarea { width: 100%; height: 150px; padding: 0.75rem; background-color: var(--card); border: 1px solid var(--line); color: var(--text); resize: vertical; }
+    button { background-color: var(--card); border: 1px solid var(--line); color: var(--text); padding: 0.75rem 1.5rem; margin: 1rem 0; cursor: pointer; }
+    button:hover { background-color: var(--line); }
+    .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+    .tag { padding: 0.25rem 0.5rem; background-color: var(--card); border: 1px solid var(--line); }
+    footer { text-align: center; margin-top: 3rem; color: var(--text-2); font-size: 0.9rem; }
+    .pos-noun { background-color: #e3f2fd; }
+    .pos-verb { background-color: #f3e5f5; }
+    .pos-adjective { background-color: #e8f5e9; }
+    .pos-adverb { background-color: #fff3e0; }
+    .pos-pronoun { background-color: #fce4ec; }
+    .pos-preposition { background-color: #f1f8e9; }
+    .pos-conjunction { background-color: #fff8e1; }
+    .pos-determiner { background-color: #e0f2f1; }
+    .pos-article { background-color: #f3e5f5; }
+    .pos-punctuation { background-color: #ffebee; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+    
+    <main>
+      <h1>Part Of Speech Tagger</h1>
+      <p>Enter text below to tag each word with its part of speech.</p>
+      
+      <textarea id="inputText" placeholder="Enter your text here...">The quick brown fox jumps over the lazy dog. She runs quickly through the park.</textarea>
+      
+      <button id="tagButton">Tag Words</button>
+      
+      <div class="tags" id="outputTags"></div>
+    </main>
+    
+    <footer>
+      Project #69 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const posRules = {
+      // Nouns
+      noun: ['fox', 'dog', 'park', 'she', 'he', 'it', 'they', 'we', 'you'],
+      // Verbs
+      verb: ['jumps', 'runs', 'is', 'are', 'was', 'were', 'have', 'has', 'had'],
+      // Adjectives
+      adjective: ['quick', 'brown', 'lazy', 'quickly', 'through'],
+      // Adverbs
+      adverb: ['quickly', 'through'],
+      // Pronouns
+      pronoun: ['she', 'he', 'it', 'they', 'we', 'you'],
+      // Prepositions
+      preposition: ['over', 'through', 'the'],
+      // Conjunctions
+      conjunction: ['and', 'but', 'or'],
+      // Determiners
+      determiner: ['the', 'a', 'an'],
+      // Articles
+      article: ['the', 'a', 'an'],
+      // Punctuation
+      punctuation: ['.', ',', ';', ':', '!', '?']
+    };
+
+    const posLabels = {
+      noun: 'Noun',
+      verb: 'Verb',
+      adjective: 'Adjective',
+      adverb: 'Adverb',
+      pronoun: 'Pronoun',
+      preposition: 'Preposition',
+      conjunction: 'Conjunction',
+      determiner: 'Determiner',
+      article: 'Article',
+      punctuation: 'Punctuation'
+    };
+
+    const posClasses = {
+      noun: 'pos-noun',
+      verb: 'pos-verb',
+      adjective: 'pos-adjective',
+      adverb: 'pos-adverb',
+      pronoun: 'pos-pronoun',
+      preposition: 'pos-preposition',
+      conjunction: 'pos-conjunction',
+      determiner: 'pos-determiner',
+      article: 'pos-article',
+      punctuation: 'pos-punctuation'
+    };
+
+    function tagWords(text) {
+      const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+      return words.map(word => {
+        let pos = 'unknown';
+        for (const [key, values] of Object.entries(posRules)) {
+          if (values.includes(word)) {
+            pos = key;
+            break;
+          }
+        }
+        return { word, pos };
+      });
+    }
+
+    function renderTags(taggedWords) {
+      const output = document.getElementById('outputTags');
+      output.innerHTML = '';
+      
+      taggedWords.forEach(({ word, pos }) => {
+        const span = document.createElement('span');
+        span.className = `tag ${posClasses[pos] || ''}`;
+        span.textContent = `${word} (${posLabels[pos] || 'Unknown'})`;
+        output.appendChild(span);
+      });
+    }
+
+    function saveToStorage(text) {
+      try {
+        localStorage.setItem('posTaggerText', text);
+      } catch (e) {}
+    }
+
+    function loadFromStorage() {
+      try {
+        const saved = localStorage.getItem('posTaggerText');
+        if (saved) {
+          document.getElementById('inputText').value = saved;
+        }
+      } catch (e) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadFromStorage();
+      
+      document.getElementById('tagButton').addEventListener('click', () => {
+        const text = document.getElementById('inputText').value;
+        saveToStorage(text);
+        const taggedWords = tagWords(text);
+        renderTags(taggedWords);
+      });
+    });
+  </script>
+</body>
+</html>

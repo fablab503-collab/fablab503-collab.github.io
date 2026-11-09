@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Text Repeater · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/090-text-repeater/">
+<meta name="description" content="Type text and repeat it back with uppercase, lowercase, title case or reverse transformations.">
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --card: #fff;
+    --text: #111;
+    --text-2: #5a5a5a;
+    --line: #e2e2de;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --card: #1c1c1c;
+      --text: #f2f2f2;
+      --text-2: #a8a8a8;
+      --line: #2c2c2c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .top {
+    padding: 16px 20px 0;
+  }
+  .top a {
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .top a:hover { color: var(--text); }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+  }
+  h1 {
+    font-size: 24px;
+    margin: 8px 0 4px;
+  }
+  .sub {
+    color: var(--text-2);
+    font-size: 14px;
+    margin: 0 0 20px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-2);
+    margin: 0 0 6px;
+  }
+  textarea, input[type="number"], select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 15px;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  .row {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .row > div { flex: 1; }
+  .row > div.narrow { flex: 0 0 110px; }
+  button {
+    margin-top: 16px;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--text);
+    color: var(--bg);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { opacity: 0.88; }
+  .out-label { margin-top: 20px; }
+  output, .output {
+    display: block;
+    margin-top: 6px;
+    padding: 12px;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    min-height: 48px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 15px;
+  }
+  .output:empty::before {
+    content: "Nothing yet. Type something and press Repeat.";
+    color: var(--text-2);
+  }
+  .count {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  footer {
+    text-align: center;
+    padding: 0 20px 28px;
+    color: var(--text-2);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+  <div class="top">
+    <a href="/503/">← Project 503</a>
+  </div>
+  <main>
+    <h1>Text Repeater</h1>
+    <p class="sub">Type text, pick a transformation, and repeat it back as many times as you like.</p>
+    <div class="card">
+      <label for="input">Your text</label>
+      <textarea id="input" placeholder="Type or paste text here…"></textarea>
+      <div class="row">
+        <div class="narrow">
+          <label for="times">Repeat</label>
+          <input type="number" id="times" min="1" max="1000" value="3">
+        </div>
+        <div>
+          <label for="transform">Transformation</label>
+          <select id="transform">
+            <option value="none">None</option>
+            <option value="upper">Uppercase</option>
+            <option value="lower">Lowercase</option>
+            <option value="title">Title Case</option>
+            <option value="reverse">Reverse</option>
+          </select>
+        </div>
+      </div>
+      <button id="go" type="button">Repeat</button>
+      <div class="out-label"><label>Result</label></div>
+      <div class="output" id="output" aria-live="polite"></div>
+      <div class="count" id="count"></div>
+    </div>
+  </main>
+  <footer>Project #90 of 503 · Daniel Madac, D-CREATIONS</footer>
+<script>
+(function () {
+  "use strict";
+
+  var input = document.getElementById("input");
+  var times = document.getElementById("times");
+  var transform = document.getElementById("transform");
+  var go = document.getElementById("go");
+  var output = document.getElementById("output");
+  var count = document.getElementById("count");
+
+  function load(key, fallback) {
+    try {
+      var v = window.localStorage.getItem(key);
+      return v === null ? fallback : v;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function save(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (e) {
+      /* storage unavailable; ignore */
+    }
+  }
+
+  input.value = load("tr90_text", "");
+  times.value = load("tr90_times", "3");
+  transform.value = load("tr90_transform", "none");
+
+  function applyTransform(text, mode) {
+    if (mode === "upper") return text.toUpperCase();
+    if (mode === "lower") return text.toLowerCase();
+    if (mode === "title") {
+      return text.replace(/\S+/g, function (w) {
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      });
+    }
+    if (mode === "reverse") {
+      return Array.from(text).reverse().join("");
+    }
+    return text;
+  }
+
+  function repeat() {
+    var text = input.value;
+    var n = parseInt(times.value, 10);
+    if (isNaN(n) || n < 1) n = 1;
+    if (n > 1000) n = 1000;
+    times.value = n;
+
+    var line = applyTransform(text, transform.value);
+    var lines = [];
+    for (var i = 0; i < n; i++) lines.push(line);
+
+    output.textContent = lines.join("\n");
+    count.textContent = lines.length + (lines.length === 1 ? " line" : " lines") +
+      " · " + Array.from(line).length + " characters per line";
+
+    save("tr90_text", input.value);
+    save("tr90_times", String(n));
+    save("tr90_transform", transform.value);
+  }
+
+  go.addEventListener("click", repeat);
+  input.addEventListener("input", function () { save("tr90_text", input.value); });
+  times.addEventListener("change", function () { save("tr90_times", times.value); });
+  transform.addEventListener("change", function () { save("tr90_transform", transform.value); });
+})();
+</script>
+</body>
+</html>

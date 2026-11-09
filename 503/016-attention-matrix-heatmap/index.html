@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Interactive transformer self-attention visualizer showing token-to-token attention weights for any sentence.">
+    <link rel="canonical" href="https://dcreations.fr/503/016-attention-matrix-heatmap/">
+    <title>Attention Matrix Heatmap · Project 503 · D-CREATIONS</title>
+    <style>
+        :root {
+            --bg: #f4f4f2;
+            --card: #fff;
+            --text: #111;
+            --text-2: #5a5a5a;
+            --line: #e2e2de;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #121212;
+                --card: #1c1c1c;
+                --text: #f2f2f2;
+                --text-2: #a8a8a8;
+                --line: #2c2c2c;
+            }
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        header {
+            margin-bottom: 1.5rem;
+        }
+        header a {
+            color: var(--text);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+        header a:hover {
+            text-decoration: underline;
+        }
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        p {
+            color: var(--text-2);
+            margin-bottom: 1rem;
+            font-size: 0.9375rem;
+        }
+        .controls {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .controls input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--line);
+            border-radius: 0.5rem;
+            background-color: var(--card);
+            color: var(--text);
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        .controls input:focus {
+            outline: none;
+            border-color: var(--text);
+        }
+        .controls input::placeholder {
+            color: var(--text-2);
+        }
+        .controls button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            background-color: var(--line);
+            color: var(--text);
+            font-size: 1rem;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            opacity: 0.85;
+        }
+        .controls button:active {
+            opacity: 0.7;
+        }
+        #heatmap-container {
+            background-color: var(--card);
+            border-radius: 0.75rem;
+            border: 1px solid var(--line);
+            overflow: auto;
+            margin-bottom: 1.5rem;
+        }
+        #heatmap-container canvas {
+            display: block;
+            max-width: 100%;
+        }
+        .status {
+            color: var(--text-2);
+            font-size: 0.875rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: var(--text-2);
+            font-size: 0.875rem;
+        }
+        @media (max-width: 600px) {
+            body { padding: 1rem 0.75rem; }
+            h1 { font-size: 1.25rem; }
+            .controls { flex-direction: column; }
+            .controls button { width: 100%; }
+        }
+        @media (max-width: 375px) {
+            body { padding: 0.75rem 0.5rem; }
+            h1 { font-size: 1.125rem; }
+            .controls input { padding: 0.625rem 0.75rem; font-size: 0.875rem; }
+            .controls button { padding: 0.625rem; font-size: 0.875rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/503/">← Project 503</a>
+    </header>
+    <main>
+        <h1>Attention Matrix Heatmap</h1>
+        <p>Enter a sentence to visualize transformer self-attention weights across tokens.</p>
+        <div class="controls">
+            <input type="text" id="sentence" placeholder="Type a sentence..." value="The quick brown fox jumps over the lazy dog">
+            <button id="go">Visualize</button>
+        </div>
+        <div id="heatmap-container"></div>
+        <div id="status" class="status"></div>
+    </main>
+    <footer>
+        Project #16 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+    <script>
+        (function() {
+            'use strict';
+
+            const sentenceInput = document.getElementById('sentence');
+            const goButton = document.getElementById('go');
+            const container = document.getElementById('heatmap-container');
+            const statusEl = document.getElementById('status');
+
+            // Default sentence
+            const DEFAULT_SENTENCE = 'The quick brown fox jumps over the lazy dog';
+
+            // Theme colors cached for tooltip
+            let themeColors = {};
+            function updateThemeColors() {
+                const root = document.documentElement;
+                const getColor = (prop) => getComputedStyle(root).getPropertyValue(prop).trim();
+                themeColors = {
+                    card: getColor('--card'),
+                    text: getColor('--text'),
+                    line: getColor('--line')
+                };
+            }
+            updateThemeColors();
+
+            // Load saved sentence
+            function loadSavedSentence() {
+                try {
+                    const saved = localStorage.getItem('attention_matrix_sentence');
+                    if (saved && saved.trim()) {
+                        sentenceInput.value = saved;
+                    }
+                } catch (e) {
+                    // localStorage not available
+                }
+            }
+
+            // Save sentence
+            function saveSentence(sentence) {
+                try {
+                    if (sentence && sentence.trim()) {
+                        localStorage.setItem('attention_matrix_sentence', sentence);
+                    }
+                } catch (e) {
+                    // localStorage not available
+                }
+            }
+
+            // Tokenize text into tokens
+            function tokenize(text) {
+                return text.trim().split(/\s+/).filter(t => t.length > 0);
+            }
+
+            // Create character frequency embedding for a token
+            function createEmbedding(token, dim = 26) {
+                const vec = new Array(dim).fill(0);
+                const aCode = 'a'.charCodeAt(0);
+                for (const c of token.toLowerCase()) {
+                    if (c >= 'a' && c <= 'z') {
+                        vec[c.charCodeAt(0) - aCode]++;
+                    }
+                }
+                // Normalize
+                const norm = Math.sqrt(vec.reduce((s, v) => s + v * v, 0));
+                if (norm > 0) {
+                    return vec.map(v => v / norm);
+                }
+                return vec;
+            }
+
+            // Calculate self-attention scores
+            function calculateAttention(tokens) {
+                const n = tokens.length;
+                if (n === 0) return [];
+
+                const embeddings = tokens.map(t => createEmbedding(t));
+                const dimension = embeddings[0].length;
+                const scale = Math.sqrt(dimension);
+
+                const scores = [];
+                for (let i = 0; i < n; i++) {
+                    scores[i] = [];
+                    for (let j = 0; j < n; j++) {
+                        // Dot product
+                        let dot = 0;
+                        for (let k = 0; k < dimension; k++) {
+                            dot += embeddings[i][k] * embeddings[j][k];
+                        }
+                        scores[i][j] = dot / scale;
+                    }
+                    // Softmax for attention weights
+                    const max = Math.max(...scores[i]);
+                    const expSum = scores[i].reduce((s, v) => s + Math.exp(v - max), 0);
+                    for (let j = 0; j < n; j++) {
+                        scores[i][j] = Math.exp(scores[i][j] - max) / expSum;
+                    }
+                }
+                return scores;
+            }
+
+            // Get color for attention value
+            function getColor(value, isDarkMode) {
+                // Blue gradient: low = light blue, high = dark blue
+                const r = isDarkMode ? Math.floor(80 + value * 175) : Math.floor(120 + value * 135);
+                const g = isDarkMode ? Math.floor(130 + value * 125) : Math.floor(160 + value * 95);
+                const b = Math.floor(200 + value * 55);
+                return `rgb(${r}, ${g}, ${b})`;
+            }
+
+            // Check if dark mode is active
+            function isDarkMode() {
+                return window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
+
+            // Render heatmap
+            function renderHeatmap(scores, tokens) {
+                const n = scores.length;
+                if (n === 0) return;
+
+                updateThemeColors();
+                const isDark = isDarkMode();
+                const cellSize = Math.max(24, Math.min(60, Math.floor(500 / n)));
+                const canvasWidth = n * cellSize;
+                const canvasHeight = n * cellSize;
+                const labelPadding = 40;
+
+                // Account for label space
+                const totalWidth = canvasWidth + labelPadding * 2;
+                const totalHeight = canvasHeight + labelPadding * 2;
+
+                const canvas = document.createElement('canvas');
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = totalWidth * dpr;
+                canvas.height = totalHeight * dpr;
+                canvas.style.width = `${totalWidth}px`;
+                canvas.style.height = `${totalHeight}px`;
+
+                const ctx = canvas.getContext('2d');
+                ctx.scale(dpr, dpr);
+
+                // Background
+                ctx.fillStyle = themeColors.card;
+                ctx.fillRect(0, 0, totalWidth, totalHeight);
+
+                // Draw grid lines
+                ctx.strokeStyle = themeColors.line;
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= n; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(labelPadding, labelPadding + i * cellSize);
+                    ctx.lineTo(labelPadding + n * cellSize, labelPadding + i * cellSize);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(labelPadding + i * cellSize, labelPadding);
+                    ctx.lineTo(labelPadding + i * cellSize, labelPadding + n * cellSize);
+                    ctx.stroke();
+                }
+
+                // Draw cells
+                for (let i = 0; i < n; i++) {
+                    for (let j = 0; j < n; j++) {
+                        const value = scores[i][j];
+                        ctx.fillStyle = getColor(value, isDark);
+                        ctx.fillRect(
+                            labelPadding + j * cellSize,
+                            labelPadding + i * cellSize,
+                            cellSize,
+                            cellSize
+                        );
+                    }
+                }
+
+                // Draw token labels
+                ctx.fillStyle = themeColors.text;
+                const fontSize = Math.min(12, cellSize * 0.45);
+                ctx.font = `${fontSize}px system-ui, -apple-system, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                // Top labels (key tokens) - rotated 45 degrees
+                for (let j = 0; j < n; j++) {
+                    ctx.save();
+                    ctx.translate(
+                        labelPadding + j * cellSize + cellSize / 2,
+                        labelPadding - 10
+                    );
+                    ctx.rotate(-Math.PI / 4);
+                    ctx.fillText(tokens[j], 0, 0);
+                    ctx.restore();
+                }
+
+                // Left labels (query tokens)
+                ctx.textAlign = 'right';
+                for (let i = 0; i < n; i++) {
+                    ctx.fillText(
+                        tokens[i],
+                        labelPadding - 10,
+                        labelPadding + i * cellSize + cellSize / 2
+                    );
+                }
+
+                container.innerHTML = '';
+                container.appendChild(canvas);
+
+                // Add interactivity
+                let hoveredCell = null;
+                let tooltip = null;
+
+                function createTooltip(row, col, tokenI, tokenJ, value) {
+                    if (tooltip) tooltip.remove();
+                    tooltip = document.createElement('div');
+                    tooltip.style.position = 'absolute';
+                    tooltip.style.background = themeColors.card;
+                    tooltip.style.color = themeColors.text;
+                    tooltip.style.border = `1px solid ${themeColors.line}`;
+                    tooltip.style.borderRadius = '0.5rem';
+                    tooltip.style.padding = '0.5rem 0.75rem';
+                    tooltip.style.fontSize = '0.875rem';
+                    tooltip.style.pointerEvents = 'none';
+                    tooltip.style.zIndex = '1000';
+                    tooltip.style.maxWidth = '300px';
+                    tooltip.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    tooltip.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+                    tooltip.textContent = `${tokenI} → ${tokenJ}: ${(value * 100).toFixed(1)}%`;
+                    document.body.appendChild(tooltip);
+                    return tooltip;
+                }
+
+                function removeTooltip() {
+                    if (tooltip) {
+                        tooltip.remove();
+                        tooltip = null;
+                    }
+                }
+
+                canvas.addEventListener('mousemove', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / dpr;
+                    const y = (e.clientY - rect.top) / dpr;
+
+                    const col = Math.floor((x - labelPadding) / cellSize);
+                    const row = Math.floor((y - labelPadding) / cellSize);
+
+                    if (row >= 0 && row < n && col >= 0 && col < n) {
+                        const newHover = `${row}-${col}`;
+                        if (newHover !== hoveredCell) {
+                            hoveredCell = newHover;
+                            removeTooltip();
+                            tooltip = createTooltip(
+                                row, col,
+                                tokens[row], tokens[col],
+                                scores[row][col]
+                            );
+                        }
+
+                        // Position tooltip
+                        if (tooltip) {
+                            const tooltipWidth = tooltip.offsetWidth;
+                            const tooltipHeight = tooltip.offsetHeight;
+                            tooltip.style.left = `${e.clientX + 10}px`;
+                            tooltip.style.top = `${e.clientY - tooltipHeight / 2}px`;
+                            // Flip if goes off screen
+                            if (e.clientX + 10 + tooltipWidth > window.innerWidth) {
+                                tooltip.style.left = `${e.clientX - tooltipWidth - 10}px`;
+                            }
+                        }
+                    } else {
+                        if (hoveredCell) {
+                            hoveredCell = null;
+                            removeTooltip();
+                        }
+                    }
+                });
+
+                canvas.addEventListener('mouseleave', () => {
+                    if (hoveredCell) {
+                        hoveredCell = null;
+                        removeTooltip();
+                    }
+                });
+
+                // Touch support
+                canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const rect = canvas.getBoundingClientRect();
+                    const x = (touch.clientX - rect.left) / dpr;
+                    const y = (touch.clientY - rect.top) / dpr;
+
+                    const col = Math.floor((x - labelPadding) / cellSize);
+                    const row = Math.floor((y - labelPadding) / cellSize);
+
+                    if (row >= 0 && row < n && col >= 0 && col < n) {
+                        if (!tooltip) {
+                            tooltip = createTooltip(
+                                row, col,
+                                tokens[row], tokens[col],
+                                scores[row][col]
+                            );
+                        }
+                        tooltip.style.left = `${touch.clientX + 10}px`;
+                        tooltip.style.top = `${touch.clientY - tooltip.offsetHeight / 2}px`;
+                    } else {
+                        removeTooltip();
+                    }
+                });
+
+                canvas.addEventListener('touchend', () => {
+                    removeTooltip();
+                });
+            }
+
+            // Initialize
+            function init() {
+                loadSavedSentence();
+
+                goButton.addEventListener('click', () => {
+                    const sentence = sentenceInput.value.trim();
+                    if (!sentence) {
+                        statusEl.textContent = 'Please enter a sentence.';
+                        return;
+                    }
+                    saveSentence(sentence);
+                    statusEl.textContent = '';
+
+                    const tokens = tokenize(sentence);
+                    if (tokens.length === 0) {
+                        statusEl.textContent = 'No valid tokens found.';
+                        return;
+                    }
+                    if (tokens.length > 50) {
+                        statusEl.textContent = 'Too many tokens (max 50). Use a shorter sentence.';
+                        return;
+                    }
+
+                    statusEl.textContent = 'Calculating...';
+
+                    // Defer to allow UI to update
+                    setTimeout(() => {
+                        const scores = calculateAttention(tokens);
+                        renderHeatmap(scores, tokens);
+                        statusEl.textContent = '';
+                    }, 0);
+                });
+
+                // Also trigger on Enter
+                sentenceInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        goButton.click();
+                    }
+                });
+
+                // Auto-run with default on load
+                setTimeout(() => {
+                    if (sentenceInput.value.trim() === DEFAULT_SENTENCE) {
+                        goButton.click();
+                    }
+                }, 100);
+            }
+
+            // Start
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+            // Handle theme change
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                const sentence = sentenceInput.value.trim();
+                if (sentence) {
+                    const tokens = tokenize(sentence);
+                    if (tokens.length > 0 && tokens.length <= 50) {
+                        const scores = calculateAttention(tokens);
+                        renderHeatmap(scores, tokens);
+                    }
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

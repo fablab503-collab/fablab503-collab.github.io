@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Visualize GPU memory allocation blocks and demonstrate best-fit vs first-fit strategies.">
+  <link rel="canonical" href="https://dcreations.fr/503/038-gpu-memory-allocator/">
+  <title>GPU Memory Allocator · Project 503 · D-CREATIONS</title>
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --border-radius: 4px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 1rem; line-height: 1.5; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .controls { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    button { background: var(--card); border: 1px solid var(--line); padding: 0.5rem 1rem; border-radius: var(--border-radius); cursor: pointer; }
+    button.active { background: var(--text); color: var(--card); }
+    .memory-container { display: flex; gap: 0.25rem; height: 200px; margin-bottom: 1.5rem; border: 1px solid var(--line); border-radius: var(--border-radius); padding: 0.5rem; overflow-x: auto; }
+    .block { display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: var(--text-2); border-radius: 2px; }
+    .free { background: #e8e8e8; }
+    .allocated { background: #4a90e2; color: white; }
+    .stats { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .stat-card { background: var(--card); border: 1px solid var(--line); padding: 1rem; border-radius: var(--border-radius); flex: 1; min-width: 120px; }
+    .stat-value { font-size: 1.5rem; font-weight: bold; margin-bottom: 0.25rem; }
+    .legend { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 0.25rem; font-size: 0.875rem; }
+    .legend-color { width: 1rem; height: 1rem; border-radius: 2px; }
+    footer { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: 0.875rem; color: var(--text-2); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+      <h1>GPU Memory Allocator</h1>
+    </header>
+
+    <div class="controls">
+      <button id="firstFit">First-Fit</button>
+      <button id="bestFit" class="active">Best-Fit</button>
+      <button id="allocate">Allocate</button>
+      <button id="deallocate">Deallocate</button>
+      <button id="reset">Reset</button>
+    </div>
+
+    <div class="memory-container" id="memory"></div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div>Free Blocks</div>
+        <div class="stat-value" id="freeBlocks">0</div>
+      </div>
+      <div class="stat-card">
+        <div>Allocated Size</div>
+        <div class="stat-value" id="allocatedSize">0 KB</div>
+      </div>
+      <div class="stat-card">
+        <div>Fragmentation</div>
+        <div class="stat-value" id="fragmentation">0%</div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background: #e8e8e8;"></div>
+        <span>Free</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #4a90e2;"></div>
+        <span>Allocated</span>
+      </div>
+    </div>
+
+    <footer>
+      Project #38 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const memorySize = 1024;
+    let memory = [];
+    let strategy = 'bestFit';
+    let allocatedBlocks = [];
+
+    function initMemory() {
+      memory = Array(memorySize).fill(0);
+      renderMemory();
+      updateStats();
+    }
+
+    function renderMemory() {
+      const container = document.getElementById('memory');
+      container.innerHTML = '';
+      
+      for (let i = 0; i < memory.length; i++) {
+        const block = document.createElement('div');
+        block.className = 'block';
+        block.style.width = '10px';
+        block.style.height = '100%';
+        
+        if (memory[i] === 0) {
+          block.classList.add('free');
+        } else {
+          block.classList.add('allocated');
+          block.textContent = memory[i];
+        }
+        
+        container.appendChild(block);
+      }
+    }
+
+    function updateStats() {
+      const freeBlocks = memory.filter(b => b === 0).length;
+      const allocatedSize = allocatedBlocks.reduce((sum, block) => sum + block.size, 0);
+      const fragmentation = Math.round((freeBlocks / memory.length) * 100);
+      
+      document.getElementById('freeBlocks').textContent = freeBlocks;
+      document.getElementById('allocatedSize').textContent = `${allocatedSize} KB`;
+      document.getElementById('fragmentation').textContent = `${fragmentation}%`;
+    }
+
+    function allocateBlock(size) {
+      let start = -1;
+      let bestStart = -1;
+      let bestSize = Infinity;
+
+      if (strategy === 'firstFit') {
+        for (let i = 0; i < memory.length; i++) {
+          if (memory[i] === 0) {
+            let j = i;
+            while (j < memory.length && memory[j] === 0) j++;
+            if (j - i >= size) {
+              start = i;
+              break;
+            }
+          }
+        }
+      } else {
+        for (let i = 0; i < memory.length; i++) {
+          if (memory[i] === 0) {
+            let j = i;
+            while (j < memory.length && memory[j] === 0) j++;
+            const blockSize = j - i;
+            if (blockSize >= size && blockSize < bestSize) {
+              bestSize = blockSize;
+              bestStart = i;
+            }
+          }
+        }
+        start = bestStart;
+      }
+
+      if (start !== -1) {
+        for (let i = start; i < start + size; i++) {
+          memory[i] = size;
+        }
+        allocatedBlocks.push({ start, size });
+        renderMemory();
+        updateStats();
+        return true;
+      }
+      return false;
+    }
+
+    function deallocateBlock() {
+      if (allocatedBlocks.length === 0) return false;
+      
+      const block = allocatedBlocks.pop();
+      for (let i = block.start; i < block.start + block.size; i++) {
+        memory[i] = 0;
+      }
+      renderMemory();
+      updateStats();
+      return true;
+    }
+
+    function reset() {
+      try {
+        localStorage.removeItem('gpuAllocatedBlocks');
+      } catch(e) {}
+      allocatedBlocks = [];
+      initMemory();
+    }
+
+    document.getElementById('firstFit').addEventListener('click', () => {
+      strategy = 'firstFit';
+      document.getElementById('firstFit').classList.add('active');
+      document.getElementById('bestFit').classList.remove('active');
+    });
+
+    document.getElementById('bestFit').addEventListener('click', () => {
+      strategy = 'bestFit';
+      document.getElementById('bestFit').classList.add('active');
+      document.getElementById('firstFit').classList.remove('active');
+    });
+
+    document.getElementById('allocate').addEventListener('click', () => {
+      const sizes = [64, 128, 256, 512];
+      const size = sizes[Math.floor(Math.random() * sizes.length)];
+      if (!allocateBlock(size)) {
+        alert('No suitable memory block found!');
+      }
+    });
+
+    document.getElementById('deallocate').addEventListener('click', () => {
+      deallocateBlock();
+    });
+
+    document.getElementById('reset').addEventListener('click', reset);
+
+    initMemory();
+  </script>
+</body>
+</html>

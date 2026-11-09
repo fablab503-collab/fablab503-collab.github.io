@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stop Words Filter · Project 503 · D-CREATIONS</title>
+  <meta name="description" content="Remove configurable stop words from input text and show the before-and-after word lists.">
+  <link rel="canonical" href="https://dcreations.fr/503/067-stop-words-filter/">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background-color: var(--card);
+      color: var(--text);
+      font-family: var(--font);
+      resize: vertical;
+    }
+    button {
+      margin: 1rem 0;
+      padding: 0.75rem 1.5rem;
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--font);
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: var(--line);
+    }
+    .results {
+      margin-top: 1.5rem;
+    }
+    .word-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .word-item {
+      padding: 0.25rem 0.5rem;
+      background-color: var(--line);
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+    .word-item.stop {
+      background-color: #ffdddd;
+      color: #990000;
+    }
+    footer {
+      margin-top: auto;
+      text-align: center;
+      padding: 1rem 0;
+      font-size: 0.875rem;
+      color: var(--text-2);
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="/503/">← Project 503</a>
+    <h1>Stop Words Filter</h1>
+    <p>Enter text below to remove common stop words (like "the", "and", "is") and see the filtered results.</p>
+    <textarea id="inputText" placeholder="Enter your text here...">The quick brown fox jumps over the lazy dog. This is a sample sentence with some common stop words that should be removed.</textarea>
+    <button id="filterBtn">Filter Stop Words</button>
+    <div class="results">
+      <h2>Before:</h2>
+      <div id="beforeList" class="word-list"></div>
+      <h2>After:</h2>
+      <div id="afterList" class="word-list"></div>
+    </div>
+  </main>
+  <footer>
+    Project #67 of 503 · Daniel Madac, D-CREATIONS
+  </footer>
+
+  <script>
+    const stopWords = [
+      'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
+      'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the',
+      'to', 'was', 'will', 'with', 'i', 'you', 'we', 'they', 'she',
+      'this', 'these', 'those', 'but', 'or', 'not', 'have', 'had',
+      'do', 'does', 'did', 'can', 'could', 'should', 'would', 'may',
+      'might', 'must', 'shall', 'am', 'been', 'being', 'was', 'were'
+    ];
+
+    const inputText = document.getElementById('inputText');
+    const filterBtn = document.getElementById('filterBtn');
+    const beforeList = document.getElementById('beforeList');
+    const afterList = document.getElementById('afterList');
+
+    function updateWordLists() {
+      const text = inputText.value.toLowerCase();
+      const words = text.match(/\b\w+\b/g) || [];
+      
+      beforeList.innerHTML = '';
+      words.forEach(word => {
+        const span = document.createElement('span');
+        span.className = 'word-item';
+        span.textContent = word;
+        beforeList.appendChild(span);
+      });
+
+      const filteredWords = words.filter(word => !stopWords.includes(word));
+      
+      afterList.innerHTML = '';
+      filteredWords.forEach(word => {
+        const span = document.createElement('span');
+        span.className = 'word-item';
+        span.textContent = word;
+        afterList.appendChild(span);
+      });
+    }
+
+    filterBtn.addEventListener('click', updateWordLists);
+
+    try {
+      const savedText = localStorage.getItem('stopWordsFilterText');
+      if (savedText) inputText.value = savedText;
+    } catch (e) {}
+
+    inputText.addEventListener('input', () => {
+      try {
+        localStorage.setItem('stopWordsFilterText', inputText.value);
+      } catch (e) {}
+    });
+
+    updateWordLists();
+  </script>
+</body>
+</html>

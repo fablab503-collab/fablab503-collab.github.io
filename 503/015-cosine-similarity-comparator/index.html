@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cosine Similarity Comparator · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Two-input vector embedding studio that computes deterministic n-gram hash embeddings for two sentences and plots their cosine similarity score on a radial gauge.">
+<link rel="canonical" href="https://dcreations.fr/503/015-cosine-similarity-comparator/">
+<style>
+:root {
+  --bg: #f4f4f2;
+  --card: #fff;
+  --text: #111;
+  --text-2: #5a5a5a;
+  --line: #e2e2de;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121212;
+    --card: #1c1c1c;
+    --text: #f2f2f2;
+    --text-2: #a8a8a8;
+    --line: #2c2c2c;
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 16px;
+  line-height: 1.5;
+}
+a {
+  color: var(--text);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+.main {
+  max-width: 640px;
+  margin: 0 auto;
+}
+.header {
+  margin-bottom: 24px;
+}
+.header a {
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.header a::before {
+  content: "←";
+  font-size: 20px;
+}
+.h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.p {
+  color: var(--text-2);
+  font-size: 15px;
+  margin-bottom: 20px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 6px;
+  display: block;
+}
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  background: var(--card);
+  color: var(--text);
+  resize: vertical;
+}
+.textarea:focus {
+  outline: none;
+  border-color: var(--text);
+}
+.textarea::placeholder {
+  color: var(--text-2);
+}
+.btn {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn:hover { opacity: 0.9; }
+.btn:active { opacity: 0.8; }
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.gauge-container {
+  margin: 20px auto;
+  width: 240px;
+  height: 240px;
+  position: relative;
+}
+#gauge {
+  width: 100%;
+  height: 100%;
+}
+.score-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.score-label .value {
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1;
+}
+.score-label .text {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+.result {
+  text-align: center;
+  padding: 16px;
+  font-size: 15px;
+  color: var(--text-2);
+}
+.footer {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-2);
+}
+@media (max-width: 400px) {
+  .gauge-container {
+    width: 200px;
+    height: 200px;
+  }
+  .score-label .value {
+    font-size: 28px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="main">
+  <header class="header">
+    <a href="/503/">Project 503</a>
+  </header>
+
+  <h1 class="h1">Cosine Similarity Comparator</h1>
+  <p class="p">Enter two sentences to compute deterministic n-gram hash embeddings and compare their cosine similarity.</p>
+
+  <div class="card">
+    <div class="inputs">
+      <label class="label">Sentence A</label>
+      <textarea class="textarea" id="sentenceA" placeholder="The quick brown fox jumps over the lazy dog"></textarea>
+      
+      <label class="label">Sentence B</label>
+      <textarea class="textarea" id="sentenceB" placeholder="The fast brown fox leaps over the sleepy dog"></textarea>
+    </div>
+    
+    <button class="btn" id="computeBtn">Compute Cosine Similarity</button>
+  </div>
+
+  <div class="card">
+    <h2 class="h1" style="margin-bottom: 16px;">Similarity Score</h2>
+    <div class="gauge-container">
+      <canvas id="gauge"></canvas>
+      <div class="score-label" id="scoreLabel">
+        <span class="value" id="scoreValue">0.00</span>
+        <span class="text">cosine similarity</span>
+      </div>
+    </div>
+    <div class="result" id="resultText">Enter text above and click Compute to see the similarity.</div>
+  </div>
+
+  <footer class="footer">
+    Project #15 of 503 · Daniel Madac, D-CREATIONS
+  </footer>
+</div>
+
+<script>
+// ==================== N-Gram Hash Embedding Implementation ====================
+
+const EMBEDDING_DIM = 100;
+const NGRAM_SIZE = 2; // bigrams
+
+/** Simple deterministic hash function (djb2 variant) */
+function hash(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) + h) + str.charCodeAt(i);
+  }
+  return h >>> 0;
+}
+
+/** Extract character-level n-grams from text */
+function extractNGrams(text, n) {
+  const clean = text.toLowerCase().trim();
+  if (clean.length < n) return [clean];
+  const ngrams = [];
+  for (let i = 0; i <= clean.length - n; i++) {
+    ngrams.push(clean.slice(i, i + n));
+  }
+  return ngrams;
+}
+
+/** Create deterministic binary embedding from n-grams */
+function createEmbedding(text, dim = EMBEDDING_DIM, n = NGRAM_SIZE) {
+  const vector = new Array(dim).fill(0);
+  const ngrams = extractNGrams(text, n);
+  for (const ng of ngrams) {
+    const idx = hash(ng) % dim;
+    vector[idx] = 1;
+  }
+  return vector;
+}
+
+/** Compute cosine similarity between two vectors */
+function cosineSimilarity(a, b) {
+  let dot = 0, magA = 0, magB = 0;
+  const len = Math.min(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    dot += a[i] * b[i];
+    magA += a[i] * a[i];
+    magB += b[i] * b[i];
+  }
+  const denominator = Math.sqrt(magA) * Math.sqrt(magB);
+  return denominator === 0 ? 0 : dot / denominator;
+}
+
+// ==================== Radial Gauge Drawing ====================
+
+const canvas = document.getElementById('gauge');
+const ctx = canvas.getContext('2d');
+const scoreLabel = document.getElementById('scoreLabel');
+const scoreValue = document.getElementById('scoreValue');
+const resultText = document.getElementById('resultText');
+let currentScore = 0;
+
+function getGaugeColors() {
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return {
+    bgArc: isDark ? '#3c3c3c' : '#e0e0e0',
+    ticks: isDark ? '#505050' : '#b0b0b0',
+    labels: isDark ? '#808080' : '#666'
+  };
+}
+
+function resizeCanvas() {
+  const container = canvas.parentElement;
+  canvas.width = container.clientWidth;
+  canvas.height = container.clientHeight;
+  drawGauge(currentScore);
+}
+
+function drawGauge(score) {
+  try {
+    currentScore = score;
+    const colors = getGaugeColors();
+    const width = canvas.width;
+    const height = canvas.height;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(width, height) * 0.42;
+    const barWidth = radius * 0.1;
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    // Draw background arc
+    const startAngle = -Math.PI / 2;
+    const endAngle = Math.PI / 2;
+    
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    ctx.lineWidth = barWidth;
+    ctx.strokeStyle = colors.bgArc;
+    ctx.stroke();
+    
+    // Draw tick marks
+    ctx.strokeStyle = colors.ticks;
+    ctx.lineWidth = 2;
+    for (let i = 0; i <= 10; i++) {
+      const angle = startAngle + (endAngle - startAngle) * (i / 10);
+      const tickRadius = radius + barWidth / 2 + 4;
+      const tickInnerRadius = tickRadius + (i % 5 === 0 ? 8 : 4);
+      const x1 = centerX + Math.cos(angle) * tickRadius;
+      const y1 = centerY + Math.sin(angle) * tickRadius;
+      const x2 = centerX + Math.cos(angle) * tickInnerRadius;
+      const y2 = centerY + Math.sin(angle) * tickInnerRadius;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+    
+    // Draw label numbers
+    ctx.fillStyle = colors.labels;
+    ctx.font = `${barWidth * 0.7}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i <= 10; i += 2) {
+      const angle = startAngle + (endAngle - startAngle) * (i / 10);
+      const labelRadius = radius + barWidth / 2 + 16;
+      const x = centerX + Math.cos(angle) * labelRadius;
+      const y = centerY + Math.sin(angle) * labelRadius;
+      const label = (i / 10).toFixed(1);
+      ctx.fillText(label, x, y);
+    }
+    
+    // Draw active arc based on score (0 to 1)
+    const scoreAngle = startAngle + (endAngle - startAngle) * score;
+    
+    // Gradient from green to red
+    const gradient = ctx.createLinearGradient(centerX - radius, centerY, centerX + radius, centerY);
+    gradient.addColorStop(0, '#22c55e');
+    gradient.addColorStop(0.5, '#eab308');
+    gradient.addColorStop(1, '#ef4444');
+    
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, startAngle, scoreAngle);
+    ctx.lineWidth = barWidth;
+    ctx.strokeStyle = gradient;
+    ctx.stroke();
+  } catch (e) {
+    console.error('Error drawing gauge:', e);
+  }
+}
+
+// ==================== Local Storage ====================
+
+function saveInputs(a, b) {
+  try {
+    localStorage.setItem('cosineSim_A', a);
+    localStorage.setItem('cosineSim_B', b);
+  } catch (e) {
+    // ignore
+  }
+}
+
+function loadInputs() {
+  try {
+    const a = localStorage.getItem('cosineSim_A');
+    const b = localStorage.getItem('cosineSim_B');
+    if (a) document.getElementById('sentenceA').value = a;
+    if (b) document.getElementById('sentenceB').value = b;
+  } catch (e) {
+    // ignore
+  }
+}
+
+// ==================== Main Compute Function ====================
+
+function computeSimilarity() {
+  const a = document.getElementById('sentenceA').value.trim();
+  const b = document.getElementById('sentenceB').value.trim();
+  
+  if (!a || !b) {
+    resultText.textContent = 'Please enter both sentences.';
+    return;
+  }
+  
+  saveInputs(a, b);
+  
+  const embeddingA = createEmbedding(a);
+  const embeddingB = createEmbedding(b);
+  const similarity = cosineSimilarity(embeddingA, embeddingB);
+  
+  const rounded = Math.round(similarity * 100) / 100;
+  scoreValue.textContent = rounded.toFixed(2);
+  drawGauge(similarity);
+  
+  // Interpret the score
+  let interpretation = '';
+  if (similarity >= 0.8) interpretation = 'Very high similarity - sentences share many n-grams';
+  else if (similarity >= 0.6) interpretation = 'High similarity - significant overlap in n-grams';
+  else if (similarity >= 0.4) interpretation = 'Moderate similarity - some shared n-grams';
+  else if (similarity >= 0.2) interpretation = 'Low similarity - few shared n-grams';
+  else interpretation = 'Very low similarity - minimal n-gram overlap';
+  
+  resultText.textContent = `Cosine Similarity: ${(similarity * 100).toFixed(1)}% - ${interpretation}`;
+}
+
+// ==================== Event Listeners ====================
+
+document.getElementById('computeBtn').addEventListener('click', computeSimilarity);
+
+// Compute on Enter key in either textarea
+document.getElementById('sentenceA').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    computeSimilarity();
+  }
+});
+
+document.getElementById('sentenceB').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    computeSimilarity();
+  }
+});
+
+// Auto-compute when both fields have content and user types
+document.getElementById('sentenceA').addEventListener('input', debounce(autoCompute));
+document.getElementById('sentenceB').addEventListener('input', debounce(autoCompute));
+
+function autoCompute() {
+  const a = document.getElementById('sentenceA').value.trim();
+  const b = document.getElementById('sentenceB').value.trim();
+  if (a && b) {
+    computeSimilarity();
+  }
+}
+
+function debounce(fn, delay = 300) {
+  let timeout;
+  return function() {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(), delay);
+  };
+}
+
+// ==================== Initialize ====================
+
+window.addEventListener('load', function() {
+  loadInputs();
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  
+  // Redraw gauge on color scheme change
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+    drawGauge(currentScore);
+  });
+});
+
+// Initial draw
+resizeCanvas();
+</script>
+</body>
+</html>

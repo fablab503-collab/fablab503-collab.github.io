@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Passive Voice Detector · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/078-passive-voice-detector/">
+<meta name="description" content="Paste any English text and this rule-based tool highlights likely passive-voice constructions so you can rewrite them in the active voice.">
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --card: #fff;
+    --text: #111;
+    --text-2: #5a5a5a;
+    --line: #e2e2de;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --card: #1c1c1c;
+      --text: #f2f2f2;
+      --text-2: #a8a8a8;
+      --line: #2c2c2c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 16px 16px 40px;
+  }
+  .top-link {
+    display: inline-block;
+    color: var(--text-2);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .top-link:hover { color: var(--text); text-decoration: underline; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .sub { color: var(--text-2); font-size: 14px; margin: 0 0 20px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-2); }
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    resize: vertical;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 15px;
+    padding: 10px;
+  }
+  textarea:focus { outline: 2px solid var(--text-2); outline-offset: 1px; }
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+  button {
+    font: inherit;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--text);
+    background: var(--text);
+    color: var(--bg);
+    cursor: pointer;
+  }
+  button.secondary {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--line);
+  }
+  button:hover { opacity: 0.85; }
+  #count { font-size: 14px; color: var(--text-2); }
+  #count strong { color: var(--text); }
+  #output {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 15px;
+    min-height: 24px;
+  }
+  #output mark {
+    background: #ffe58a;
+    color: #111;
+    border-radius: 3px;
+    padding: 0 2px;
+  }
+  @media (prefers-color-scheme: dark) {
+    #output mark { background: #8a6d1a; color: #fff; }
+  }
+  #list { margin: 8px 0 0; padding-left: 20px; font-size: 14px; color: var(--text-2); }
+  #list li { margin-bottom: 4px; }
+  #list code { color: var(--text); background: var(--bg); padding: 0 4px; border-radius: 4px; border: 1px solid var(--line); }
+  .hint { font-size: 13px; color: var(--text-2); margin: 0; }
+  footer {
+    text-align: center;
+    color: var(--text-2);
+    font-size: 13px;
+    margin-top: 32px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="top-link" href="/503/">← Project 503</a>
+  <h1>Passive Voice Detector</h1>
+  <p class="sub">Rule-based pattern matcher. It flags likely passive constructions and highlights them below.</p>
+
+  <div class="card">
+    <label for="input">Your text</label>
+    <textarea id="input" placeholder="Type or paste English text here. Example: The report was written by Anna."></textarea>
+    <div class="row">
+      <button id="check" type="button">Check text</button>
+      <button id="clear" type="button" class="secondary">Clear</button>
+      <span id="count"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>Highlighted result</label>
+    <div id="output"></div>
+    <ul id="list"></ul>
+    <p class="hint" style="margin-top:12px">How it works: any form of “to be” (is, was, were, been, …) followed by a past participle (a word ending in -ed, or a common irregular like “written”, “taken”, “given”) is flagged. It is a heuristic, not a grammar proof — short sentences like “He was tired” are not flagged because “tired” is not in the participle list.</p>
+  </div>
+
+  <footer>Project #78 of 503 · Daniel Madac, D-CREATIONS</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Forms of "to be" that can build a passive.
+  var BE = ["am", "is", "are", "was", "were", "be", "been", "being"];
+
+  // Common irregular past participles (not ending in -ed).
+  var IRREGULAR = [
+    "written","taken","given","gone","done","seen","known","thought","brought","bought",
+    "caught","taught","made","paid","said","told","sold","held","kept","left","felt",
+    "meant","sent","spent","built","found","lost","won","torn","worn","borne","born",
+    "chosen","chosen","frozen","spoken","broken","stolen","driven","ridden","risen",
+    "eaten","fallen","forgotten","forgot","hidden","beaten","bitten","blown","drawn",
+    "flown","grown","known","lain","shown","sworn","thrown","withdrawn","sunk","shrunk",
+    "stunk","striven","swum","begun","run","come","become","overcome","paid","laid",
+    "met","led","read","lit","shot","bent","lent","dreamt","burnt","spelt","spilt",
+    "spoilt","wept","crept","slept","swept","leapt","dealt","felt","knelt","spat",
+    "sung","gotten","got"
+  ];
+
+  // Words ending in -ed that are adjectives, not participles.
+  var ED_ADJECTIVES = [
+    "tired","bored","excited","interested","worried","surprised","amazed","scared",
+    "frightened","terrified","pleased","delighted","disappointed","embarrassed",
+    "confused","astonished","shocked","bored","naked","wicked","learned","aged",
+    "beloved","accursed","crooked","dogged","ragged","rugged","sacred","wretched"
+  ];
+
+  // Short adverbs that can sit between the be-verb and the participle.
+  var FILLERS = [
+    "not","also","often","always","never","still","just","now","then","soon",
+    "already","probably","possibly","perhaps","maybe","really","very","quite",
+    "rather","suddenly","finally","eventually","generally","usually","typically",
+    "normally","here","there","only","even","again","once","twice","first",
+    "last","next","well","hard","quickly","slowly","carefully","simply"
+  ];
+
+  var input = document.getElementById("input");
+  var output = document.getElementById("output");
+  var list = document.getElementById("list");
+  var count = document.getElementById("count");
+
+  function isParticiple(word) {
+    var w = word.toLowerCase();
+    if (IRREGULAR.indexOf(w) !== -1) return true;
+    // Regular participle heuristic: ends in "ed", long enough (so "red", "bed" are excluded),
+    // and not a known -ed adjective.
+    if (w.length > 3 && w.slice(-2) === "ed" && ED_ADJECTIVES.indexOf(w) === -1) return true;
+    return false;
+  }
+
+  // Escape HTML so user text can never break the page.
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // Tokenize into words with their offsets, keeping punctuation/newlines intact.
+  function analyze(text) {
+    var matches = [];
+    var re = /[A-Za-z]+/g;
+    var m;
+    var words = [];
+    while ((m = re.exec(text)) !== null) {
+      words.push({ word: m[0], index: m.index });
+    }
+    for (var i = 0; i < words.length; i++) {
+      var w = words[i].word.toLowerCase();
+      if (BE.indexOf(w) === -1) continue;
+      // Look ahead past short filler words (e.g. "was quickly written", "is often said to be done").
+      for (var j = i + 1; j < Math.min(i + 4, words.length); j++) {
+        var nxt = words[j].word.toLowerCase();
+        if (FILLERS.indexOf(nxt) !== -1) continue;
+        if (isParticiple(nxt)) {
+          var start = words[i].index;
+          var end = words[j].index + words[j].word.length;
+          matches.push({ start: start, end: end, text: text.slice(start, end) });
+        }
+        break; // Only the first non-filler word after the be-verb matters.
+      }
+    }
+    // Merge overlapping matches.
+    matches.sort(function (a, b) { return a.start - b.start; });
+    var merged = [];
+    for (var k = 0; k < matches.length; k++) {
+      var last = merged[merged.length - 1];
+      if (last && matches[k].start < last.end) {
+        if (matches[k].end > last.end) { last.end = matches[k].end; last.text = text.slice(last.start, last.end); }
+      } else {
+        merged.push(matches[k]);
+      }
+    }
+    return merged;
+  }
+
+  function render() {
+    var text = input.value;
+    var matches = analyze(text);
+    var html = "";
+    var pos = 0;
+    for (var i = 0; i < matches.length; i++) {
+      var mt = matches[i];
+      html += escapeHtml(text.slice(pos, mt.start));
+      html += "<mark>" + escapeHtml(text.slice(mt.start, mt.end)) + "</mark>";
+      pos = mt.end;
+    }
+    html += escapeHtml(text.slice(pos));
+    output.innerHTML = html || escapeHtml(text);
+    if (matches.length === 0) {
+      count.innerHTML = text.trim() ? "No likely passive constructions found." : "";
+    } else {
+      count.innerHTML = "<strong>" + matches.length + "</strong> likely passive" + (matches.length === 1 ? "" : "s") + " found.";
+    }
+    list.innerHTML = "";
+    for (var j = 0; j < matches.length; j++) {
+      var li = document.createElement("li");
+      var code = document.createElement("code");
+      code.textContent = "“" + matches[j].text + "”";
+      li.appendChild(code);
+      li.appendChild(document.createTextNode(" — try naming who or what does the action."));
+      list.appendChild(li);
+    }
+    try { localStorage.setItem("pvd78-text", text); } catch (e) { /* storage unavailable */ }
+  }
+
+  document.getElementById("check").addEventListener("click", render);
+  document.getElementById("clear").addEventListener("click", function () {
+    input.value = "";
+    render();
+    input.focus();
+  });
+  input.addEventListener("input", render);
+
+  // Restore last text if storage is available.
+  try {
+    var saved = localStorage.getItem("pvd78-text");
+    if (saved) input.value = saved;
+  } catch (e) { /* storage unavailable */ }
+
+  render();
+})();
+</script>
+</body>
+</html>

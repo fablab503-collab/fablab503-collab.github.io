@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Text Entropy · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/083-text-entropy/">
+<meta name="description" content="Type or paste any text and see its Shannon entropy — character level and word level — on a live gauge. Project 83 of 503 by Daniel Madac.">
+<style>
+  :root {
+    --bg: #f4f4f2;
+    --card: #fff;
+    --text: #111;
+    --text-2: #5a5a5a;
+    --line: #e2e2de;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121212;
+      --card: #1c1c1c;
+      --text: #f2f2f2;
+      --text-2: #a8a8a8;
+      --line: #2c2c2c;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  a { color: var(--text-2); text-decoration: none; }
+  a:hover { color: var(--text); text-decoration: underline; }
+  .top { padding: 16px 20px; }
+  .top a { font-size: 14px; }
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 8px 20px 40px;
+  }
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .sub { color: var(--text-2); font-size: 14px; margin: 6px 0 20px; }
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    resize: vertical;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--text);
+    font: inherit;
+    font-size: 15px;
+  }
+  textarea:focus { outline: 2px solid var(--text-2); outline-offset: 1px; }
+  .row { display: flex; gap: 10px; margin: 12px 0 24px; flex-wrap: wrap; }
+  button {
+    font: inherit;
+    font-size: 14px;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--text-2); }
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 560px) {
+    .cards { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+  }
+  .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+  .gauge { width: 100%; max-width: 200px; height: auto; display: block; margin: 0 auto; }
+  .gauge .track { stroke: var(--line); }
+  .gauge .fill { stroke: var(--text); transition: stroke-dasharray 0.15s ease-out; }
+  .big { font-size: 28px; font-weight: 700; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .pct { color: var(--text-2); font-size: 13px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .meta { color: var(--text-2); font-size: 12px; margin-top: 10px; font-variant-numeric: tabular-nums; }
+  footer {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-2);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+  <div class="top"><a href="/503/">← Project 503</a></div>
+  <main>
+    <h1>Text Entropy</h1>
+    <p class="sub">Shannon entropy of your text, in bits per symbol, shown as a gauge. 100% means every symbol is equally likely — maximum disorder.</p>
+    <textarea id="text" placeholder="Type or paste text here…" spellcheck="false"></textarea>
+    <div class="row">
+      <button id="sample" type="button">Load sample text</button>
+      <button id="clear" type="button">Clear</button>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <h2>Character level</h2>
+        <svg class="gauge" viewBox="0 0 200 110" role="img" aria-label="Character entropy gauge">
+          <path class="track" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="14" stroke-linecap="round"/>
+          <path class="fill" id="charFill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 251.33"/>
+        </svg>
+        <div class="big" id="charBits">0.00 bits</div>
+        <div class="pct" id="charPct">0% of max</div>
+        <div class="meta" id="charMeta">0 characters · 0 unique</div>
+      </div>
+      <div class="card">
+        <h2>Word level</h2>
+        <svg class="gauge" viewBox="0 0 200 110" role="img" aria-label="Word entropy gauge">
+          <path class="track" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="14" stroke-linecap="round"/>
+          <path class="fill" id="wordFill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 251.33"/>
+        </svg>
+        <div class="big" id="wordBits">0.00 bits</div>
+        <div class="pct" id="wordPct">0% of max</div>
+        <div class="meta" id="wordMeta">0 words · 0 unique</div>
+      </div>
+    </div>
+  </main>
+  <footer>Project #83 of 503 · Daniel Madac, D-CREATIONS</footer>
+
+<script>
+(function () {
+  "use strict";
+  var ARC = Math.PI * 80; // length of the semicircle gauge arc
+  var text = document.getElementById("text");
+
+  function entropyFromCounts(counts, total) {
+    var h = 0;
+    for (var i = 0; i < counts.length; i++) {
+      var p = counts[i] / total;
+      if (p > 0) h -= p * Math.log2(p);
+    }
+    return h;
+  }
+
+  function analyze(str) {
+    var charCounts = {};
+    var i, ch;
+    for (i = 0; i < str.length; i++) {
+      ch = str.charAt(i);
+      charCounts[ch] = (charCounts[ch] || 0) + 1;
+    }
+    var charKeys = Object.keys(charCounts);
+    var charVals = charKeys.map(function (k) { return charCounts[k]; });
+    var charH = str.length ? entropyFromCounts(charVals, str.length) : 0;
+    var charMax = charKeys.length > 1 ? Math.log2(charKeys.length) : 0;
+
+    var words = str.toLowerCase().match(/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/gu) || [];
+    var wordCounts = {};
+    for (i = 0; i < words.length; i++) {
+      wordCounts[words[i]] = (wordCounts[words[i]] || 0) + 1;
+    }
+    var wordKeys = Object.keys(wordCounts);
+    var wordVals = wordKeys.map(function (k) { return wordCounts[k]; });
+    var wordH = words.length ? entropyFromCounts(wordVals, words.length) : 0;
+    var wordMax = wordKeys.length > 1 ? Math.log2(wordKeys.length) : 0;
+
+    return {
+      charH: charH, charMax: charMax, charTotal: str.length, charDistinct: charKeys.length,
+      wordH: wordH, wordMax: wordMax, wordTotal: words.length, wordDistinct: wordKeys.length
+    };
+  }
+
+  function setGauge(fillId, bitsId, pctId, metaId, h, max, total, distinct, unit) {
+    var norm = max > 0 ? h / max : 0;
+    if (norm < 0) norm = 0;
+    if (norm > 1) norm = 1;
+    document.getElementById(fillId).setAttribute("stroke-dasharray", (norm * ARC).toFixed(2) + " " + ARC.toFixed(2));
+    document.getElementById(bitsId).textContent = h.toFixed(2) + " bits";
+    document.getElementById(pctId).textContent = Math.round(norm * 100) + "% of max";
+    document.getElementById(metaId).textContent = total + " " + unit + " · " + distinct + " unique";
+  }
+
+  function update() {
+    var r = analyze(text.value);
+    setGauge("charFill", "charBits", "charPct", "charMeta", r.charH, r.charMax, r.charTotal, r.charDistinct, "characters");
+    setGauge("wordFill", "wordBits", "wordPct", "wordMeta", r.wordH, r.wordMax, r.wordTotal, r.wordDistinct, "words");
+    try { localStorage.setItem("text-entropy-83", text.value); } catch (e) { /* storage unavailable */ }
+  }
+
+  function loadSaved() {
+    try {
+      var saved = localStorage.getItem("text-entropy-83");
+      if (saved) text.value = saved;
+    } catch (e) { /* storage unavailable */ }
+  }
+
+  document.getElementById("sample").addEventListener("click", function () {
+    text.value = "The quick brown fox jumps over the lazy dog. The dog barked, and the fox ran away. Quick, quick — the fox was quick, but the dog was quicker still.";
+    update();
+  });
+  document.getElementById("clear").addEventListener("click", function () {
+    text.value = "";
+    update();
+    text.focus();
+  });
+  text.addEventListener("input", update);
+
+  loadSaved();
+  update();
+})();
+</script>
+</body>
+</html>

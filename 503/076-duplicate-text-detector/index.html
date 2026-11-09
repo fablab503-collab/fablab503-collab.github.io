@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Duplicate Text Detector · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/076-duplicate-text-detector/">
+  <meta name="description" content="Find near-duplicate sentences or paragraphs within a single document using fuzzy matching.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 768px;
+      margin: 0 auto;
+    }
+    header, footer {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background-color: var(--card);
+      color: var(--text);
+      font-family: var(--font);
+      resize: vertical;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background-color: var(--card);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    button:hover {
+      background-color: var(--line);
+    }
+    .results {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+    }
+    .result-item {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .result-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .highlight {
+      background-color: #ffeb3b;
+      padding: 0.1rem 0.2rem;
+      border-radius: 2px;
+    }
+    footer a {
+      color: var(--text-2);
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <a href="/503/" style="color: var(--text); text-decoration: none;">← Project 503</a>
+      <h1>Duplicate Text Detector</h1>
+      <p>Find near-duplicate sentences or paragraphs within a single document using fuzzy matching.</p>
+    </header>
+
+    <textarea id="inputText" placeholder="Paste your text here..."></textarea>
+    <button id="detectBtn">Detect Duplicates</button>
+
+    <div class="results" id="resultsContainer" style="display: none;"></div>
+
+    <footer>
+      Project #76 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const inputText = document.getElementById('inputText');
+      const detectBtn = document.getElementById('detectBtn');
+      const resultsContainer = document.getElementById('resultsContainer');
+
+      // Load saved text from localStorage if available
+      try {
+        const savedText = localStorage.getItem('duplicateDetectorText');
+        if (savedText) {
+          inputText.value = savedText;
+        }
+      } catch (e) {}
+
+      detectBtn.addEventListener('click', () => {
+        const text = inputText.value.trim();
+        if (!text) return;
+
+        // Save current text to localStorage
+        try {
+          localStorage.setItem('duplicateDetectorText', text);
+        } catch (e) {}
+
+        const sentences = splitIntoSentences(text);
+        const duplicates = findDuplicates(sentences);
+
+        displayResults(duplicates, sentences);
+      });
+
+      function splitIntoSentences(text) {
+        return text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 0);
+      }
+
+      function findDuplicates(sentences) {
+        const duplicates = [];
+        const seen = new Set();
+
+        for (let i = 0; i < sentences.length; i++) {
+          const sentence = sentences[i];
+          if (seen.has(sentence)) continue;
+
+          const matches = [];
+          for (let j = i + 1; j < sentences.length; j++) {
+            if (isSimilar(sentence, sentences[j])) {
+              matches.push(j);
+            }
+          }
+
+          if (matches.length > 0) {
+            duplicates.push({
+              index: i,
+              text: sentence,
+              matches: matches
+            });
+            seen.add(sentence);
+            matches.forEach(idx => seen.add(sentences[idx]));
+          }
+        }
+
+        return duplicates;
+      }
+
+      function isSimilar(s1, s2) {
+        const l1 = s1.toLowerCase();
+        const l2 = s2.toLowerCase();
+
+        if (l1 === l2) return true;
+
+        // Simple fuzzy matching based on character similarity
+        const longer = l1.length > l2.length ? l1 : l2;
+        const shorter = l1.length > l2.length ? l2 : l1;
+
+        if (longer.length === 0) return 1.0;
+
+        const distance = levenshteinDistance(longer, shorter);
+        const similarity = (longer.length - distance) / longer.length;
+
+        return similarity > 0.8;
+      }
+
+      function levenshteinDistance(s1, s2) {
+        const matrix = Array(s2.length + 1).fill().map(() => Array(s1.length + 1).fill(0));
+
+        for (let i = 0; i <= s1.length; i++) matrix[0][i] = i;
+        for (let j = 0; j <= s2.length; j++) matrix[j][0] = j;
+
+        for (let j = 1; j <= s2.length; j++) {
+          for (let i = 1; i <= s1.length; i++) {
+            if (s2[j - 1] === s1[i - 1]) {
+              matrix[j][i] = matrix[j - 1][i - 1];
+            } else {
+              matrix[j][i] = Math.min(
+                matrix[j - 1][i] + 1,
+                matrix[j][i - 1] + 1,
+                matrix[j - 1][i - 1] + 1
+              );
+            }
+          }
+        }
+
+        return matrix[s2.length][s1.length];
+      }
+
+      function displayResults(duplicates, sentences) {
+        if (duplicates.length === 0) {
+          resultsContainer.innerHTML = '<p>No duplicates found.</p>';
+        } else {
+          let html = '';
+          duplicates.forEach(item => {
+            const original = item.text;
+            const matches = item.matches.map(idx => sentences[idx]).join(', ');
+            html += `
+              <div class="result-item">
+                <p><strong>Original:</strong> <span class="highlight">${original}</span></p>
+                <p><strong>Matches:</strong> ${matches}</p>
+              </div>
+            `;
+          });
+          resultsContainer.innerHTML = html;
+        }
+        resultsContainer.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

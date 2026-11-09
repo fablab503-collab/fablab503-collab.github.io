@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fairness Scheduler · Project 503 · D-CREATIONS</title>
+  <meta name="description" content="A fairness scheduler that ensures all users/devices get fair access to resources over time with weighted fairness.">
+  <link rel="canonical" href="https://dcreations.fr/503/057-fairness-scheduler/">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-width: 375px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 30px;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .card {
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+    h1, h2 {
+      margin-top: 0;
+    }
+    input, button {
+      padding: 8px 12px;
+      font-family: var(--font);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background-color: var(--card);
+      color: var(--text);
+    }
+    button {
+      cursor: pointer;
+      background-color: var(--bg);
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .stat-card {
+      text-align: center;
+      padding: 10px;
+      background-color: var(--bg);
+      border-radius: 4px;
+    }
+    .progress-bar {
+      height: 20px;
+      background-color: var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .progress-fill {
+      height: 100%;
+      background-color: #4CAF50;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+
+    <main>
+      <h1>Fairness Scheduler</h1>
+      <p>Ensures all users/devices get fair access to resources over time with weighted fairness.</p>
+
+      <div class="card">
+        <h2>Add User/Device</h2>
+        <input type="text" id="userInput" placeholder="User or device name">
+        <input type="number" id="weightInput" placeholder="Weight (1-10)" min="1" max="10" value="1">
+        <button id="addBtn">Add</button>
+      </div>
+
+      <div class="card">
+        <h2>Active Resources</h2>
+        <div id="resourcesList"></div>
+      </div>
+
+      <div class="card">
+        <h2>Scheduling Stats</h2>
+        <div class="stats">
+          <div class="stat-card">
+            <div>Total Users</div>
+            <div id="totalUsers">0</div>
+          </div>
+          <div class="stat-card">
+            <div>Current Access</div>
+            <div id="currentAccess">None</div>
+          </div>
+          <div class="stat-card">
+            <div>Queue Length</div>
+            <div id="queueLength">0</div>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Project #57 of 503 · Daniel Madac, D-CREATIONS</p>
+    </footer>
+  </div>
+
+  <script>
+    const users = [];
+    let currentAccess = null;
+    let queue = [];
+    let progress = 0;
+
+    function loadUsers() {
+      try {
+        const saved = localStorage.getItem('fairnessSchedulerUsers');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          users.push(...parsed);
+        }
+      } catch (e) {}
+    }
+
+    function saveUsers() {
+      try {
+        localStorage.setItem('fairnessSchedulerUsers', JSON.stringify(users));
+      } catch (e) {}
+    }
+
+    function addUser(name, weight) {
+      if (!name.trim()) return;
+      users.push({ name, weight: parseInt(weight) || 1 });
+      saveUsers();
+      render();
+    }
+
+    function scheduleNext() {
+      if (users.length === 0) return;
+
+      const totalWeight = users.reduce((sum, u) => sum + u.weight, 0);
+      let random = Math.random() * totalWeight;
+      
+      for (const user of users) {
+        random -= user.weight;
+        if (random <= 0) {
+          currentAccess = user.name;
+          queue.push(user.name);
+          updateStats();
+          return;
+        }
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('totalUsers').textContent = users.length;
+      document.getElementById('currentAccess').textContent = currentAccess || 'None';
+      document.getElementById('queueLength').textContent = queue.length;
+      
+      progress += 10;
+      if (progress > 100) progress = 0;
+      document.getElementById('progressFill').style.width = `${progress}%`;
+    }
+
+    function render() {
+      const list = document.getElementById('resourcesList');
+      list.innerHTML = '';
+      
+      users.forEach((user, i) => {
+        const div = document.createElement('div');
+        div.textContent = `${user.name} (weight: ${user.weight})`;
+        div.style.marginBottom = '5px';
+        list.appendChild(div);
+      });
+    }
+
+    function init() {
+      loadUsers();
+      render();
+      
+      document.getElementById('addBtn').addEventListener('click', () => {
+        const name = document.getElementById('userInput').value;
+        const weight = document.getElementById('weightInput').value;
+        addUser(name, weight);
+        document.getElementById('userInput').value = '';
+        document.getElementById('weightInput').value = '1';
+      });
+
+      setInterval(() => {
+        scheduleNext();
+        updateStats();
+      }, 2000);
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

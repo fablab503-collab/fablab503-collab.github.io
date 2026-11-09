@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Device Health Monitor · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/032-device-health-monitor/">
+<meta name="description" content="Real-time dashboard of simulated device metrics — CPU, memory, GPU usage and temperature — generated locally in your browser with no server and no network.">
+<style>
+:root{
+  --bg:#f4f4f2; --card:#fff; --text:#111; --text-2:#5a5a5a; --line:#e2e2de;
+  --ok:#1e8449; --warn:#b9770e; --bad:#c0392b;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121212; --card:#1c1c1c; --text:#f2f2f2; --text-2:#a8a8a8; --line:#2c2c2c;
+    --ok:#5fd39a; --warn:#e5b567; --bad:#ff7a66;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.5}
+header.top{padding:16px 20px}
+a.back{color:var(--text-2);text-decoration:none;font-size:14px}
+a.back:hover{color:var(--text)}
+main{max-width:920px;margin:0 auto;padding:0 16px 32px}
+h1{font-size:24px;margin:8px 0 6px}
+.lede{color:var(--text-2);margin:0 0 18px;max-width:64ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:16px;margin-bottom:16px}
+.card h2{font-size:16px;margin:0 0 10px}
+.sec-title{font-size:16px;margin:20px 0 10px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input{font:inherit;color:var(--text)}
+button{padding:8px 14px;border:1px solid var(--line);border-radius:8px;
+  background:var(--bg);cursor:pointer}
+button:hover{background:var(--line)}
+button.small{padding:2px 8px;font-size:12px;border-radius:6px}
+label.speed{display:flex;align-items:center;gap:6px;color:var(--text-2);font-size:14px}
+select,input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.form{display:flex;flex-wrap:wrap;gap:8px}
+#inDev{width:160px}
+.hint{color:var(--text-2);font-size:13px;margin:10px 0 0}
+.status{font-weight:600;margin:12px 0 0}
+.overview{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.ov{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.ov-label{font-size:12px;color:var(--text-2)}
+.ov-val{font-size:20px;font-weight:600;margin:2px 0 6px}
+.devices{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.dev{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.dev-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.dev-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.badge{font-size:12px;font-weight:600;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.badge.ok{background:var(--ok);color:#fff}
+.badge.warn{background:var(--warn);color:#fff}
+.badge.bad{background:var(--bad);color:#fff}
+.metric{margin-top:10px}
+.m-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.m-label{color:var(--text-2)}
+.m-val{font-weight:600;font-variant-numeric:tabular-nums}
+.bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.bar.sm{height:6px;border-radius:3px}
+.bar-fill{height:100%;border-radius:5px;background:var(--ok);transition:width .3s,background .3s}
+canvas.spark{display:block;width:100%;height:40px;margin-top:6px}
+footer{text-align:center;color:var(--text-2);font-size:13px;
+  padding:24px 16px 40px;border-top:1px solid var(--line);margin-top:8px}
+</style>
+</head>
+<body>
+<header class="top"><a class="back" href="/503/">← Project 503</a></header>
+<main>
+  <h1>Device Health Monitor</h1>
+  <p class="lede">A live dashboard of simulated device metrics: CPU, memory, GPU usage and temperature.
+  Every number is generated locally in this page — no real device is read, no server, no network.</p>
+
+  <section class="card">
+    <div class="controls">
+      <button id="btnToggle" type="button">Pause</button>
+      <button id="btnReset" type="button">Reset</button>
+      <button id="btnDemo" type="button">Load demo</button>
+      <label class="speed">Speed
+        <select id="selSpeed">
+          <option value="2000">Slow (2s)</option>
+          <option value="1000" selected>Normal (1s)</option>
+          <option value="400">Fast (0.4s)</option>
+        </select>
+      </label>
+    </div>
+    <p id="status" class="status"></p>
+  </section>
+
+  <section class="card">
+    <h2>Fleet overview</h2>
+    <div class="overview">
+      <div class="ov"><div class="ov-label">Avg CPU</div><div class="ov-val" id="ovCpu">—</div>
+        <div class="bar sm"><div class="bar-fill" id="ovCpuB"></div></div></div>
+      <div class="ov"><div class="ov-label">Avg memory</div><div class="ov-val" id="ovMem">—</div>
+        <div class="bar sm"><div class="bar-fill" id="ovMemB"></div></div></div>
+      <div class="ov"><div class="ov-label">Avg GPU</div><div class="ov-val" id="ovGpu">—</div>
+        <div class="bar sm"><div class="bar-fill" id="ovGpuB"></div></div></div>
+      <div class="ov"><div class="ov-label">Max temperature</div><div class="ov-val" id="ovTemp">—</div>
+        <div class="bar sm"><div class="bar-fill" id="ovTempB"></div></div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Add a device</h2>
+    <form id="formDev" class="form">
+      <input id="inDev" placeholder="Device name" maxlength="16" aria-label="Device name">
+      <button type="submit">Add device</button>
+    </form>
+    <p class="hint">Each device gets its own simulated CPU, memory, GPU and temperature feed.
+    The list of device names is saved in this browser only (localStorage).</p>
+  </section>
+
+  <h2 class="sec-title">Devices</h2>
+  <div id="devices" class="devices"></div>
+</main>
+<footer>Project #32 of 503 · Daniel Madac, D-CREATIONS</footer>
+<script>
+(function(){
+"use strict";
+var LS_KEY="p503dhm.state.v1";
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function read(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+function num(v,d){v=Number(v);return isFinite(v)?v:d;}
+function round(v){return Math.round(v);}
+
+var HIST=60;
+var DEMO=["Laptop","Phone","Server","Tablet"];
+var state={devices:[],on:false,timer:null,speed:1000,tick:0};
+
+function theme(){
+  var s=getComputedStyle(document.documentElement);
+  return {
+    ok:(s.getPropertyValue("--ok")||"").trim()||"#1e8449",
+    warn:(s.getPropertyValue("--warn")||"").trim()||"#b9770e",
+    bad:(s.getPropertyValue("--bad")||"").trim()||"#c0392b"
+  };
+}
+function usageColor(v,c){return v>=85?c.bad:(v>=60?c.warn:c.ok);}
+function tempColor(t,c){return t>=80?c.bad:(t>=65?c.warn:c.ok);}
+function tempPct(t){return clamp((t-20)/80*100,0,100);}
+
+function newDevice(name){
+  name=((name||"").trim()||"Device").slice(0,16);
+  var d={name:name,cpu:15+Math.random()*35,mem:25+Math.random()*35,
+    gpu:5+Math.random()*30,temp:36+Math.random()*12,
+    hist:{cpu:[],mem:[],gpu:[],temp:[]},ui:null};
+  return d;
+}
+function push(arr,v){arr.push(v);if(arr.length>HIST)arr.shift();}
+function walk(v,step,mean){return v+(Math.random()-0.5)*step+(mean-v)*0.06;}
+
+function step(){
+  state.tick++;
+  state.devices.forEach(function(d){
+    d.cpu=clamp(walk(d.cpu,10,40),2,100);
+    d.mem=clamp(walk(d.mem,4,55),5,100);
+    d.gpu=clamp(walk(d.gpu,12,25),0,100);
+    var target=34+0.5*d.cpu+0.3*d.gpu;
+    d.temp=clamp(d.temp+(target-d.temp)*0.12+(Math.random()-0.5)*2,25,99);
+    push(d.hist.cpu,d.cpu);push(d.hist.mem,d.mem);
+    push(d.hist.gpu,d.gpu);push(d.hist.temp,d.temp);
+  });
+  render();
+}
+
+function deviceStatus(d){
+  var worst=Math.max(d.cpu,d.mem,d.gpu);
+  if(d.temp>=80||worst>=85)return["Hot","bad"];
+  if(d.temp>=65||worst>=60)return["Busy","warn"];
+  return["Normal","ok"];
+}
+
+function metricHtml(label,key){
+  return '<div class="metric"><div class="m-row"><span class="m-label">'+label+'</span>'+
+    '<span class="m-val" data-v="'+key+'"></span></div>'+
+    '<div class="bar"><div class="bar-fill" data-b="'+key+'"></div></div>'+
+    '<canvas class="spark" data-c="'+key+'"></canvas></div>';
+}
+function buildCard(d){
+  var card=document.createElement("div");
+  card.className="dev";
+  card.innerHTML=
+    '<div class="dev-head"><span class="dev-name">'+esc(d.name)+'</span>'+
+    '<span class="badge ok">Normal</span>'+
+    '<button class="small" type="button" title="Remove device" aria-label="Remove '+esc(d.name)+'">×</button></div>'+
+    metricHtml("CPU","cpu")+metricHtml("Memory","mem")+
+    metricHtml("GPU","gpu")+metricHtml("Temperature","temp");
+  var ui={
+    badge:card.querySelector(".badge"),
+    vals:{},bars:{},sparks:{}
+  };
+  card.querySelectorAll("[data-v]").forEach(function(el){ui.vals[el.getAttribute("data-v")]=el;});
+  card.querySelectorAll("[data-b]").forEach(function(el){ui.bars[el.getAttribute("data-b")]=el;});
+  card.querySelectorAll("[data-c]").forEach(function(el){ui.sparks[el.getAttribute("data-c")]=el;});
+  card.querySelector("button.small").addEventListener("click",function(){removeDevice(d);});
+  d.ui=ui;
+  return card;
+}
+function addDevice(name){
+  var d=newDevice(name);
+  state.devices.push(d);
+  document.getElementById("devices").appendChild(buildCard(d));
+  return d;
+}
+function removeDevice(d){
+  var i=state.devices.indexOf(d);
+  if(i>=0)state.devices.splice(i,1);
+  if(d.ui&&d.ui.badge&&d.ui.badge.closest(".dev"))
+    d.ui.badge.closest(".dev").remove();
+  save();render();
+}
+function drawSpark(cv,data,color){
+  var dpr=window.devicePixelRatio||1;
+  var w=cv.clientWidth||240,h=40;
+  var W=Math.round(w*dpr),H=Math.round(h*dpr);
+  if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;}
+  var ctx=cv.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  if(data.length<2)return;
+  var min=Infinity,max=-Infinity,i;
+  for(i=0;i<data.length;i++){if(data[i]<min)min=data[i];if(data[i]>max)max=data[i];}
+  if(max-min<1)max=min+1;
+  function x(k){return (k/(data.length-1))*(w-4)+2;}
+  function y(v){return h-3-((v-min)/(max-min))*(h-6);}
+  ctx.beginPath();
+  ctx.moveTo(x(0),h);
+  for(i=0;i<data.length;i++)ctx.lineTo(x(i),y(data[i]));
+  ctx.lineTo(x(data.length-1),h);
+  ctx.closePath();
+  ctx.globalAlpha=0.12;ctx.fillStyle=color;ctx.fill();
+  ctx.globalAlpha=1;
+  ctx.beginPath();
+  for(i=0;i<data.length;i++){if(i===0)ctx.moveTo(x(i),y(data[i]));else ctx.lineTo(x(i),y(data[i]));}
+  ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.lineJoin="round";ctx.stroke();
+}
+function renderDevice(d,c){
+  var ui=d.ui;if(!ui)return;
+  var st=deviceStatus(d);
+  ui.badge.textContent=st[0];
+  ui.badge.className="badge "+st[1];
+  var vals=[["cpu",round(d.cpu)+"%",d.cpu,usageColor(d.cpu,c)],
+            ["mem",round(d.mem)+"%",d.mem,usageColor(d.mem,c)],
+            ["gpu",round(d.gpu)+"%",d.gpu,usageColor(d.gpu,c)],
+            ["temp",round(d.temp)+" °C",tempPct(d.temp),tempColor(d.temp,c)]];
+  vals.forEach(function(m){
+    var key=m[0];
+    ui.vals[key].textContent=m[1];
+    ui.bars[key].style.width=m[2]+"%";
+    ui.bars[key].style.background=m[3];
+    drawSpark(ui.sparks[key],d.hist[key],m[3]);
+  });
+}
+function render(){
+  var c=theme();
+  var st=document.getElementById("status");
+  st.textContent=(state.on?"Live":"Paused")+" · tick "+state.tick+
+    " · every "+(state.speed/1000)+"s · "+state.devices.length+
+    " device(s) · simulated locally in this page";
+  document.getElementById("btnToggle").textContent=state.on?"Pause":"Start";
+  var n=state.devices.length;
+  var cpu=0,mem=0,gpu=0,temp=-Infinity;
+  state.devices.forEach(function(d){
+    cpu+=d.cpu;mem+=d.mem;gpu+=d.gpu;
+    if(d.temp>temp)temp=d.temp;
+  });
+  if(n){
+    cpu/=n;mem/=n;gpu/=n;
+    setOv("ovCpu",round(cpu)+"%",cpu,usageColor(cpu,c));
+    setOv("ovMem",round(mem)+"%",mem,usageColor(mem,c));
+    setOv("ovGpu",round(gpu)+"%",gpu,usageColor(gpu,c));
+    setOv("ovTemp",round(temp)+" °C",tempPct(temp),tempColor(temp,c));
+  }else{
+    setOv("ovCpu","—",0,c.ok);setOv("ovMem","—",0,c.ok);
+    setOv("ovGpu","—",0,c.ok);setOv("ovTemp","—",0,c.ok);
+  }
+  state.devices.forEach(function(d){renderDevice(d,c);});
+}
+function setOv(valId,txt,pct,color){
+  document.getElementById(valId).textContent=txt;
+  document.getElementById(valId+"B").style.width=pct+"%";
+  document.getElementById(valId+"B").style.background=color;
+}
+function stopTimer(){
+  if(state.timer){clearInterval(state.timer);state.timer=null;}
+  state.on=false;
+}
+function startTimer(){
+  stopTimer();
+  state.on=true;
+  state.timer=setInterval(step,state.speed);
+}
+function save(){
+  store(LS_KEY,JSON.stringify({devices:state.devices.map(function(d){return d.name;})}));
+}
+function loadSaved(){
+  var raw=read(LS_KEY);
+  if(raw===null)return false;
+  try{
+    var o=JSON.parse(raw);
+    if(!o||!Array.isArray(o.devices)||!o.devices.length)return false;
+    o.devices.forEach(function(n){if(typeof n==="string")addDevice(n);});
+    return true;
+  }catch(e){return false;}
+}
+function loadDemo(){
+  stopTimer();
+  state.devices=[];state.tick=0;
+  document.getElementById("devices").innerHTML="";
+  DEMO.forEach(addDevice);
+  save();startTimer();render();
+}
+function reset(){
+  state.tick=0;
+  state.devices.forEach(function(d){
+    d.cpu=15+Math.random()*35;d.mem=25+Math.random()*35;
+    d.gpu=5+Math.random()*30;d.temp=36+Math.random()*12;
+    d.hist={cpu:[],mem:[],gpu:[],temp:[]};
+  });
+  render();
+}
+
+document.getElementById("btnToggle").addEventListener("click",function(){
+  if(state.on){stopTimer();}else{startTimer();}
+  render();
+});
+document.getElementById("btnReset").addEventListener("click",reset);
+document.getElementById("btnDemo").addEventListener("click",loadDemo);
+document.getElementById("selSpeed").addEventListener("change",function(e){
+  state.speed=clamp(num(e.target.value,1000),100,10000);
+  if(state.on)startTimer();
+  render();
+});
+document.getElementById("formDev").addEventListener("submit",function(e){
+  e.preventDefault();
+  addDevice(document.getElementById("inDev").value);
+  save();render();
+  document.getElementById("inDev").value="";
+});
+
+if(!loadSaved()){DEMO.forEach(addDevice);}
+startTimer();
+render();
+})();
+</script>
+</body>
+</html>

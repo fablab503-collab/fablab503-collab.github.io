@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Softmax Temperature Sampler · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Interactive next-token probability explorer with temperature, top-k, and nucleus sampling controls.">
+<link rel="canonical" href="https://dcreations.fr/503/019-softmax-temperature-sampler/">
+<style>
+:root {
+  --bg: #f4f4f2;
+  --card: #fff;
+  --text: #111;
+  --text-2: #5a5a5a;
+  --line: #e2e2de;
+  --primary: #0066cc;
+  --bar-raw: #a8a8a8;
+  --bar-scaled: #0066cc;
+  --bar-filtered: #00994d;
+  --bar-sampled: #cc3300;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121212;
+    --card: #1c1c1c;
+    --text: #f2f2f2;
+    --text-2: #a8a8a8;
+    --line: #2c2c2c;
+    --bar-raw: #5a5a5a;
+    --bar-scaled: #3388cc;
+    --bar-filtered: #00b359;
+    --bar-sampled: #ff4400;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.header {
+  margin-bottom: 16px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+h1 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.tagline {
+  color: var(--text-2);
+  margin: 0;
+  font-size: 16px;
+}
+
+.description {
+  margin: 24px 0;
+  color: var(--text-2);
+  max-width: 600px;
+}
+
+.controls {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.slider-group {
+  margin-bottom: 20px;
+}
+
+.slider-group:last-child {
+  margin-bottom: 0;
+}
+
+.slider-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.slider-label span:first-child {
+  font-weight: 500;
+}
+
+.slider-label .value {
+  font-variant-numeric: tabular-nums;
+  background: var(--bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.slider-container {
+  position: relative;
+  height: 6px;
+  background: var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.slider-input {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slider-track {
+  position: absolute;
+  height: 100%;
+  background: var(--primary);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.slider-thumb {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: var(--primary);
+  border-radius: 50%;
+  top: -6px;
+  pointer-events: none;
+  box-shadow: 0 0 0 3px var(--card), 0 0 0 6px var(--primary);
+}
+
+.reset-btn {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.reset-btn:hover {
+  background: var(--line);
+}
+
+.visualization {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.chart-container {
+  margin: 16px 0;
+  position: relative;
+}
+
+.chart-title {
+  font-size: 14px;
+  color: var(--text-2);
+  margin: 0 0 8px 0;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  height: 250px;
+  gap: 4px;
+  border-left: 1px solid var(--line);
+  padding-left: 2px;
+}
+
+.bar {
+  flex: 1;
+  background: var(--bar-raw);
+  border-radius: 3px 3px 0 0;
+  position: relative;
+  transition: background 0.1s ease;
+}
+
+.bar.scaled {
+  background: var(--bar-scaled);
+}
+
+.bar.filtered {
+  background: var(--bar-filtered);
+}
+
+.bar.sampled {
+  background: var(--bar-sampled);
+}
+
+.bar.label {
+  position: absolute;
+  bottom: -22px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.pointer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.pointer::before {
+  content: '';
+  position: absolute;
+  bottom: 250px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 10px solid var(--primary);
+}
+
+.pointer::after {
+  content: attr(data-token);
+  position: absolute;
+  bottom: 262px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary);
+  color: var(--card);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.sample-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-radius: 8px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.sample-label {
+  color: var(--text-2);
+}
+
+.sample-value {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.steps {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.step {
+  flex: 1;
+  min-width: 180px;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.step-title {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.step-icon {
+  width: 14px;
+  height: 14px;
+  background: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--card);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.step-content {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.legend {
+  display: flex;
+  gap: 20px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.footer {
+  text-align: center;
+  padding: 24px 0;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .steps {
+    flex-direction: column;
+  }
+  
+  .step {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 500px) {
+  h1 {
+    font-size: 20px;
+  }
+  
+  .tagline {
+    font-size: 14px;
+  }
+  
+  .description {
+    font-size: 14px;
+  }
+  
+  .bars {
+    height: 200px;
+  }
+  
+  .bar.label {
+    bottom: -18px;
+    font-size: 10px;
+  }
+  
+  .legend {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 375px) {
+  .container {
+    padding: 12px;
+  }
+  
+  h1 {
+    font-size: 18px;
+  }
+  
+  .controls, .visualization {
+    padding: 16px;
+  }
+  
+  .bars {
+    height: 180px;
+    gap: 2px;
+  }
+  
+  .bar.label {
+    display: none;
+  }
+  
+  .legend {
+    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .sample-info {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <a href="/503/" class="back-link">← Project 503</a>
+    <h1>Softmax Temperature Sampler</h1>
+    <p class="tagline">Project #19 of 503</p>
+  </header>
+
+  <p class="description">
+    Adjust temperature, top-k, and top-p nucleus sampling parameters to see how next-token probability distributions reshape and how tokens are sampled in real time.
+  </p>
+
+  <section class="controls">
+    <h2 style="margin:0 0 12px 0; font-size:15px;">Sampling Parameters</h2>
+    
+    <div class="slider-group">
+      <div class="slider-label">
+        <span>Temperature</span>
+        <span class="value" id="temp-value">1.00</span>
+      </div>
+      <div class="slider-container">
+        <input type="range" id="temp-slider" min="0.01" max="5.00" step="0.01" value="1.00" class="slider-input">
+        <div class="slider-track" id="temp-track" style="width:20%; left:0;"></div>
+        <div class="slider-thumb" id="temp-thumb" style="left:20%;"></div>
+      </div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label">
+        <span>Top-k</span>
+        <span class="value" id="topk-value">50</span>
+      </div>
+      <div class="slider-container">
+        <input type="range" id="topk-slider" min="1" max="50" step="1" value="50" class="slider-input">
+        <div class="slider-track" id="topk-track" style="width:100%; left:0;"></div>
+        <div class="slider-thumb" id="topk-thumb" style="left:100%;"></div>
+      </div>
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-label">
+        <span>Top-p (Nucleus)</span>
+        <span class="value" id="topp-value">0.90</span>
+      </div>
+      <div class="slider-container">
+        <input type="range" id="topp-slider" min="0.01" max="1.00" step="0.01" value="0.90" class="slider-input">
+        <div class="slider-track" id="topp-track" style="width:90%; left:0;"></div>
+        <div class="slider-thumb" id="topp-thumb" style="left:90%;"></div>
+      </div>
+    </div>
+
+    <button class="reset-btn" id="reset-btn">Regenerate Logits</button>
+  </section>
+
+  <section class="visualization">
+    <h2 style="margin:0 0 12px 0; font-size:15px;">Probability Distribution</h2>
+    
+    <div class="steps">
+      <div class="step">
+        <div class="step-header">
+          <div class="step-icon">1</div>
+          <span class="step-title">Raw Logits</span>
+        </div>
+        <div class="step-content">
+          <span id="raw-desc">26 random values</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-header">
+          <div class="step-icon">2</div>
+          <span class="step-title">Softmax + Temp</span>
+        </div>
+        <div class="step-content">
+          <span id="softmax-desc">26 probabilities</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-header">
+          <div class="step-icon">3</div>
+          <span class="step-title">Top-k + Top-p</span>
+        </div>
+        <div class="step-content">
+          <span id="filtered-desc">N probabilities</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <p class="chart-title">Token probabilities (sorted by probability)</p>
+      <div class="bars" id="bars"></div>
+      <div class="pointer" id="pointer"></div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background:var(--bar-raw);"></div>
+        <span>Raw logits (pre-softmax)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background:var(--bar-scaled);"></div>
+        <span>Temperature-scaled</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background:var(--bar-filtered);"></div>
+        <span>Filtered (top-k + top-p)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background:var(--bar-sampled);"></div>
+        <span>Sampled token</span>
+      </div>
+    </div>
+
+    <div class="sample-info">
+      <span class="sample-label">Sampled Token:</span>
+      <span class="sample-value" id="sampled-token">-</span>
+    </div>
+  </section>
+
+  <footer class="footer">
+    Project #19 of 503 · Daniel Madac, D-CREATIONS
+  </footer>
+</div>
+
+<script>
+// Configuration
+const VOCAB = Array.from({length: 26}, (_, i) => String.fromCharCode(97 + i));
+const VOCAB_SIZE = VOCAB.length;
+
+// State
+let logits = [];
+let temperature = 1.0;
+let topK = 50;
+let topP = 0.9;
+
+// Utility functions
+function softmax(logits, temp) {
+  const max = Math.max(...logits);
+  const exps = logits.map(l => Math.exp((l - max) / temp));
+  const sum = exps.reduce((a, b) => a + b, 0);
+  return exps.map(e => e / sum);
+}
+
+function topKFilter(probs, k) {
+  const sorted = [...probs].sort((a, b) => b - a);
+  const threshold = sorted[Math.min(k, sorted.length) - 1] || 0;
+  return probs.map(p => p >= threshold ? p : 0);
+}
+
+function nucleusFilter(probs, p) {
+  const sorted = [...probs].sort((a, b) => b - a);
+  let cumulative = 0;
+  let last = sorted.length - 1;
+  
+  for (let i = 0; i < sorted.length; i++) {
+    cumulative += sorted[i];
+    if (cumulative >= p) {
+      last = i;
+      break;
+    }
+  }
+  
+  const threshold = sorted[last] || 0;
+  return probs.map(p => p >= threshold ? p : 0);
+}
+
+function sample(probs) {
+  const rand = Math.random();
+  let cumulative = 0;
+  for (let i = 0; i < probs.length; i++) {
+    cumulative += probs[i];
+    if (rand <= cumulative) {
+      return i;
+    }
+  }
+  return probs.length - 1;
+}
+
+function generateLogits() {
+  // Generate random logits with some variation
+  return Array.from({length: VOCAB_SIZE}, () => Math.random() * 10 - 5);
+}
+
+function formatPercent(value, decimals = 1) {
+  return (value * 100).toFixed(decimals) + '%';
+}
+
+function getCSSTime() {
+  return new Date().toISOString().slice(11, 19);
+}
+
+// Visualization
+function updateVisualization() {
+  // Get DOM elements
+  const barsContainer = document.getElementById('bars');
+  const pointer = document.getElementById('pointer');
+  const sampledTokenEl = document.getElementById('sampled-token');
+  const rawDesc = document.getElementById('raw-desc');
+  const softmaxDesc = document.getElementById('softmax-desc');
+  const filteredDesc = document.getElementById('filtered-desc');
+
+  // Step 1: Raw logits
+  const softmaxProbs = softmax(logits, temperature);
+  
+  // Step 2: Top-k filtering
+  let filteredProbs = [...softmaxProbs];
+  if (topK < VOCAB_SIZE) {
+    filteredProbs = topKFilter(filteredProbs, topK);
+  }
+  
+  // Step 3: Nucleus (top-p) filtering
+  if (topP < 1.0) {
+    filteredProbs = nucleusFilter(filteredProbs, topP);
+  }
+  
+  // Re-normalize after filtering
+  const sum = filteredProbs.reduce((a, b) => a + b, 0);
+  const normalizedProbs = sum > 0 ? filteredProbs.map(p => p / sum) : filteredProbs;
+  
+  // Sample token
+  const sampledIndex = sample(normalizedProbs);
+  const sampledToken = VOCAB[sampledIndex];
+  
+  // Sort by probability (descending)
+  const indices = Array.from({length: VOCAB_SIZE}, (_, i) => i);
+  indices.sort((a, b) => normalizedProbs[b] - normalizedProbs[a]);
+  
+  // Update descriptions
+  rawDesc.textContent = `${VOCAB_SIZE} random values`;
+  softmaxDesc.textContent = `${VOCAB_SIZE} probabilities`;
+  const nonZero = normalizedProbs.filter(p => p > 0).length;
+  filteredDesc.textContent = `${nonZero} probabilities`;
+  
+  // Update sampled token
+  sampledTokenEl.textContent = sampledToken;
+  
+  // Update pointer
+  pointer.style.left = `${(sampledIndex / VOCAB_SIZE) * 100}%`;
+  pointer.setAttribute('data-token', sampledToken);
+  
+  // Clear and recreate bars
+  barsContainer.innerHTML = '';
+  
+  // Find max probability for scaling
+  const maxProb = Math.max(...softmaxProbs);
+  
+  indices.forEach((index, sortedIndex) => {
+    const token = VOCAB[index];
+    const prob = normalizedProbs[index];
+    const rawProb = softmaxProbs[index];
+    const isFiltered = normalizedProbs[index] > 0 && (filteredProbs[index] === 0 || softmaxProbs[index] === 0);
+    const isSampled = index === sampledIndex;
+    
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    
+    // Apply classes based on state
+    if (isSampled) {
+      bar.classList.add('sampled');
+    } else if (normalizedProbs[index] > 0) {
+      bar.classList.add('filtered');
+    } else if (softmaxProbs[index] > 0) {
+      bar.classList.add('scaled');
+    }
+    
+    // Height based on softmax probability (normalized to maxProb)
+    const heightPercent = (rawProb / maxProb) * 100;
+    bar.style.height = `${heightPercent}%`;
+    
+    // Label
+    const label = document.createElement('div');
+    label.className = 'bar label';
+    label.textContent = token;
+    bar.appendChild(label);
+    
+    // Tooltip
+    bar.title = `${token}: Raw=${formatPercent(rawProb, 2)}, Filtered=${formatPercent(prob, 2)}`;
+    
+    barsContainer.appendChild(bar);
+  });
+}
+
+// Update slider track positions
+function updateSliderTrack(sliderId, trackId, thumbId, value, min, max) {
+  const track = document.getElementById(trackId);
+  const thumb = document.getElementById(thumbId);
+  const percent = ((value - min) / (max - min)) * 100;
+  
+  if (track) track.style.width = `${percent}%`;
+  if (thumb) thumb.style.left = `${percent}%`;
+}
+
+// Handle slider changes
+function setupSliders() {
+  const tempSlider = document.getElementById('temp-slider');
+  const tempValue = document.getElementById('temp-value');
+  const topkSlider = document.getElementById('topk-slider');
+  const topkValue = document.getElementById('topk-value');
+  const toppSlider = document.getElementById('topp-slider');
+  const toppValue = document.getElementById('topp-value');
+
+  tempSlider.addEventListener('input', () => {
+    temperature = parseFloat(tempSlider.value);
+    tempValue.textContent = temperature.toFixed(2);
+    updateSliderTrack('temp-slider', 'temp-track', 'temp-thumb', temperature, 0.01, 5.00);
+    
+    try {
+      window.localStorage.setItem('softmax-temp', temperature.toString());
+    } catch (e) {}
+    
+    updateVisualization();
+  });
+
+  topkSlider.addEventListener('input', () => {
+    topK = parseInt(topkSlider.value);
+    topkValue.textContent = topK;
+    updateSliderTrack('topk-slider', 'topk-track', 'topk-thumb', topK, 1, 50);
+    
+    try {
+      window.localStorage.setItem('softmax-topk', topK.toString());
+    } catch (e) {}
+    
+    updateVisualization();
+  });
+
+  toppSlider.addEventListener('input', () => {
+    topP = parseFloat(toppSlider.value);
+    toppValue.textContent = topP.toFixed(2);
+    updateSliderTrack('topp-slider', 'topp-track', 'topp-thumb', topP, 0.01, 1.00);
+    
+    try {
+      window.localStorage.setItem('softmax-topp', topP.toString());
+    } catch (e) {}
+    
+    updateVisualization();
+  });
+
+  // Reset button
+  const resetBtn = document.getElementById('reset-btn');
+  resetBtn.addEventListener('click', () => {
+    logits = generateLogits();
+    updateVisualization();
+  });
+
+  // Keyboard support
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      logits = generateLogits();
+      updateVisualization();
+    }
+  });
+}
+
+// Load saved preferences
+function loadPreferences() {
+  try {
+    const savedTemp = window.localStorage.getItem('softmax-temp');
+    const savedTopK = window.localStorage.getItem('softmax-topk');
+    const savedTopP = window.localStorage.getItem('softmax-topp');
+    
+    if (savedTemp) {
+      temperature = parseFloat(savedTemp);
+      document.getElementById('temp-slider').value = temperature;
+      document.getElementById('temp-value').textContent = temperature.toFixed(2);
+      updateSliderTrack('temp-slider', 'temp-track', 'temp-thumb', temperature, 0.01, 5.00);
+    }
+    
+    if (savedTopK) {
+      topK = parseInt(savedTopK);
+      document.getElementById('topk-slider').value = topK;
+      document.getElementById('topk-value').textContent = topK;
+      updateSliderTrack('topk-slider', 'topk-track', 'topk-thumb', topK, 1, 50);
+    }
+    
+    if (savedTopP) {
+      topP = parseFloat(savedTopP);
+      document.getElementById('topp-slider').value = topP;
+      document.getElementById('topp-value').textContent = topP.toFixed(2);
+      updateSliderTrack('topp-slider', 'topp-track', 'topp-thumb', topP, 0.01, 1.00);
+    }
+  } catch (e) {}
+}
+
+// Initialize
+function init() {
+  logits = generateLogits();
+  loadPreferences();
+  setupSliders();
+  updateVisualization();
+  
+  // Set initial track positions
+  updateSliderTrack('temp-slider', 'temp-track', 'temp-thumb', temperature, 0.01, 5.00);
+  updateSliderTrack('topk-slider', 'topk-track', 'topk-thumb', topK, 1, 50);
+  updateSliderTrack('topp-slider', 'topp-track', 'topp-thumb', topP, 0.01, 1.00);
+}
+
+// Start when DOM is ready
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

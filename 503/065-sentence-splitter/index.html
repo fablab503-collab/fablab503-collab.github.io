@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sentence Splitter · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/065-sentence-splitter/">
+  <meta name="description" content="Break a block of text into individual sentences using a rule-based tokenizer and display them as a numbered list.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 768px;
+      margin: 0 auto;
+    }
+    header, footer {
+      text-align: center;
+      color: var(--text-2);
+    }
+    header a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    textarea, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background-color: var(--card);
+      color: var(--text);
+    }
+    button {
+      cursor: pointer;
+      font-weight: bold;
+    }
+    ol {
+      padding-left: 1.5rem;
+    }
+    li {
+      margin-bottom: 0.5rem;
+    }
+    @media (max-width: 375px) {
+      body {
+        padding: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+    
+    <main>
+      <textarea id="input" placeholder="Enter your text here..." rows="8">This is the first sentence. Here is another one! And a third one? Yes, it's working.</textarea>
+      <button id="split">Split Sentences</button>
+      <ol id="output"></ol>
+    </main>
+    
+    <footer>
+      Project #65 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const splitBtn = document.getElementById('split');
+
+    function splitSentences(text) {
+      if (!text.trim()) return [];
+      
+      const sentences = [];
+      let currentSentence = '';
+      let inQuote = false;
+      
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        currentSentence += char;
+        
+        if (char === '"' || char === "'") {
+          inQuote = !inQuote;
+        }
+        
+        if (!inQuote && (char === '.' || char === '!' || char === '?')) {
+          sentences.push(currentSentence.trim());
+          currentSentence = '';
+        }
+      }
+      
+      if (currentSentence.trim()) {
+        sentences.push(currentSentence.trim());
+      }
+      
+      return sentences;
+    }
+
+    function displaySentences(sentences) {
+      output.innerHTML = '';
+      sentences.forEach((sentence, index) => {
+        const li = document.createElement('li');
+        li.textContent = `${index + 1}. ${sentence}`;
+        output.appendChild(li);
+      });
+    }
+
+    function saveToStorage(text) {
+      try {
+        localStorage.setItem('sentenceSplitterText', text);
+      } catch (e) {}
+    }
+
+    function loadFromStorage() {
+      try {
+        const saved = localStorage.getItem('sentenceSplitterText');
+        if (saved) input.value = saved;
+      } catch (e) {}
+    }
+
+    splitBtn.addEventListener('click', () => {
+      const text = input.value;
+      saveToStorage(text);
+      const sentences = splitSentences(text);
+      displaySentences(sentences);
+    });
+
+    loadFromStorage();
+  </script>
+</body>
+</html>

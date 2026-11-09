@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Few Shot Context Builder · Project 503 · D-CREATIONS</title>
+  <meta name="description" content="Drag-and-drop composer that selects the best few-shot examples from a local dataset by TF-IDF similarity to your query and assembles a ready-to-copy prompt.">
+  <link rel="canonical" href="https://dcreations.fr/503/028-few-shot-context-builder/">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --accent: #2563eb;
+      --accent-ink: #fff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+        --accent: #60a5fa;
+        --accent-ink: #0b1220;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 1rem;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    a { color: var(--accent); }
+    .back {
+      display: inline-block;
+      margin-bottom: .75rem;
+      color: var(--text-2);
+      text-decoration: none;
+      font-size: .95rem;
+    }
+    .back:hover { color: var(--text); text-decoration: underline; }
+    main { max-width: 1080px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; margin: .25rem 0 .25rem; }
+    .sub { color: var(--text-2); margin: 0 0 1.25rem; font-size: .95rem; max-width: 70ch; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .card h2 {
+      font-size: .8rem;
+      margin: 0 0 .75rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--text-2);
+    }
+    textarea {
+      width: 100%;
+      resize: vertical;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: .6rem .7rem;
+      font: inherit;
+      font-size: .9rem;
+    }
+    textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .row { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-top: .75rem; }
+    button {
+      font: inherit;
+      font-size: .875rem;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 8px;
+      padding: .45rem .8rem;
+      cursor: pointer;
+    }
+    button:hover { border-color: var(--text-2); }
+    button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+    label.klabel { display: flex; align-items: center; gap: .5rem; font-size: .875rem; color: var(--text-2); flex: 1; min-width: 180px; }
+    label.klabel input[type="range"] { flex: 1; min-width: 90px; }
+    #kVal { font-variant-numeric: tabular-nums; color: var(--text); min-width: 1.2em; text-align: center; }
+    .status { font-size: .8rem; color: var(--text-2); margin: .6rem 0 0; min-height: 1.2em; }
+    .drop {
+      border: 1.5px dashed var(--line);
+      border-radius: 8px;
+      padding: .7rem;
+      text-align: center;
+      color: var(--text-2);
+      font-size: .8rem;
+      margin-bottom: .75rem;
+    }
+    .drop.over { border-color: var(--accent); color: var(--text); }
+    ul.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+    ul.list.over { outline: 2px dashed var(--accent); outline-offset: 3px; border-radius: 8px; }
+    li.ex {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: .6rem .7rem;
+      background: var(--bg);
+      cursor: grab;
+    }
+    li.ex:active { cursor: grabbing; }
+    li.ex .task { font-size: .72rem; color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; }
+    li.ex .q { font-size: .875rem; margin: .15rem 0; }
+    li.ex .a { font-size: .8rem; color: var(--text-2); white-space: pre-wrap; word-break: break-word; }
+    li.ex .meta { display: flex; gap: .5rem; align-items: center; margin-top: .5rem; }
+    li.ex .meta button { font-size: .75rem; padding: .25rem .55rem; }
+    .badge { margin-left: auto; font-size: .75rem; color: var(--text-2); font-variant-numeric: tabular-nums; }
+    li.ex.pinned { border-color: var(--accent); }
+    li.ex.auto { border-style: dashed; }
+    .scorebar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: .5rem; }
+    .scorebar i { display: block; height: 100%; background: var(--accent); }
+    li.empty { color: var(--text-2); font-size: .85rem; padding: .4rem 0; }
+    .hint { font-size: .78rem; color: var(--text-2); margin: 0 0 .5rem; }
+    pre#promptOut {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: .7rem .8rem;
+      font-size: .8rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 420px;
+      overflow: auto;
+      margin: 0;
+    }
+    #stats { font-size: .78rem; color: var(--text-2); }
+    .note { font-size: .78rem; color: var(--text-2); margin: .7rem 0 0; }
+    footer {
+      border-top: 1px solid var(--line);
+      color: var(--text-2);
+      font-size: .8rem;
+      text-align: center;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="/503/">← Project 503</a>
+  <main>
+    <h1>Few Shot Context Builder</h1>
+    <p class="sub">Type your query and this page picks the best matching examples from the local dataset (TF-IDF cosine similarity), then assembles a ready-to-paste few-shot prompt. Drag example cards to pin and reorder them, or drop a .json, .csv or .txt file to import your own examples. Everything runs offline in your browser.</p>
+
+    <div class="grid">
+      <div>
+        <section class="card">
+          <h2>1 · Your query</h2>
+          <textarea id="query" rows="4" placeholder="Paste the input you want the model to answer…"></textarea>
+          <div class="row">
+            <label class="klabel" for="k">Examples to use
+              <input type="range" id="k" min="0" max="8" step="1" value="4">
+              <span id="kVal">4</span>
+            </label>
+            <button id="autoBtn" class="primary">Auto-select best</button>
+            <button id="clearBtn">Clear pins</button>
+          </div>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="card">
+          <h2>2 · Example library <span id="libCount"></span></h2>
+          <div class="drop" id="dropzone">Drop a .json, .csv or .txt file here to import examples</div>
+          <div class="row">
+            <button id="resetBtn">Reset saved data</button>
+          </div>
+          <ul class="list" id="library"></ul>
+        </section>
+      </div>
+
+      <div>
+        <section class="card">
+          <h2>3 · Pinned examples</h2>
+          <p class="hint">Drag cards here from the library to pin them, drag to reorder, or drag back to the library to unpin.</p>
+          <ul class="list" id="pinned"></ul>
+        </section>
+
+        <section class="card">
+          <h2>4 · Composed prompt</h2>
+          <pre id="promptOut"></pre>
+          <div class="row">
+            <button id="copyBtn" class="primary">Copy prompt</button>
+            <span id="stats"></span>
+          </div>
+          <p class="note">All math happens locally in your browser: no network calls, no keys, no tracking. Query, pins and imported examples are saved in localStorage only.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer>Project #28 of 503 · Daniel Madac, D-CREATIONS</footer>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var KEY = 'fsck28:v1';
+
+    var DEFAULTS = [
+      { id: 'd1',  task: 'Sentiment',  query: 'Classify the sentiment of this review: "Great sound, but the case feels cheap."', response: 'Mixed, leaning positive.' },
+      { id: 'd2',  task: 'Extract',    query: 'Extract the names and cities from: "Ada met Grace in London before the talk in Paris."', response: 'Names: Ada, Grace. Cities: London, Paris.' },
+      { id: 'd3',  task: 'Summarize',  query: 'Summarize in one sentence: "The report covers sales, hiring and the roadmap. Sales grew 12%, hiring slowed, and two features were added to the roadmap."', response: 'Sales grew 12% while hiring slowed and two new features joined the roadmap.' },
+      { id: 'd4',  task: 'Translate',  query: 'Translate into French: "See you tomorrow at noon."', response: 'On se voit demain à midi.' },
+      { id: 'd5',  task: 'Code',       query: 'Write a Python function is_even(n) that returns True if n is even.', response: 'def is_even(n):\n    return n % 2 == 0' },
+      { id: 'd6',  task: 'Rewrite',    query: 'Rewrite this message professionally: "hey, can u send the file asap?"', response: 'Hello, could you please send me the file as soon as possible?' },
+      { id: 'd7',  task: 'JSON',       query: 'Return the three primary colors as JSON.', response: '{"colors": ["red", "yellow", "blue"]}' },
+      { id: 'd8',  task: 'Explain',    query: 'Explain what a cache is like I am five.', response: 'A cache is a small, fast memory that keeps things you use often, so you do not have to fetch them again.' },
+      { id: 'd9',  task: 'Bullets',    query: 'Turn this into bullet points: "First we plan, then we build, then we test, then we ship."', response: '- Plan\n- Build\n- Test\n- Ship' },
+      { id: 'd10', task: 'Math',       query: 'Solve: 12 × (3 + 4)', response: '12 × 7 = 84' },
+      { id: 'd11', task: 'Email',      query: 'Write a short polite decline for: "Can you join the call on Friday?"', response: 'Thanks for the invite — I can\'t make it on Friday, but I\'d be happy to join next week.' },
+      { id: 'd12', task: 'Keywords',   query: 'List three keywords for an article about electric bicycles.', response: 'electric bike, e-bike, battery range' }
+    ];
+
+    var state = { query: '', k: 4, pinned: [], custom: [] };
+    var drag = null;
+
+    function $(s) { return document.querySelector(s); }
+    function el(tag, cls, txt) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (txt != null) e.textContent = txt;
+      return e;
+    }
+
+    /* ---------- storage (all access wrapped in try/catch) ---------- */
+    function load() {
+      try {
+        var raw = localStorage.getItem(KEY);
+        if (!raw) return;
+        var d = JSON.parse(raw);
+        if (!d || typeof d !== 'object') return;
+        if (typeof d.query === 'string') state.query = d.query;
+        if (typeof d.k === 'number') state.k = Math.max(0, Math.min(8, Math.floor(d.k)));
+        if (Array.isArray(d.pinned)) state.pinned = d.pinned.filter(function (x) { return typeof x === 'string'; });
+        if (Array.isArray(d.custom)) {
+          state.custom = d.custom.filter(function (x) {
+            return x && typeof x.id === 'string' && typeof x.query === 'string' && typeof x.response === 'string';
+          });
+        }
+      } catch (e) { /* ignore */ }
+    }
+    function save() {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({ query: state.query, k: state.k, pinned: state.pinned, custom: state.custom }));
+      } catch (e) { /* ignore */ }
+    }
+
+    /* ---------- TF-IDF ---------- */
+    var STOP = new Set(('a an the and or but if then of to in on for with at by is are was were be been this that it its as from into your you i we they he she me my our their not no do does did what which who when where how why can could will would should please just list turn write return give').split(' '));
+    function toks(s) {
+      var m = (s || '').toLowerCase().match(/[a-z0-9]+(?:'[a-z]+)?/g);
+      if (!m) return [];
+      return m.filter(function (t) { return !STOP.has(t); });
+    }
+    function tcount(s) {
+      var c = new Map();
+      toks(s).forEach(function (t) { c.set(t, (c.get(t) || 0) + 1); });
+      return c;
+    }
+    function allEx() { return state.custom.concat(DEFAULTS); }
+    function scores(q) {
+      var all = allEx();
+      var N = all.length;
+      var docs = all.map(function (e) { return tcount((e.task || '') + ' ' + e.query); });
+      var df = new Map();
+      docs.forEach(function (c) { c.forEach(function (_, t) { df.set(t, (df.get(t) || 0) + 1); }); });
+      function idf(t) { return df.has(t) ? Math.log(1 + N / df.get(t)) : Math.log(1 + N); }
+      function w(c, t) { return (1 + Math.log(c)) * idf(t); }
+      var qc = tcount(q);
+      var qn = 0;
+      qc.forEach(function (f, t) { var ww = w(f, t); qn += ww * ww; });
+      var out = new Map();
+      all.forEach(function (e, i) {
+        var c = docs[i], dot = 0, dn = 0;
+        c.forEach(function (f, t) {
+          var ww = w(f, t);
+          dn += ww * ww;
+          var qf = qc.get(t);
+          if (qf) dot += ww * w(qf, t);
+        });
+        out.set(e.id, (qn && dn) ? dot / (Math.sqrt(qn) * Math.sqrt(dn)) : 0);
+      });
+      return out;
+    }
+
+    /* ---------- selection ---------- */
+    function effectiveSelection(sc) {
+      var all = allEx();
+      var byId = {};
+      all.forEach(function (e) { byId[e.id] = e; });
+      var pinned = state.pinned.map(function (id) { return byId[id]; }).filter(Boolean);
+      if (!state.query.trim()) return pinned;
+      var rest = all
+        .filter(function (e) { return state.pinned.indexOf(e.id) === -1; })
+        .map(function (e) { return { e: e, s: sc ? (sc.get(e.id) || 0) : 0 }; })
+        .filter(function (x) { return x.s > 0; })
+        .sort(function (a, b) { return b.s - a.s; });
+      var need = Math.max(0, state.k - pinned.length);
+      return pinned.concat(rest.slice(0, need).map(function (x) { return x.e; }));
+    }
+
+    /* ---------- rendering ---------- */
+    function setStatus(msg) { $('#status').textContent = msg; }
+
+    function render() {
+      var q = state.query.trim();
+      var sc = q ? scores(q) : null;
+      var all = allEx();
+      var sel = effectiveSelection(sc);
+      var selIds = {};
+      sel.forEach(function (e) { selIds[e.id] = true; });
+      var byId = {};
+      all.forEach(function (e) { byId[e.id] = e; });
+
+      var lib = $('#library');
+      lib.innerHTML = '';
+      var sorted = all.slice();
+      if (sc) sorted.sort(function (a, b) { return (sc.get(b.id) || 0) - (sc.get(a.id) || 0); });
+      sorted.forEach(function (e) {
+        var li = el('li', 'ex');
+        li.draggable = true;
+        if (state.pinned.indexOf(e.id) > -1) li.classList.add('pinned');
+        else if (selIds[e.id]) li.classList.add('auto');
+        li.appendChild(el('div', 'task', e.task || 'Example'));
+        li.appendChild(el('div', 'q', e.query));
+        li.appendChild(el('div', 'a', e.response));
+        if (sc) {
+          var bar = el('div', 'scorebar');
+          var fill = el('i');
+          var pct = Math.max(0, Math.min(1, sc.get(e.id) || 0));
+          fill.style.width = Math.round(pct * 100) + '%';
+          bar.appendChild(fill);
+          li.appendChild(bar);
+        }
+        var meta = el('div', 'meta');
+        var pinBtn = el('button', null, state.pinned.indexOf(e.id) > -1 ? 'Pinned' : 'Pin');
+        pinBtn.setAttribute('aria-pressed', state.pinned.indexOf(e.id) > -1 ? 'true' : 'false');
+        pinBtn.addEventListener('click', function () { togglePin(e.id); });
+        meta.appendChild(pinBtn);
+        if (e.custom) {
+          var del = el('button', null, 'Delete');
+          del.addEventListener('click', function () { removeCustom(e.id); });
+          meta.appendChild(del);
+        }
+        meta.appendChild(el('span', 'badge', sc ? Math.round((sc.get(e.id) || 0) * 100) + '% match' : (selIds[e.id] ? 'selected' : '')));
+        li.appendChild(meta);
+        li.addEventListener('dragstart', function (ev) {
+          drag = { id: e.id, from: 'lib' };
+          try {
+            ev.dataTransfer.setData('text/plain', e.id);
+            ev.dataTransfer.effectAllowed = 'copyMove';
+          } catch (err) { /* ignore */ }
+        });
+        lib.appendChild(li);
+      });
+      $('#libCount').textContent = '(' + all.length + ')';
+
+      var pin = $('#pinned');
+      pin.innerHTML = '';
+      if (!state.pinned.length) {
+        pin.appendChild(el('li', 'empty', 'Nothing pinned yet. Pin examples below or press "Auto-select best"; the best matches are added automatically up to your limit.'));
+      }
+      state.pinned.forEach(function (id, i) {
+        var e = byId[id];
+        if (!e) return;
+        var li = el('li', 'ex pinned');
+        li.draggable = true;
+        li.appendChild(el('div', 'task', (i + 1) + '. ' + (e.task || 'Example')));
+        li.appendChild(el('div', 'q', e.query));
+        li.appendChild(el('div', 'a', e.response));
+        var meta = el('div', 'meta');
+        var un = el('button', null, 'Unpin');
+        un.addEventListener('click', function () { togglePin(id); });
+        meta.appendChild(un);
+        li.appendChild(meta);
+        li.addEventListener('dragstart', function (ev) {
+          drag = { id: id, from: 'pin' };
+          try {
+            ev.dataTransfer.setData('text/plain', id);
+            ev.dataTransfer.effectAllowed = 'move';
+          } catch (err) { /* ignore */ }
+        });
+        pin.appendChild(li);
+      });
+
+      renderPrompt(sel);
+    }
+
+    function renderPrompt(sel) {
+      var out = $('#promptOut');
+      var q = state.query.trim();
+      if (!sel.length && !q) {
+        out.textContent = 'Your composed prompt appears here. Type a query or pin an example.';
+        $('#stats').textContent = '';
+        return;
+      }
+      var L = [];
+      if (sel.length) {
+        L.push('Answer in the same style as the examples below.');
+        L.push('');
+        sel.forEach(function (e, i) {
+          L.push('Example ' + (i + 1) + (e.task ? ' — ' + e.task : ''));
+          L.push('Input: ' + e.query);
+          L.push('Output: ' + e.response);
+          L.push('');
+        });
+      }
+      if (q) {
+        L.push('Input: ' + q);
+        L.push('Output:');
+      }
+      var txt = L.join('\n').replace(/\n{3,}/g, '\n\n');
+      out.textContent = txt;
+      var words = (txt.match(/\S+/g) || []).length;
+      $('#stats').textContent = sel.length + ' example' + (sel.length === 1 ? '' : 's') + ' · ' + words + ' words · ' + txt.length + ' chars';
+    }
+
+    /* ---------- actions ---------- */
+    function togglePin(id) {
+      var i = state.pinned.indexOf(id);
+      if (i > -1) state.pinned.splice(i, 1);
+      else state.pinned.push(id);
+      save();
+      render();
+    }
+    function removeCustom(id) {
+      state.custom = state.custom.filter(function (e) { return e.id !== id; });
+      state.pinned = state.pinned.filter(function (x) { return x !== id; });
+      save();
+      render();
+      setStatus('Example deleted.');
+    }
+    function copyPrompt() {
+      var txt = $('#promptOut').textContent;
+      function ok() { setStatus('Copied to clipboard.'); }
+      function fallback() {
+        var ta = document.createElement('textarea');
+        ta.value = txt;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); ok(); }
+        catch (e) { setStatus('Select the prompt text and copy it manually.'); }
+        document.body.removeChild(ta);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(ok, fallback);
+      } else {
+        fallback();
+      }
+    }
+
+    /* ---------- file import ---------- */
+    function csvParse(text) {
+      var rows = [], row = [], cur = '', inQ = false;
+      for (var i = 0; i < text.length; i++) {
+        var c = text[i];
+        if (inQ) {
+          if (c === '"') {
+            if (text[i + 1] === '"') { cur += '"'; i++; }
+            else inQ = false;
+          } else cur += c;
+        } else if (c === '"') inQ = true;
+        else if (c === ',') { row.push(cur); cur = ''; }
+        else if (c === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+        else if (c !== '\r') cur += c;
+      }
+      if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+      return rows.filter(function (r) { return r.some(function (x) { return x.trim() !== ''; }); });
+    }
+    function parseCsv(text) {
+      var rows = csvParse(text);
+      if (!rows.length) return [];
+      var head = rows[0].map(function (x) { return x.trim().toLowerCase(); });
+      var isHeader = head.some(function (h) { return h === 'query' || h === 'input' || h === 'prompt' || h === 'question'; });
+      var start = isHeader ? 1 : 0;
+      var out = [];
+      for (var i = start; i < rows.length; i++) {
+        var r = rows[i];
+        var q = (r[0] || '').trim();
+        var a = (r[1] || '').trim();
+        if (q && a) out.push({ task: (r[2] || 'Imported').trim() || 'Imported', query: q, response: a });
+      }
+      return out;
+    }
+    function parseJson(text) {
+      var d = JSON.parse(text);
+      var arr = Array.isArray(d) ? d : (Array.isArray(d.exemplars) ? d.exemplars : (Array.isArray(d.examples) ? d.examples : null));
+      if (!arr) throw new Error('no array found');
+      var out = [];
+      arr.forEach(function (o) {
+        if (typeof o === 'string') return;
+        if (!o || typeof o !== 'object') return;
+        var q = o.query || o.input || o.prompt || o.question || o.q || '';
+        var a = o.response || o.output || o.answer || o.completion || o.a || '';
+        if (typeof q === 'string' && typeof a === 'string' && q.trim() && a.trim()) {
+          out.push({ task: String(o.task || o.label || 'Imported'), query: q, response: a });
+        }
+      });
+      return out;
+    }
+    function parseTxt(text) {
+      var out = [];
+      text.split(/\n\s*\n/).forEach(function (block) {
+        var lines = block.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+        if (!lines.length) return;
+        var q = null, a = null, rest = [];
+        lines.forEach(function (l) {
+          var mq = l.match(/^(?:q|input|query)[:：]\s*(.*)$/i);
+          var ma = l.match(/^(?:a|output|answer|response)[:：]\s*(.*)$/i);
+          if (mq && q === null) { q = mq[1]; return; }
+          if (ma && a === null) { a = ma[1]; return; }
+          rest.push(l);
+        });
+        if (q === null) q = rest.shift() || '';
+        if (a === null) a = rest.join(' ');
+        if (q && a) out.push({ task: 'Imported', query: q, response: a });
+      });
+      return out;
+    }
+    function parseImport(name, text) {
+      var ext = (name.split('.').pop() || '').toLowerCase();
+      if (ext === 'json') return parseJson(text);
+      if (ext === 'csv' || ext === 'tsv') return parseCsv(text);
+      return parseTxt(text);
+    }
+    function handleFiles(files) {
+      var n = files.length, done = 0, added = 0, failed = 0;
+      Array.prototype.forEach.call(files, function (f) {
+        var r = new FileReader();
+        r.onload = function () {
+          try {
+            var items = parseImport(f.name, String(r.result));
+            items.forEach(function (it) {
+              it.id = 'c' + Date.now().toString(36) + Math.floor(Math.random() * 1e9).toString(36);
+              it.custom = true;
+              state.custom.unshift(it);
+              added++;
+            });
+            if (!items.length) failed++;
+          } catch (err) { failed++; }
+          done++;
+          if (done === n) {
+            save();
+            render();
+            if (added) setStatus('Imported ' + added + ' example' + (added === 1 ? '' : 's') + (failed ? ' (' + failed + ' file' + (failed === 1 ? '' : 's') + ' skipped)' : '') + '.');
+            else setStatus('No examples found in the dropped file' + (n === 1 ? '' : 's') + '.');
+          }
+        };
+        r.onerror = function () { done++; failed++; if (done === n) { save(); render(); setStatus('Could not read the dropped file.'); } };
+        r.readAsText(f);
+      });
+    }
+
+    /* ---------- drag & drop between lists ---------- */
+    function dropIndex(container, y) {
+      var kids = Array.prototype.slice.call(container.querySelectorAll('li.ex'));
+      for (var i = 0; i < kids.length; i++) {
+        var r = kids[i].getBoundingClientRect();
+        if (y < r.top + r.height / 2) return i;
+      }
+      return kids.length;
+    }
+
+    /* ---------- init ---------- */
+    function init() {
+      load();
+      $('#query').value = state.query;
+      $('#k').value = state.k;
+      $('#kVal').textContent = state.k;
+
+      $('#query').addEventListener('input', function () {
+        state.query = this.value;
+        save();
+        render();
+      });
+      $('#k').addEventListener('input', function () {
+        state.k = Math.max(0, Math.min(8, parseInt(this.value, 10) || 0));
+        $('#kVal').textContent = state.k;
+        save();
+        render();
+      });
+      $('#autoBtn').addEventListener('click', function () {
+        if (!state.query.trim()) { setStatus('Type a query first.'); return; }
+        var sc = scores(state.query);
+        var all = allEx().slice()
+          .filter(function (e) { return (sc.get(e.id) || 0) > 0; })
+          .sort(function (a, b) { return (sc.get(b.id) || 0) - (sc.get(a.id) || 0); });
+        state.pinned = all.slice(0, Math.max(0, state.k)).map(function (e) { return e.id; });
+        save();
+        render();
+        setStatus(state.pinned.length
+          ? 'Auto-selected the ' + state.pinned.length + ' best match' + (state.pinned.length === 1 ? '' : 'es') + ' for your query.'
+          : 'No example shares words with your query, so nothing was pinned.');
+      });
+      $('#clearBtn').addEventListener('click', function () {
+        state.pinned = [];
+        save();
+        render();
+        setStatus('Pins cleared. Best matches will still fill up to your limit while a query is set.');
+      });
+      $('#copyBtn').addEventListener('click', copyPrompt);
+      $('#resetBtn').addEventListener('click', function () {
+        try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
+        state = { query: '', k: 4, pinned: [], custom: [] };
+        $('#query').value = '';
+        $('#k').value = 4;
+        $('#kVal').textContent = '4';
+        render();
+        setStatus('Saved data reset to defaults.');
+      });
+
+      var pin = $('#pinned');
+      var lib = $('#library');
+      document.addEventListener('dragend', function () { drag = null; pin.classList.remove('over'); lib.classList.remove('over'); });
+
+      pin.addEventListener('dragover', function (ev) {
+        if (!drag) return;
+        ev.preventDefault();
+        ev.dataTransfer.dropEffect = drag.from === 'pin' ? 'move' : 'copy';
+        pin.classList.add('over');
+      });
+      pin.addEventListener('dragleave', function (ev) {
+        if (ev.target === pin) pin.classList.remove('over');
+      });
+      pin.addEventListener('drop', function (ev) {
+        if (!drag) return;
+        ev.preventDefault();
+        pin.classList.remove('over');
+        var id = drag.id;
+        var old = state.pinned.indexOf(id);
+        var idx = dropIndex(pin, ev.clientY);
+        state.pinned = state.pinned.filter(function (x) { return x !== id; });
+        if (old > -1 && old < idx) idx--;
+        state.pinned.splice(idx, 0, id);
+        save();
+        render();
+        setStatus(drag.from === 'pin' ? 'Reordered.' : 'Pinned.');
+      });
+
+      lib.addEventListener('dragover', function (ev) {
+        if (!drag) return;
+        ev.preventDefault();
+        lib.classList.add('over');
+      });
+      lib.addEventListener('dragleave', function (ev) {
+        if (ev.target === lib) lib.classList.remove('over');
+      });
+      lib.addEventListener('drop', function (ev) {
+        if (!drag) return;
+        ev.preventDefault();
+        lib.classList.remove('over');
+        if (drag.from === 'pin') {
+          state.pinned = state.pinned.filter(function (x) { return x !== drag.id; });
+          save();
+          render();
+          setStatus('Unpinned.');
+        }
+      });
+
+      var dz = $('#dropzone');
+      dz.addEventListener('dragover', function (ev) { ev.preventDefault(); dz.classList.add('over'); });
+      dz.addEventListener('dragleave', function () { dz.classList.remove('over'); });
+      dz.addEventListener('drop', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        dz.classList.remove('over');
+        if (ev.dataTransfer.files && ev.dataTransfer.files.length) handleFiles(ev.dataTransfer.files);
+      });
+      function hasFiles(ev) {
+        var t = ev.dataTransfer && ev.dataTransfer.types;
+        if (!t) return false;
+        for (var i = 0; i < t.length; i++) { if (t[i] === 'Files') return true; }
+        return false;
+      }
+      window.addEventListener('dragover', function (ev) {
+        if (hasFiles(ev)) ev.preventDefault();
+      });
+      window.addEventListener('drop', function (ev) {
+        if (ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files.length) {
+          ev.preventDefault();
+          handleFiles(ev.dataTransfer.files);
+        }
+      });
+
+      render();
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>

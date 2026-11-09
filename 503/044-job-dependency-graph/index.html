@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Job Dependency Graph · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/044-job-dependency-graph/">
+  <meta name="description" content="Visualize job dependencies in a graph structure.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --border-radius: 4px;
+      --padding: 16px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: var(--padding); line-height: 1.5; }
+    h1 { margin-bottom: 16px; font-size: 1.5rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .graph-container { background-color: var(--card); border-radius: var(--border-radius); padding: var(--padding); margin-bottom: 24px; }
+    .controls { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+    input, button { padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--border-radius); background-color: var(--card); color: var(--text); }
+    button { cursor: pointer; }
+    .graph { min-height: 300px; position: relative; }
+    .node { position: absolute; width: 120px; padding: 12px; text-align: center; background-color: var(--card); border: 1px solid var(--line); border-radius: var(--border-radius); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .node-label { font-weight: bold; margin-bottom: 4px; }
+    .node-deps { font-size: 0.85rem; color: var(--text-2); }
+    .edge { position: absolute; background-color: var(--line); transform-origin: 0 0; }
+    .instructions { margin-top: 16px; padding: 12px; background-color: var(--card); border-radius: var(--border-radius); font-size: 0.9rem; color: var(--text-2); }
+    footer { text-align: center; margin-top: 32px; font-size: 0.9rem; color: var(--text-2); }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Job Dependency Graph</h1>
+    
+    <div class="graph-container">
+      <div class="controls">
+        <input type="text" id="jobName" placeholder="Job name">
+        <button id="addJob">Add Job</button>
+        <input type="text" id="depName" placeholder="Dependency job">
+        <button id="addDep">Add Dependency</button>
+      </div>
+      
+      <div class="graph" id="graph"></div>
+    </div>
+    
+    <div class="instructions">
+      <p>Add jobs and define dependencies between them. Jobs with no dependencies appear at the top level.</p>
+    </div>
+    
+    <footer>
+      <a href="/503/">← Project 503</a><br>
+      Project #44 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const graph = document.getElementById('graph');
+    const jobNameInput = document.getElementById('jobName');
+    const depNameInput = document.getElementById('depName');
+    const addJobBtn = document.getElementById('addJob');
+    const addDepBtn = document.getElementById('addDep');
+
+    let jobs = {};
+    let nextId = 1;
+
+    function saveState() {
+      try {
+        localStorage.setItem('jobGraph', JSON.stringify({jobs, nextId}));
+      } catch(e) {}
+    }
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem('jobGraph');
+        if (saved) {
+          const data = JSON.parse(saved);
+          jobs = data.jobs;
+          nextId = data.nextId;
+          renderGraph();
+        }
+      } catch(e) {}
+    }
+
+    function addJob(name) {
+      if (!name || jobs[name]) return;
+      jobs[name] = { id: nextId++, dependsOn: [] };
+      saveState();
+      renderGraph();
+    }
+
+    function addDependency(jobName, depName) {
+      if (!jobs[jobName] || !jobs[depName] || jobName === depName) return;
+      if (!jobs[jobName].dependsOn.includes(depName)) {
+        jobs[jobName].dependsOn.push(depName);
+        saveState();
+        renderGraph();
+      }
+    }
+
+    function renderGraph() {
+      graph.innerHTML = '';
+      const jobNames = Object.keys(jobs);
+      if (jobNames.length === 0) return;
+
+      const positions = {};
+      const visited = new Set();
+      const stack = [];
+      const levels = [];
+
+      // Topological sort
+      const inDegree = {};
+      for (const name of jobNames) {
+        inDegree[name] = 0;
+      }
+      for (const name of jobNames) {
+        for (const dep of jobs[name].dependsOn) {
+          inDegree[dep]++;
+        }
+      }
+
+      const queue = [];
+      for (const name of jobNames) {
+        if (inDegree[name] === 0) {
+          queue.push(name);
+        }
+      }
+
+      while (queue.length > 0) {
+        const size = queue.length;
+        const level = [];
+        for (let i = 0; i < size; i++) {
+          const name = queue.shift();
+          level.push(name);
+          visited.add(name);
+          for (const jobName of jobNames) {
+            if (jobs[jobName].dependsOn.includes(name)) {
+              inDegree[jobName]--;
+              if (inDegree[jobName] === 0) {
+                queue.push(jobName);
+              }
+            }
+          }
+        }
+        levels.push(level);
+      }
+
+      // Position nodes
+      const nodeWidth = 120;
+      const nodeHeight = 60;
+      const horizontalSpacing = 20;
+      const verticalSpacing = 40;
+
+      for (let levelIndex = 0; levelIndex < levels.length; levelIndex++) {
+        const level = levels[levelIndex];
+        const totalWidth = (level.length - 1) * (nodeWidth + horizontalSpacing);
+        const startX = (graph.offsetWidth - totalWidth) / 2;
+        
+        for (let i = 0; i < level.length; i++) {
+          const name = level[i];
+          positions[name] = {
+            x: startX + i * (nodeWidth + horizontalSpacing),
+            y: levelIndex * (nodeHeight + verticalSpacing)
+          };
+        }
+      }
+
+      // Render nodes
+      for (const [name, job] of Object.entries(jobs)) {
+        const node = document.createElement('div');
+        node.className = 'node';
+        node.id = `node-${job.id}`;
+        const pos = positions[name];
+        if (pos) {
+          node.style.left = `${pos.x}px`;
+          node.style.top = `${pos.y}px`;
+        }
+        node.innerHTML = `
+          <div class="node-label">${name}</div>
+          <div class="node-deps">${job.dependsOn.length} dependencies</div>
+        `;
+        graph.appendChild(node);
+      }
+
+      // Render edges
+      for (const [name, job] of Object.entries(jobs)) {
+        const pos1 = positions[name];
+        if (!pos1) continue;
+        for (const depName of job.dependsOn) {
+          const pos2 = positions[depName];
+          if (!pos2) continue;
+          
+          const edge = document.createElement('div');
+          edge.className = 'edge';
+          
+          const length = Math.sqrt(Math.pow(pos2.x - pos1.x, 2) + Math.pow(pos2.y - pos1.y, 2));
+          const angle = Math.atan2(pos2.y - pos1.y, pos2.x - pos1.x) * 180 / Math.PI;
+          
+          edge.style.width = `${length}px`;
+          edge.style.height = '2px';
+          edge.style.left = `${pos1.x}px`;
+          edge.style.top = `${pos1.y + nodeHeight/2}px`;
+          edge.style.transform = `rotate(${angle}deg)`;
+          
+          graph.appendChild(edge);
+        }
+      }
+    }
+
+    addJobBtn.addEventListener('click', () => {
+      const name = jobNameInput.value.trim();
+      if (name) {
+        addJob(name);
+        jobNameInput.value = '';
+      }
+    });
+
+    addDepBtn.addEventListener('click', () => {
+      const jobName = jobNameInput.value.trim();
+      const depName = depNameInput.value.trim();
+      if (jobName && depName) {
+        addDependency(jobName, depName);
+        depNameInput.value = '';
+      }
+    });
+
+    loadState();
+  </script>
+</body>
+</html>

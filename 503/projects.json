@@ -1,0 +1,565 @@
+{
+  "goal": 503,
+  "deadline": "2027-03-05T00:00:00+01:00",
+  "started": "2026-11-01",
+  "projects": [
+    {
+      "name": "CineBuddy",
+      "date": null,
+      "url": "/en/projects/cinebuddy/"
+    },
+    {
+      "name": "Bouclier",
+      "date": null,
+      "url": "/en/projects/bouclier/"
+    },
+    {
+      "name": "Phoenix Display",
+      "date": null,
+      "url": "/en/projects/phoenix/"
+    },
+    {
+      "name": "YouTube Zeus",
+      "date": null,
+      "url": "/en/projects/zeus/"
+    },
+    {
+      "name": "DotWorld",
+      "date": null,
+      "url": "/en/projects/dotworld/"
+    },
+    {
+      "name": "Element 0",
+      "date": null,
+      "url": "/element0/"
+    },
+    {
+      "name": "voice ai",
+      "date": "2026-10-30",
+      "url": "/voice-ai/"
+    },
+    {
+      "name": "VeloTrack",
+      "date": null,
+      "url": "/en/projects/velotrack/"
+    },
+    {
+      "name": "Prototypes from the FabLab",
+      "date": null,
+      "url": "/en/projects/fablab-case/"
+    },
+    {
+      "name": "My AI team",
+      "date": null,
+      "url": "/en/projects/ai-team/"
+    },
+    {
+      "name": "AI engineering toolkit",
+      "date": null,
+      "url": "/en/projects/ai-toolkit/"
+    },
+    {
+      "name": "Project 503",
+      "date": "2026-11-01",
+      "url": "/503/"
+    },
+    {
+      "name": "Bpe Tokenizer Playground",
+      "date": "2026-11-01",
+      "url": "/503/013-bpe-tokenizer-playground/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Word Piece Subword Splitter",
+      "date": "2026-11-01",
+      "url": "/503/014-word-piece-subword-splitter/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Cosine Similarity Comparator",
+      "date": "2026-11-01",
+      "url": "/503/015-cosine-similarity-comparator/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Attention Matrix Heatmap",
+      "date": "2026-11-01",
+      "url": "/503/016-attention-matrix-heatmap/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Multi Head Attention Mixer",
+      "date": "2026-11-01",
+      "url": "/503/017-multi-head-attention-mixer/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Positional Encoding Wave Viewer",
+      "date": "2026-11-01",
+      "url": "/503/018-positional-encoding-wave-viewer/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Softmax Temperature Sampler",
+      "date": "2026-11-01",
+      "url": "/503/019-softmax-temperature-sampler/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Beam Search Tree Explorer",
+      "date": "2026-11-01",
+      "url": "/503/020-beam-search-tree-explorer/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Speculative Decoding Simulator",
+      "date": "2026-11-01",
+      "url": "/503/021-speculative-decoding-simulator/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Kv Cache Memory Calculator",
+      "date": "2026-11-01",
+      "url": "/503/022-kv-cache-memory-calculator/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Sliding Window Attention Demo",
+      "date": "2026-11-02",
+      "url": "/503/023-sliding-window-attention-demo/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Int8 Weight Quantizer",
+      "date": "2026-11-02",
+      "url": "/503/024-int8-weight-quantizer/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Int4 Block Quant Inspector",
+      "date": "2026-11-02",
+      "url": "/503/025-int4-block-quant-inspector/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Lora Low Rank Adapter Lab",
+      "date": "2026-11-02",
+      "url": "/503/026-lora-low-rank-adapter-lab/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Prompt Template Formatter",
+      "date": "2026-11-02",
+      "url": "/503/027-prompt-template-formatter/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Few Shot Context Builder",
+      "date": "2026-11-02",
+      "url": "/503/028-few-shot-context-builder/",
+      "track": "local-ai-foundations"
+    },
+    {
+      "name": "Round Robin Scheduler",
+      "date": "2026-11-02",
+      "url": "/503/029-round-robin-scheduler/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Priority Scheduler Demo",
+      "date": "2026-11-02",
+      "url": "/503/030-priority-scheduler-demo/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Load Balancer Simulator",
+      "date": "2026-11-02",
+      "url": "/503/031-load-balancer-simulator/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Device Health Monitor",
+      "date": "2026-11-02",
+      "url": "/503/032-device-health-monitor/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Battery Level Simulator",
+      "date": "2026-11-03",
+      "url": "/503/033-battery-level-simulator/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Thermal Throttle Demo",
+      "date": "2026-11-03",
+      "url": "/503/034-thermal-throttle-demo/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Job Timeout Tester",
+      "date": "2026-11-03",
+      "url": "/503/035-job-timeout-tester/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Device Blacklist Manager",
+      "date": "2026-11-03",
+      "url": "/503/036-device-blacklist-manager/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Memory Defrag Simulator",
+      "date": "2026-11-03",
+      "url": "/503/037-memory-defrag-simulator/",
+      "track": "device-pool"
+    },
+    {
+      "name": "GPU Memory Allocator",
+      "date": "2026-11-03",
+      "url": "/503/038-gpu-memory-allocator/",
+      "track": "device-pool"
+    },
+    {
+      "name": "CPU Affinity Simulator",
+      "date": "2026-11-03",
+      "url": "/503/039-cpu-affinity-simulator/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Network Latency Simulator",
+      "date": "2026-11-03",
+      "url": "/503/040-network-latency-simulator/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Bandwidth Bottleneck Demo",
+      "date": "2026-11-03",
+      "url": "/503/041-bandwidth-bottleneck-demo/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Device Discovery Probe",
+      "date": "2026-11-03",
+      "url": "/503/042-device-discovery-probe/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Offline Device Cache",
+      "date": "2026-11-04",
+      "url": "/503/043-offline-device-cache/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Job Dependency Graph",
+      "date": "2026-11-04",
+      "url": "/503/044-job-dependency-graph/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Retry Strategy Picker",
+      "date": "2026-11-04",
+      "url": "/503/045-retry-strategy-picker/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Circuit Breaker Demo",
+      "date": "2026-11-04",
+      "url": "/503/046-circuit-breaker-demo/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Job Batch Processor",
+      "date": "2026-11-04",
+      "url": "/503/047-job-batch-processor/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Resource Reservation System",
+      "date": "2026-11-04",
+      "url": "/503/048-resource-reservation-system/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Preemptive Scheduler",
+      "date": "2026-11-04",
+      "url": "/503/049-preemptive-scheduler/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Device Score Calculator",
+      "date": "2026-11-04",
+      "url": "/503/050-device-score-calculator/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Hot Device Cooldown",
+      "date": "2026-11-04",
+      "url": "/503/051-hot-device-cooldown/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Memory Pressure Alerts",
+      "date": "2026-11-04",
+      "url": "/503/052-memory-pressure-alerts/",
+      "track": "device-pool"
+    },
+    {
+      "name": "GPU Shared Queue",
+      "date": "2026-11-05",
+      "url": "/503/053-gpu-shared-queue/",
+      "track": "device-pool"
+    },
+    {
+      "name": "CPU Only Fallback",
+      "date": "2026-11-05",
+      "url": "/503/054-cpu-only-fallback/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Device Pool Dashboard",
+      "date": "2026-11-05",
+      "url": "/503/055-device-pool-dashboard/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Job Progress Tracker",
+      "date": "2026-11-05",
+      "url": "/503/056-job-progress-tracker/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Fairness Scheduler",
+      "date": "2026-11-05",
+      "url": "/503/057-fairness-scheduler/",
+      "track": "device-pool"
+    },
+    {
+      "name": "Text Summariser",
+      "date": "2026-11-06",
+      "url": "/503/058-text-summariser/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Keyword Extractor",
+      "date": "2026-11-06",
+      "url": "/503/059-keyword-extractor/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Entity Extractor",
+      "date": "2026-11-06",
+      "url": "/503/060-entity-extractor/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Readability Score",
+      "date": "2026-11-06",
+      "url": "/503/061-readability-score/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Language Detector",
+      "date": "2026-11-06",
+      "url": "/503/062-language-detector/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Text Diff Viewer",
+      "date": "2026-11-06",
+      "url": "/503/063-text-diff-viewer/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Word Frequency Chart",
+      "date": "2026-11-06",
+      "url": "/503/064-word-frequency-chart/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Sentence Splitter",
+      "date": "2026-11-06",
+      "url": "/503/065-sentence-splitter/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Paragraph Structure Viewer",
+      "date": "2026-11-06",
+      "url": "/503/066-paragraph-structure-viewer/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Stop Words Filter",
+      "date": "2026-11-06",
+      "url": "/503/067-stop-words-filter/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Stemmer Demo",
+      "date": "2026-11-07",
+      "url": "/503/068-stemmer-demo/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Part Of Speech Tagger",
+      "date": "2026-11-07",
+      "url": "/503/069-part-of-speech-tagger/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Topic Model Lite",
+      "date": "2026-11-07",
+      "url": "/503/070-topic-model-lite/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Sentiment Analyser",
+      "date": "2026-11-07",
+      "url": "/503/071-sentiment-analyser/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Summarise To Bullets",
+      "date": "2026-11-07",
+      "url": "/503/072-summarise-to-bullets/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "N Gram Counter",
+      "date": "2026-11-07",
+      "url": "/503/073-n-gram-counter/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Collocation Finder",
+      "date": "2026-11-07",
+      "url": "/503/074-collocation-finder/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Text Similarity",
+      "date": "2026-11-07",
+      "url": "/503/075-text-similarity/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Duplicate Text Detector",
+      "date": "2026-11-07",
+      "url": "/503/076-duplicate-text-detector/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Syllable Counter",
+      "date": "2026-11-07",
+      "url": "/503/077-syllable-counter/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Passive Voice Detector",
+      "date": "2026-11-08",
+      "url": "/503/078-passive-voice-detector/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Pronoun Tracker",
+      "date": "2026-11-08",
+      "url": "/503/079-pronoun-tracker/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Text Categoriser",
+      "date": "2026-11-08",
+      "url": "/503/080-text-categoriser/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Question Answer Extractor",
+      "date": "2026-11-08",
+      "url": "/503/081-question-answer-extractor/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Header Extractor",
+      "date": "2026-11-08",
+      "url": "/503/082-header-extractor/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Text Entropy",
+      "date": "2026-11-08",
+      "url": "/503/083-text-entropy/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Keyword In Context",
+      "date": "2026-11-08",
+      "url": "/503/084-keyword-in-context/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Text To Stats",
+      "date": "2026-11-08",
+      "url": "/503/085-text-to-stats/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Spell Checker Lite",
+      "date": "2026-11-08",
+      "url": "/503/086-spell-checker-lite/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Abbreviation Expander",
+      "date": "2026-11-08",
+      "url": "/503/087-abbreviation-expander/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Date Normaliser",
+      "date": "2026-11-09",
+      "url": "/503/088-date-normaliser/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Number Extractor",
+      "date": "2026-11-09",
+      "url": "/503/089-number-extractor/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Text Repeater",
+      "date": "2026-11-09",
+      "url": "/503/090-text-repeater/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Syllable Stress Demo",
+      "date": "2026-11-09",
+      "url": "/503/091-syllable-stress-demo/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Coherence Score",
+      "date": "2026-11-09",
+      "url": "/503/092-coherence-score/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Unique Word Finder",
+      "date": "2026-11-09",
+      "url": "/503/093-unique-word-finder/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Readability Score",
+      "date": "2026-11-09",
+      "url": "/503/094-readability-score/",
+      "track": "text-analysers"
+    },
+    {
+      "name": "Text Diff Viewer",
+      "date": "2026-11-09",
+      "url": "/503/095-text-diff-viewer/",
+      "track": "text-analysers"
+    }
+  ]
+}

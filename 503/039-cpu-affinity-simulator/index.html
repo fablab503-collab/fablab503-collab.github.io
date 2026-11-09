@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CPU Affinity Simulator · Project 503 · D-CREATIONS</title>
+  <meta name="description" content="A simulator showing how CPU thread affinity affects performance by binding jobs to specific cores.">
+  <link rel="canonical" href="https://dcreations.fr/503/039-cpu-affinity-simulator/">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --primary: #007bff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 1rem; line-height: 1.5; }
+    header { margin-bottom: 1.5rem; }
+    a { color: var(--primary); text-decoration: none; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .card { background-color: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    h1, h2 { margin-bottom: 1rem; }
+    .cores { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
+    .core { background-color: var(--line); border-radius: 4px; padding: 0.75rem; text-align: center; flex: 1 1 80px; min-width: 80px; }
+    .core.active { background-color: var(--primary); color: white; }
+    .jobs { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
+    .job { background-color: var(--line); border-radius: 4px; padding: 0.75rem; text-align: center; flex: 1 1 120px; min-width: 120px; }
+    .job.active { background-color: #28a745; color: white; }
+    .controls { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+    button { padding: 0.5rem 1rem; border: none; border-radius: 4px; background-color: var(--primary); color: white; cursor: pointer; }
+    button:hover { opacity: 0.9; }
+    .stats { display: flex; justify-content: space-between; margin-top: 1rem; font-size: 0.9rem; color: var(--text-2); }
+    footer { text-align: center; margin-top: 2rem; color: var(--text-2); font-size: 0.9rem; }
+    .status { padding: 0.5rem; border-radius: 4px; margin: 1rem 0; text-align: center; }
+    .success { background-color: #d4edda; color: #155724; }
+    .error { background-color: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+
+    <main>
+      <h1>CPU Affinity Simulator</h1>
+      <p>Bind jobs to specific CPU cores to see how it affects performance.</p>
+
+      <div class="card">
+        <h2>Core Assignment</h2>
+        <div class="cores" id="cores-container"></div>
+        
+        <h2>Jobs</h2>
+        <div class="jobs" id="jobs-container"></div>
+        
+        <div class="controls">
+          <button id="run-btn">Run Simulation</button>
+          <button id="reset-btn">Reset</button>
+        </div>
+        
+        <div class="stats">
+          <span>Active Cores: <span id="active-cores">0</span></span>
+          <span>Active Jobs: <span id="active-jobs">0</span></span>
+        </div>
+      </div>
+
+      <div class="status" id="status-message"></div>
+    </main>
+
+    <footer>
+      Project #39 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const cores = [0, 1, 2, 3];
+    const jobs = [
+      { id: 'job1', name: 'Job 1', duration: 1500 },
+      { id: 'job2', name: 'Job 2', duration: 1200 },
+      { id: 'job3', name: 'Job 3', duration: 1800 },
+      { id: 'job4', name: 'Job 4', duration: 900 }
+    ];
+
+    let assignedCores = {};
+    let activeJobs = [];
+    let simulationRunning = false;
+
+    const coresContainer = document.getElementById('cores-container');
+    const jobsContainer = document.getElementById('jobs-container');
+    const runBtn = document.getElementById('run-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const activeCoresEl = document.getElementById('active-cores');
+    const activeJobsEl = document.getElementById('active-jobs');
+    const statusMessage = document.getElementById('status-message');
+
+    function updateStats() {
+      activeCoresEl.textContent = Object.keys(assignedCores).length;
+      activeJobsEl.textContent = activeJobs.length;
+    }
+
+    function renderCores() {
+      coresContainer.innerHTML = '';
+      cores.forEach(coreId => {
+        const coreEl = document.createElement('div');
+        coreEl.className = `core ${assignedCores[coreId] ? 'active' : ''}`;
+        coreEl.textContent = `Core ${coreId}`;
+        coreEl.dataset.core = coreId;
+        coreEl.addEventListener('click', () => toggleCoreAssignment(coreId));
+        coresContainer.appendChild(coreEl);
+      });
+    }
+
+    function renderJobs() {
+      jobsContainer.innerHTML = '';
+      jobs.forEach(job => {
+        const jobEl = document.createElement('div');
+        jobEl.className = `job ${activeJobs.includes(job.id) ? 'active' : ''}`;
+        jobEl.textContent = job.name;
+        jobEl.dataset.job = job.id;
+        jobEl.addEventListener('click', () => toggleJobAssignment(job.id));
+        jobsContainer.appendChild(jobEl);
+      });
+    }
+
+    function toggleCoreAssignment(coreId) {
+      if (assignedCores[coreId]) {
+        delete assignedCores[coreId];
+      } else {
+        assignedCores[coreId] = true;
+      }
+      renderCores();
+      updateStats();
+    }
+
+    function toggleJobAssignment(jobId) {
+      const jobIndex = activeJobs.indexOf(jobId);
+      if (jobIndex > -1) {
+        activeJobs.splice(jobIndex, 1);
+      } else {
+        activeJobs.push(jobId);
+      }
+      renderJobs();
+      updateStats();
+    }
+
+    function runSimulation() {
+      if (activeJobs.length === 0 || Object.keys(assignedCores).length === 0) {
+        showMessage('Please assign at least one job and one core.', 'error');
+        return;
+      }
+
+      if (simulationRunning) return;
+      simulationRunning = true;
+      showMessage('Simulation running...', 'success');
+
+      const startTime = performance.now();
+      let completedJobs = 0;
+
+      activeJobs.forEach(jobId => {
+        setTimeout(() => {
+          completedJobs++;
+          showMessage(`Job ${jobId} completed`, 'success');
+          
+          if (completedJobs === activeJobs.length) {
+            const endTime = performance.now();
+            const duration = (endTime - startTime).toFixed(2);
+            showMessage(`Simulation complete in ${duration}ms`, 'success');
+            simulationRunning = false;
+          }
+        }, jobs.find(j => j.id === jobId).duration);
+      });
+    }
+
+    function reset() {
+      assignedCores = {};
+      activeJobs = [];
+      simulationRunning = false;
+      showMessage('', '');
+      renderCores();
+      renderJobs();
+      updateStats();
+    }
+
+    function showMessage(text, type) {
+      statusMessage.textContent = text;
+      statusMessage.className = `status ${type}`;
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem('cpuAffinityState', JSON.stringify({
+          assignedCores,
+          activeJobs
+        }));
+      } catch (e) {}
+    }
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem('cpuAffinityState');
+        if (saved) {
+          const state = JSON.parse(saved);
+          assignedCores = state.assignedCores || {};
+          activeJobs = state.activeJobs || [];
+        }
+      } catch (e) {}
+    }
+
+    runBtn.addEventListener('click', runSimulation);
+    resetBtn.addEventListener('click', reset);
+
+    loadState();
+    renderCores();
+    renderJobs();
+    updateStats();
+  </script>
+</body>
+</html>

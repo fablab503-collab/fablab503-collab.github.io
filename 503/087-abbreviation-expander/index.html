@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Abbreviation Expander · Project 503 · D-CREATIONS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://dcreations.fr/503/087-abbreviation-expander/">
+<meta name="description" content="Abbreviation Expander finds common abbreviations in your text and expands them to their full forms using a built-in lookup table, fully offline in one HTML file.">
+<style>
+:root{
+  --bg:#f4f4f2; --card:#fff; --text:#111; --text-2:#5a5a5a; --line:#e2e2de;
+  --accent:#111; --accent-text:#fff; --ok:#1a7f37;
+  --abbr:#0b5394; --abbr-bg:#e8f0fb;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121212; --card:#1c1c1c; --text:#f2f2f2; --text-2:#a8a8a8; --line:#2c2c2c;
+    --accent:#f2f2f2; --accent-text:#121212; --ok:#6fdc8c;
+    --abbr:#8ab6f0; --abbr-bg:#22303f;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.5; padding:16px;
+}
+.back{
+  display:inline-block; color:var(--text-2); text-decoration:none;
+  font-size:14px; margin:4px 0 14px;
+}
+.back:hover{color:var(--text); text-decoration:underline}
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  max-width:720px; margin:0 auto; padding:20px;
+}
+h1{font-size:22px; margin:0 0 6px}
+.sub{color:var(--text-2); font-size:14px; margin:0 0 16px}
+textarea{
+  width:100%; min-height:140px; resize:vertical; padding:12px;
+  border:1px solid var(--line); border-radius:10px; background:var(--bg);
+  color:var(--text); font:inherit; font-size:15px;
+}
+.row{display:flex; gap:8px; margin:12px 0; flex-wrap:wrap}
+button{
+  border:1px solid var(--accent); background:var(--accent); color:var(--accent-text);
+  border-radius:10px; padding:9px 16px; font:inherit; font-size:14px; cursor:pointer;
+}
+button.ghost{background:transparent; color:var(--text); border-color:var(--line)}
+button.small{padding:5px 10px; font-size:13px}
+#stats{font-size:13px; color:var(--text-2); margin:4px 0 12px}
+#output{
+  border:1px solid var(--line); border-radius:10px; padding:12px; font-size:15px;
+  white-space:pre-wrap; word-break:break-word; min-height:48px; background:var(--bg);
+}
+.abbr{
+  background:var(--abbr-bg); color:var(--abbr); border-bottom:2px solid var(--abbr);
+  cursor:pointer; border-radius:3px; padding:0 1px;
+}
+.abbr.open{border-bottom-style:dotted}
+#found{display:flex; gap:6px; flex-wrap:wrap; margin-top:12px}
+#found .chip{
+  border:1px solid var(--line); border-radius:999px; padding:3px 10px; font-size:13px;
+  color:var(--text-2); background:var(--bg);
+}
+#found .chip b{color:var(--text)}
+details{margin-top:16px; font-size:14px; color:var(--text-2)}
+summary{cursor:pointer; color:var(--text)}
+.dict-row{display:flex; gap:6px; margin:10px 0; flex-wrap:wrap}
+.dict-row input{
+  flex:1; min-width:140px; padding:8px 10px; border:1px solid var(--line);
+  border-radius:8px; background:var(--bg); color:var(--text); font:inherit; font-size:14px;
+}
+#custom-list{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+#custom-list span{
+  border:1px solid var(--line); border-radius:999px; padding:3px 10px; font-size:13px;
+}
+#custom-list button{border:none; background:none; color:var(--text-2); cursor:pointer; padding:0 0 0 6px; font-size:13px}
+footer{
+  text-align:center; color:var(--text-2); font-size:13px; margin:22px 0 8px;
+}
+</style>
+</head>
+<body>
+<a class="back" href="/503/">← Project 503</a>
+<main class="card">
+  <h1>Abbreviation Expander</h1>
+  <p class="sub">Type or paste text below. Common abbreviations are highlighted; click one to expand it, or expand them all at once. Everything runs offline in this page.</p>
+  <textarea id="input" placeholder="Start typing here…" spellcheck="false"></textarea>
+  <div class="row">
+    <button id="run">Find abbreviations</button>
+    <button id="expand-all" class="ghost">Expand all</button>
+    <button id="collapse-all" class="ghost">Collapse all</button>
+    <button id="sample" class="ghost">Sample text</button>
+    <button id="clear" class="ghost">Clear</button>
+  </div>
+  <p id="stats"></p>
+  <div id="output"></div>
+  <div id="found"></div>
+  <details>
+    <summary>My abbreviations (<span id="dict-count">0</span> custom entries, saved locally in this browser only)</summary>
+    <div class="dict-row">
+      <input id="dict-input" placeholder="e.g. TBD = to be decided" maxlength="80">
+      <button class="small" id="dict-add">Add</button>
+      <button class="small ghost" id="dict-clear">Clear all</button>
+    </div>
+    <div id="custom-list"></div>
+  </details>
+</main>
+<footer>Project #87 of 503 · Daniel Madac, D-CREATIONS</footer>
+<script>
+"use strict";
+var ABBR = {
+  "ASAP":"as soon as possible","FYI":"for your information","BTW":"by the way",
+  "IMO":"in my opinion","IMHO":"in my humble opinion","IDK":"I don't know",
+  "TTYL":"talk to you later","BRB":"be right back","LOL":"laughing out loud",
+  "OMG":"oh my god","JK":"just kidding","ETA":"estimated time of arrival",
+  "RSVP":"please reply","FAQ":"frequently asked questions","DIY":"do it yourself",
+  "EOD":"end of day","EOW":"end of week","EOM":"end of month","PTO":"paid time off",
+  "CEO":"chief executive officer","CFO":"chief financial officer","COO":"chief operating officer",
+  "CTO":"chief technology officer","HR":"human resources","IT":"information technology",
+  "PR":"public relations","SEO":"search engine optimization","API":"application programming interface",
+  "SDK":"software development kit","IDE":"integrated development environment","GUI":"graphical user interface",
+  "CLI":"command line interface","URL":"uniform resource locator","HTTP":"hypertext transfer protocol",
+  "HTTPS":"hypertext transfer protocol secure","SSL":"secure sockets layer","DNS":"domain name system",
+  "IP":"internet protocol","VPN":"virtual private network","LAN":"local area network","WAN":"wide area network",
+  "ISP":"internet service provider","Wi-Fi":"wireless fidelity","USB":"universal serial bus",
+  "PDF":"portable document format","ATM":"automated teller machine","PIN":"personal identification number",
+  "GPS":"global positioning system","TV":"television","PC":"personal computer","AC":"air conditioning",
+  "DC":"direct current","AM":"before noon","PM":"after noon","CPU":"central processing unit",
+  "GPU":"graphics processing unit","RAM":"random access memory","ROM":"read-only memory",
+  "SSD":"solid state drive","HDD":"hard disk drive","OS":"operating system","BIOS":"basic input/output system",
+  "LED":"light emitting diode","LCD":"liquid crystal display","OLED":"organic light emitting diode",
+  "QR":"quick response","SIM":"subscriber identity module","AI":"artificial intelligence","ML":"machine learning",
+  "NASA":"National Aeronautics and Space Administration","FBI":"Federal Bureau of Investigation",
+  "CIA":"Central Intelligence Agency","IRS":"Internal Revenue Service","DMV":"Department of Motor Vehicles",
+  "EU":"European Union","UN":"United Nations","NATO":"North Atlantic Treaty Organization",
+  "e.g.":"for example","i.e.":"that is","etc.":"and so on","vs.":"versus",
+  "Mr.":"Mister","Mrs.":"Misses","Ms.":"Mizz","Dr.":"Doctor","Prof.":"Professor",
+  "St.":"Saint","Ave.":"Avenue","Rd.":"Road","Dept.":"Department","Univ.":"University",
+  "Gov.":"Governor","Sen.":"Senator","Rep.":"Representative","Lt.":"Lieutenant","Gen.":"General",
+  "Col.":"Colonel","Sgt.":"Sergeant","Capt.":"Captain","approx.":"approximately","min.":"minimum",
+  "max.":"maximum","no.":"number","fig.":"figure","et al.":"and others","misc.":"miscellaneous",
+  "P.S.":"post script","a.m.":"before noon","p.m.":"after noon"
+};
+
+var LS_KEY = "ae87.customAbbr";
+function lsGet(){
+  try{
+    var raw = localStorage.getItem(LS_KEY);
+    var obj = raw ? JSON.parse(raw) : {};
+    return (obj && typeof obj === "object" && !Array.isArray(obj)) ? obj : {};
+  }catch(e){ return {}; }
+}
+function lsSet(obj){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(obj)); }catch(e){}
+}
+var custom = lsGet();
+
+var input = document.getElementById("input");
+var output = document.getElementById("output");
+var stats = document.getElementById("stats");
+var found = document.getElementById("found");
+
+function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+
+var RE = null, LOOKUP = {};
+function rebuild(){
+  var all = {}, k;
+  for(k in ABBR) all[k] = ABBR[k];
+  for(k in custom) all[k] = custom[k];
+  var keys = Object.keys(all).sort(function(a, b){ return b.length - a.length; });
+  var patterns = keys.map(function(key){
+    if(key.charAt(key.length - 1) === ".") return escRe(key.slice(0, -1)) + "\\.?";
+    return escRe(key);
+  });
+  RE = new RegExp("(^|[^\\p{L}\\p{N}_])(" + patterns.join("|") + ")(?![\\p{L}\\p{N}])", "giu");
+  LOOKUP = {};
+  keys.forEach(function(key){
+    var norm = key.toLowerCase();
+    LOOKUP[norm] = all[key];
+    if(norm.charAt(norm.length - 1) === ".") LOOKUP[norm.slice(0, -1)] = all[key];
+  });
+}
+function normKey(s){ var n = String(s).toLowerCase(); if(n.charAt(n.length-1)===".") n = n.slice(0,-1); return n; }
+
+var SAMPLE = "FYI: the DIY team met at 9 a.m. to review the new API docs. ASAP, please send the URL of the FAQ — the CEO wants it before EOD. Use HTTPS, not HTTP. vs. last year, IT fixed the VPN and the Wi-Fi. RSVP by Friday. e.g. bring your own laptop (PC or Mac).";
+
+function runFind(){
+  var text = input.value;
+  output.textContent = "";
+  found.textContent = "";
+  if(!text.trim()){
+    stats.textContent = "Type something above, then press Find abbreviations.";
+    return;
+  }
+  RE.lastIndex = 0;
+  var m, last = 0, count = 0;
+  var seen = {};
+  while((m = RE.exec(text)) !== null){
+    var abbrText = m[2];
+    var full = LOOKUP[normKey(abbrText)];
+    if(full === undefined) continue;
+    output.appendChild(document.createTextNode(text.slice(last, m.index + m[1].length)));
+    last = m.index + m[0].length;
+    var span = document.createElement("span");
+    span.className = "abbr";
+    span.textContent = abbrText;
+    span.title = full + " — click to expand";
+    span.setAttribute("data-abbr", abbrText);
+    span.setAttribute("data-full", full);
+    span.addEventListener("click", function(){ toggleSpan(this); });
+    output.appendChild(span);
+    count++;
+    var nk = normKey(abbrText);
+    seen[nk] = seen[nk] || { abbr: abbrText, full: full, n: 0 };
+    seen[nk].n++;
+  }
+  output.appendChild(document.createTextNode(text.slice(last)));
+  stats.textContent = count + " abbreviation" + (count === 1 ? "" : "s") + " found · click one in the text to expand it";
+  stats.style.color = count ? "var(--ok)" : "var(--text-2)";
+  Object.keys(seen).forEach(function(nk){
+    var rec = seen[nk];
+    var chip = document.createElement("span");
+    chip.className = "chip";
+    var b = document.createElement("b");
+    b.textContent = rec.abbr + (rec.n > 1 ? " ×" + rec.n : "");
+    chip.appendChild(b);
+    chip.appendChild(document.createTextNode(" → " + rec.full));
+    found.appendChild(chip);
+  });
+}
+
+function toggleSpan(span){
+  if(span.classList.contains("open")){
+    span.textContent = span.getAttribute("data-abbr");
+    span.classList.remove("open");
+  }else{
+    span.textContent = span.getAttribute("data-full") + " (" + span.getAttribute("data-abbr") + ")";
+    span.classList.add("open");
+  }
+}
+
+function eachAbbr(fn){
+  var spans = output.querySelectorAll(".abbr");
+  for(var i = 0; i < spans.length; i++) fn(spans[i]);
+}
+
+document.getElementById("run").addEventListener("click", runFind);
+document.getElementById("expand-all").addEventListener("click", function(){
+  eachAbbr(function(s){ if(!s.classList.contains("open")) toggleSpan(s); });
+});
+document.getElementById("collapse-all").addEventListener("click", function(){
+  eachAbbr(function(s){ if(s.classList.contains("open")) toggleSpan(s); });
+});
+document.getElementById("sample").addEventListener("click", function(){
+  input.value = SAMPLE;
+  runFind();
+});
+document.getElementById("clear").addEventListener("click", function(){
+  input.value = "";
+  output.textContent = "";
+  found.textContent = "";
+  stats.textContent = "";
+});
+
+function renderCustom(){
+  var list = document.getElementById("custom-list");
+  list.textContent = "";
+  var keys = Object.keys(custom);
+  document.getElementById("dict-count").textContent = keys.length;
+  keys.forEach(function(k){
+    var chip = document.createElement("span");
+    chip.textContent = k + " = " + custom[k];
+    var x = document.createElement("button");
+    x.textContent = "×";
+    x.title = "Remove";
+    x.addEventListener("click", function(){
+      var obj = lsGet();
+      delete obj[k];
+      lsSet(obj);
+      delete custom[k];
+      rebuild();
+      renderCustom();
+      runFind();
+    });
+    chip.appendChild(x);
+    list.appendChild(chip);
+  });
+}
+
+function addCustom(raw){
+  var parts = String(raw).split(/[=:]/);
+  if(parts.length < 2) return false;
+  var abbr = parts[0].trim().toUpperCase().replace(/\s+/g, "");
+  var full = parts.slice(1).join("=").trim();
+  if(!abbr || !full) return false;
+  if(!/^[A-Za-z0-9][A-Za-z0-9.\-]{1,11}$/.test(abbr)) return false;
+  custom[abbr] = full;
+  lsSet(custom);
+  rebuild();
+  renderCustom();
+  runFind();
+  return true;
+}
+
+document.getElementById("dict-add").addEventListener("click", function(){
+  var el = document.getElementById("dict-input");
+  if(addCustom(el.value)) el.value = "";
+});
+document.getElementById("dict-input").addEventListener("keydown", function(ev){
+  if(ev.key === "Enter"){ if(addCustom(this.value)) this.value = ""; }
+});
+document.getElementById("dict-clear").addEventListener("click", function(){
+  lsSet({});
+  custom = {};
+  rebuild();
+  renderCustom();
+  runFind();
+});
+
+rebuild();
+renderCustom();
+runFind();
+</script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Adjust the LoRA rank r from 1 to 16 and see how the low-rank matrices A and B cut the trainable parameter count compared with full fine-tuning of a whole weight matrix.">
+  <link rel="canonical" href="https://dcreations.fr/503/026-lora-low-rank-adapter-lab/">
+  <title>Lora Low Rank Adapter Lab · Project 503 · D-CREATIONS</title>
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --accent: #2456d6;
+      --pos: #d64545;
+      --neg: #3b6fd4;
+      --mid: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+        --accent: #8ab0ff;
+        --pos: #ff8585;
+        --neg: #6f9bff;
+        --mid: #1c1c1c;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 12px 16px 28px; }
+    .toplink { display: inline-block; margin: 6px 0 14px; color: var(--text-2); text-decoration: none; font-size: 14px; }
+    .toplink:hover, .toplink:focus { color: var(--text); }
+    h1 { font-size: clamp(22px, 5vw, 28px); line-height: 1.2; margin: 0 0 8px; }
+    .lede { color: var(--text-2); margin: 0 0 18px; max-width: 65ch; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 0 0 16px; }
+    .card h2 { font-size: 13px; margin: 0 0 12px; color: var(--text-2); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+    .controls { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; }
+    .field { display: flex; flex-direction: column; gap: 6px; flex: 1 1 220px; }
+    .field label { font-size: 13px; color: var(--text-2); font-weight: 600; }
+    .rank-line { display: flex; align-items: center; gap: 12px; }
+    .rank-line input[type="range"] { flex: 1; min-width: 120px; accent-color: var(--accent); }
+    .rank-line output { font-size: 20px; font-weight: 700; min-width: 62px; text-align: right; font-variant-numeric: tabular-nums; }
+    .rank-scale { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-2); }
+    select, button { font: inherit; }
+    select { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
+    .btn { background: var(--text); color: var(--bg); border: 1px solid var(--text); border-radius: 9px; padding: 9px 14px; cursor: pointer; }
+    .btn:hover { opacity: .85; }
+    .formula { font-size: 13px; color: var(--text-2); margin: 14px 0 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    .stat { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+    .stat .k { font-size: 12px; color: var(--text-2); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+    .stat .v { font-size: 22px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .stat .s { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+    .bars { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .bar-row { display: grid; grid-template-columns: 52px 1fr 76px; gap: 10px; align-items: center; font-size: 13px; }
+    .bar-label { color: var(--text-2); font-weight: 600; }
+    .bar-track { background: var(--line); border-radius: 6px; height: 16px; overflow: hidden; }
+    .bar-fill { height: 100%; width: 0; border-radius: 6px; }
+    .bar-fill.full { background: var(--text-2); }
+    .bar-fill.lora { background: var(--accent); }
+    .bar-val { text-align: right; font-variant-numeric: tabular-nums; }
+    .bar-note { font-size: 12px; color: var(--text-2); margin: 8px 0 0; }
+    .mats { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+    .mat .t { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .mat canvas { width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 9px; image-rendering: pixelated; background: var(--mid); }
+    .mat .c { font-size: 12px; color: var(--text-2); margin-top: 6px; font-variant-numeric: tabular-nums; }
+    .hover { font-size: 12px; color: var(--text-2); margin: 12px 0 0; min-height: 1.2em; font-variant-numeric: tabular-nums; }
+    .note { font-size: 12px; color: var(--text-2); }
+    footer { color: var(--text-2); font-size: 13px; text-align: center; margin-top: 22px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="toplink" href="/503/">← Project 503</a>
+    <h1>LoRA Low-Rank Adapter Lab</h1>
+    <p class="lede">Full fine-tuning updates every number in a weight matrix <strong>W</strong> (m × n). LoRA keeps W frozen and trains a small low-rank update instead: <strong>ΔW = B × A</strong>, where A is r × n and B is m × r. Move the rank r and watch the parameter count change.</p>
+
+    <section class="card">
+      <h2>Controls</h2>
+      <div class="controls">
+        <div class="field">
+          <label for="rank">Rank r</label>
+          <div class="rank-line">
+            <input type="range" id="rank" min="1" max="16" step="1" value="8">
+            <output id="rOut" for="rank">r = 8</output>
+          </div>
+          <div class="rank-scale"><span>1</span><span>16</span></div>
+        </div>
+        <div class="field">
+          <label for="size">Layer size (square W)</label>
+          <select id="size">
+            <option value="64">64 × 64</option>
+            <option value="128" selected>128 × 128</option>
+            <option value="256">256 × 256</option>
+            <option value="512">512 × 512</option>
+            <option value="1024">1,024 × 1,024</option>
+            <option value="2048">2,048 × 2,048</option>
+            <option value="4096">4,096 × 4,096</option>
+          </select>
+        </div>
+        <div class="field" style="flex:0 1 auto">
+          <label>&nbsp;</label>
+          <button class="btn" id="newBtn" type="button">New random A &amp; B</button>
+        </div>
+      </div>
+      <p class="formula" id="formula"></p>
+    </section>
+
+    <section class="card">
+      <h2>Trainable parameters</h2>
+      <div class="stats">
+        <div class="stat"><div class="k">Full fine-tuning</div><div class="v" id="fullVal">–</div><div class="s">m × n weights</div></div>
+        <div class="stat"><div class="k">LoRA (rank r)</div><div class="v" id="loraVal">–</div><div class="s">r × (m + n) weights</div></div>
+        <div class="stat"><div class="k">Savings</div><div class="v" id="saveVal">–</div><div class="s">vs full fine-tuning</div></div>
+      </div>
+      <div class="bars">
+        <div class="bar-row"><span class="bar-label">Full</span><div class="bar-track"><div class="bar-fill full" id="fullBar"></div></div><span class="bar-val" id="fullBarVal"></span></div>
+        <div class="bar-row"><span class="bar-label">LoRA</span><div class="bar-track"><div class="bar-fill lora" id="loraBar"></div></div><span class="bar-val" id="loraBarVal"></span></div>
+      </div>
+      <p class="bar-note">Bar widths use a log scale so both bars stay visible.</p>
+    </section>
+
+    <section class="card">
+      <h2>The matrices</h2>
+      <div class="mats">
+        <div class="mat">
+          <div class="t">A</div>
+          <canvas id="canvasA" role="img"></canvas>
+          <div class="c" id="capA"></div>
+        </div>
+        <div class="mat">
+          <div class="t">B</div>
+          <canvas id="canvasB" role="img"></canvas>
+          <div class="c" id="capB"></div>
+        </div>
+        <div class="mat">
+          <div class="t">ΔW = B × A</div>
+          <canvas id="canvasW" role="img"></canvas>
+          <div class="c" id="capW"></div>
+        </div>
+      </div>
+      <p class="hover" id="hover">Hover the ΔW matrix to read a value.</p>
+    </section>
+
+    <p class="note">Everything is computed locally in your browser — no server, no network, no tracking. Only the rank r and the layer size are saved in this browser's localStorage. Red cells are positive values, blue cells are negative; large matrices are shown as a 128 × 128 sample.</p>
+
+    <footer>Project #26 of 503 · Daniel Madac, D-CREATIONS</footer>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+    var SIZES = [64, 128, 256, 512, 1024, 2048, 4096];
+    var MAXD = 128;
+    var state = { r: 8, size: 128, seed: 42 };
+
+    function $(id) { return document.getElementById(id); }
+    var rankInput = $('rank'), rOut = $('rOut'), sizeSel = $('size'), newBtn = $('newBtn');
+    var formulaEl = $('formula');
+    var fullVal = $('fullVal'), loraVal = $('loraVal'), saveVal = $('saveVal');
+    var fullBar = $('fullBar'), loraBar = $('loraBar'), fullBarVal = $('fullBarVal'), loraBarVal = $('loraBarVal');
+    var canvasA = $('canvasA'), canvasB = $('canvasB'), canvasW = $('canvasW');
+    var capA = $('capA'), capB = $('capB'), capW = $('capW'), hoverEl = $('hover');
+
+    function load() {
+      try {
+        var raw = localStorage.getItem('lora-lab-26');
+        if (!raw) return;
+        var o = JSON.parse(raw);
+        if (o) {
+          if (typeof o.r === 'number' && o.r >= 1 && o.r <= 16) state.r = Math.round(o.r);
+          if (typeof o.size === 'number' && SIZES.indexOf(o.size) >= 0) state.size = o.size;
+        }
+      } catch (e) {}
+    }
+    function save() {
+      try {
+        localStorage.setItem('lora-lab-26', JSON.stringify({ r: state.r, size: state.size }));
+      } catch (e) {}
+    }
+
+    function mulberry32(a) {
+      return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        var t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    function normalFn(rng) {
+      var spare = null;
+      return function () {
+        if (spare !== null) { var v = spare; spare = null; return v; }
+        var u = 0, v = 0;
+        while (u === 0) u = rng();
+        while (v === 0) v = rng();
+        var mag = Math.sqrt(-2 * Math.log(u));
+        spare = mag * Math.sin(2 * Math.PI * v);
+        return mag * Math.cos(2 * Math.PI * v);
+      };
+    }
+
+    var A, B, m, n, r;
+    function generate() {
+      m = n = state.size; r = state.r;
+      var rng = mulberry32(state.seed >>> 0);
+      var norm = normalFn(rng);
+      A = new Float32Array(r * n);
+      for (var i = 0; i < A.length; i++) A[i] = norm();
+      B = new Float32Array(m * r);
+      var s = 1 / Math.sqrt(r);
+      for (var j = 0; j < B.length; j++) B[j] = norm() * s;
+    }
+    function wAt(i, j) {
+      var acc = 0, base = i * r;
+      for (var k = 0; k < r; k++) acc += B[base + k] * A[k * n + j];
+      return acc;
+    }
+
+    function sample(R, C, get) {
+      var rows = Math.min(R, MAXD), cols = Math.min(C, MAXD);
+      var vals = new Float32Array(rows * cols), maxAbs = 0;
+      for (var y = 0; y < rows; y++) {
+        var sy = rows === 1 ? 0 : Math.round(y * (R - 1) / (rows - 1));
+        for (var x = 0; x < cols; x++) {
+          var sx = cols === 1 ? 0 : Math.round(x * (C - 1) / (cols - 1));
+          var v = get(sy, sx);
+          vals[y * cols + x] = v;
+          var a = v < 0 ? -v : v;
+          if (a > maxAbs) maxAbs = a;
+        }
+      }
+      return { rows: rows, cols: cols, vals: vals, maxAbs: maxAbs };
+    }
+
+    function cssVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+    function hexRGB(hex) {
+      hex = hex.replace('#', '');
+      if (hex.length === 3) hex = hex.charAt(0) + hex.charAt(0) + hex.charAt(1) + hex.charAt(1) + hex.charAt(2) + hex.charAt(2);
+      var num = parseInt(hex, 16);
+      return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+    }
+
+    function draw(canvas, s) {
+      canvas.width = s.cols; canvas.height = s.rows;
+      var ctx = canvas.getContext('2d');
+      var img = ctx.createImageData(s.cols, s.rows);
+      var pos = hexRGB(cssVar('--pos')), neg = hexRGB(cssVar('--neg')), mid = hexRGB(cssVar('--mid'));
+      var d = img.data, max = s.maxAbs > 0 ? s.maxAbs : 1;
+      for (var p = 0; p < s.vals.length; p++) {
+        var t = s.vals[p] / max;
+        if (t > 1) t = 1; else if (t < -1) t = -1;
+        var a = t < 0 ? -t : t;
+        var k = p * 4;
+        if (t >= 0) {
+          d[k] = mid[0] + (pos[0] - mid[0]) * a;
+          d[k + 1] = mid[1] + (pos[1] - mid[1]) * a;
+          d[k + 2] = mid[2] + (pos[2] - mid[2]) * a;
+        } else {
+          d[k] = mid[0] + (neg[0] - mid[0]) * a;
+          d[k + 1] = mid[1] + (neg[1] - mid[1]) * a;
+          d[k + 2] = mid[2] + (neg[2] - mid[2]) * a;
+        }
+        d[k + 3] = 255;
+      }
+      ctx.putImageData(img, 0, 0);
+    }
+
+    function compact(x) {
+      return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 2 }).format(x);
+    }
+    function loc(x) { return x.toLocaleString('en-US'); }
+
+    function update() {
+      generate();
+      var full = m * n, lora = r * (m + n);
+      rOut.textContent = 'r = ' + r;
+      fullVal.textContent = loc(full);
+      loraVal.textContent = loc(lora);
+      var pct = lora / full * 100;
+      var pctStr = pct < 0.01 ? '<0.01%' : (pct < 10 ? pct.toFixed(2) : String(Math.round(pct))) + '%';
+      var ratio = full / lora;
+      var ratioStr = ratio >= 100 ? Math.round(ratio) + '×' : ratio.toFixed(1) + '×';
+      saveVal.textContent = pctStr + ' · ' + ratioStr + ' fewer';
+      formulaEl.textContent = 'ΔW = B × A   ·   full: ' + m + ' × ' + n + ' = ' + loc(full) +
+        ' params   ·   LoRA: ' + r + ' × (' + m + ' + ' + n + ') = ' + loc(lora) + ' params';
+      var lf = Math.log10(full + 1), ll = Math.log10(lora + 1);
+      fullBar.style.width = '100%';
+      loraBar.style.width = Math.max(1.5, ll / lf * 100) + '%';
+      fullBarVal.textContent = compact(full);
+      loraBarVal.textContent = compact(lora);
+      capA.textContent = 'shape ' + r + ' × ' + n + ' — ' + loc(r * n) + ' params';
+      capB.textContent = 'shape ' + m + ' × ' + r + ' — ' + loc(m * r) + ' params';
+      capW.textContent = 'shape ' + m + ' × ' + n + ' — rank ≤ ' + r;
+      draw(canvasA, sample(r, n, function (i, j) { return A[i * n + j]; }));
+      draw(canvasB, sample(m, r, function (i, j) { return B[i * r + j]; }));
+      draw(canvasW, sample(m, n, wAt));
+      canvasA.setAttribute('aria-label', 'Heatmap of matrix A, ' + r + ' rows by ' + n + ' columns');
+      canvasB.setAttribute('aria-label', 'Heatmap of matrix B, ' + m + ' rows by ' + r + ' columns');
+      canvasW.setAttribute('aria-label', 'Heatmap of delta W equals B times A, ' + m + ' rows by ' + n + ' columns');
+    }
+
+    rankInput.addEventListener('input', function () {
+      state.r = +rankInput.value;
+      save();
+      update();
+    });
+    sizeSel.addEventListener('change', function () {
+      state.size = +sizeSel.value;
+      save();
+      update();
+    });
+    newBtn.addEventListener('click', function () {
+      state.seed = (Math.random() * 1e9) >>> 0;
+      update();
+    });
+
+    canvasW.addEventListener('mousemove', function (e) {
+      var rect = canvasW.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      var cx = Math.round((e.clientX - rect.left) / rect.width * (canvasW.width - 1));
+      var cy = Math.round((e.clientY - rect.top) / rect.height * (canvasW.height - 1));
+      if (cx < 0) cx = 0; else if (cx > canvasW.width - 1) cx = canvasW.width - 1;
+      if (cy < 0) cy = 0; else if (cy > canvasW.height - 1) cy = canvasW.height - 1;
+      var sx = canvasW.width === 1 ? 0 : Math.round(cx * (n - 1) / (canvasW.width - 1));
+      var sy = canvasW.height === 1 ? 0 : Math.round(cy * (m - 1) / (canvasW.height - 1));
+      hoverEl.textContent = 'ΔW[' + sy + ', ' + sx + '] ≈ ' + wAt(sy, sx).toFixed(3);
+    });
+    canvasW.addEventListener('mouseleave', function () {
+      hoverEl.textContent = 'Hover the ΔW matrix to read a value.';
+    });
+
+    load();
+    rankInput.value = state.r;
+    sizeSel.value = String(state.size);
+    update();
+    if (window.matchMedia) {
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+      var onTheme = function () { update(); };
+      if (mq.addEventListener) mq.addEventListener('change', onTheme);
+      else if (mq.addListener) mq.addListener(onTheme);
+    }
+  })();
+  </script>
+</body>
+</html>

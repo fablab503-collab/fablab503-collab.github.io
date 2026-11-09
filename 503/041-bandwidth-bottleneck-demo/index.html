@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bandwidth Bottleneck Demo · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/041-bandwidth-bottleneck-demo/">
+  <meta name="description" content="Demonstrates how bandwidth limits affect model transfer speed between devices.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --primary: #007bff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); line-height: 1.6; padding: 1rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2rem; }
+    h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .subtitle { color: var(--text-2); margin-bottom: 1rem; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .controls { display: flex; flex-direction: column; gap: 1rem; }
+    label { display: flex; align-items: center; gap: 0.5rem; }
+    input[type="range"] { width: 100%; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .stat-card { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1rem; text-align: center; }
+    .stat-value { font-size: 1.5rem; font-weight: bold; margin-bottom: 0.25rem; }
+    .stat-label { color: var(--text-2); font-size: 0.9rem; }
+    .progress-container { margin: 1rem 0; }
+    .progress-bar { height: 20px; background: var(--line); border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease; }
+    .status { text-align: center; margin: 1rem 0; font-weight: bold; }
+    .btn { padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+    .btn:hover { opacity: 0.9; }
+    footer { text-align: center; margin-top: 2rem; color: var(--text-2); font-size: 0.9rem; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/" class="btn">← Project 503</a>
+      <h1>Bandwidth Bottleneck Demo</h1>
+      <p class="subtitle">Demonstrates how bandwidth limits affect model transfer speed between devices.</p>
+    </header>
+
+    <main>
+      <div class="card">
+        <div class="controls">
+          <label>
+            <span>Bandwidth Limit:</span>
+            <input type="range" id="bandwidth" min="1" max="100" value="50">
+            <span id="bandwidth-value">50 Mbps</span>
+          </label>
+          <label>
+            <span>Model Size:</span>
+            <input type="range" id="model-size" min="10" max="200" value="100">
+            <span id="model-size-value">100 MB</span>
+          </label>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+          </div>
+        </div>
+
+        <div class="status" id="status">Ready to start transfer</div>
+
+        <button class="btn" id="start-btn">Start Transfer</button>
+      </div>
+
+      <div class="card">
+        <h2>Transfer Statistics</h2>
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-value" id="speed-value">0</div>
+            <div class="stat-label">Mbps</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="time-value">0</div>
+            <div class="stat-label">Seconds</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="size-value">0</div>
+            <div class="stat-label">MB</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      Project #41 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const bandwidthInput = document.getElementById('bandwidth');
+    const modelSizeInput = document.getElementById('model-size');
+    const bandwidthValue = document.getElementById('bandwidth-value');
+    const modelSizeValue = document.getElementById('model-size-value');
+    const startBtn = document.getElementById('start-btn');
+    const progress = document.getElementById('progress');
+    const status = document.getElementById('status');
+    const speedValue = document.getElementById('speed-value');
+    const timeValue = document.getElementById('time-value');
+    const sizeValue = document.getElementById('size-value');
+
+    let transferInterval;
+    let totalBytes = 0;
+    let startTime;
+
+    bandwidthInput.addEventListener('input', () => {
+      bandwidthValue.textContent = `${bandwidthInput.value} Mbps`;
+    });
+
+    modelSizeInput.addEventListener('input', () => {
+      modelSizeValue.textContent = `${modelSizeInput.value} MB`;
+    });
+
+    function simulateTransfer() {
+      const bandwidth = parseInt(bandwidthInput.value);
+      const modelSize = parseInt(modelSizeInput.value);
+      const bytes = modelSize * 1024 * 1024;
+      let transferredBytes = 0;
+
+      startTime = Date.now();
+      totalBytes = 0;
+
+      status.textContent = "Transfer in progress...";
+      progress.style.width = "0%";
+
+      clearInterval(transferInterval);
+
+      transferInterval = setInterval(() => {
+        const bytesPerSecond = bandwidth * 1024 * 1024;
+        const timeElapsed = (Date.now() - startTime) / 1000;
+        const expectedBytes = bytesPerSecond * timeElapsed;
+
+        transferredBytes = Math.min(expectedBytes, bytes);
+        totalBytes = transferredBytes;
+
+        const progressPercent = (transferredBytes / bytes) * 100;
+        progress.style.width = `${progressPercent}%`;
+
+        speedValue.textContent = (bandwidth).toFixed(1);
+        timeValue.textContent = timeElapsed.toFixed(1);
+        sizeValue.textContent = (modelSize).toFixed(1);
+
+        if (transferredBytes >= bytes) {
+          clearInterval(transferInterval);
+          status.textContent = "Transfer complete!";
+          try {
+            localStorage.setItem('lastTransfer', JSON.stringify({
+              bandwidth: bandwidth,
+              modelSize: modelSize,
+              time: timeElapsed
+            }));
+          } catch (e) {}
+        }
+      }, 100);
+    }
+
+    startBtn.addEventListener('click', simulateTransfer);
+
+    // Load previous transfer data if available
+    try {
+      const lastTransfer = localStorage.getItem('lastTransfer');
+      if (lastTransfer) {
+        const data = JSON.parse(lastTransfer);
+        bandwidthInput.value = data.bandwidth;
+        modelSizeInput.value = data.modelSize;
+        bandwidthValue.textContent = `${data.bandwidth} Mbps`;
+        modelSizeValue.textContent = `${data.modelSize} MB`;
+      }
+    } catch (e) {}
+  </script>
+</body>
+</html>

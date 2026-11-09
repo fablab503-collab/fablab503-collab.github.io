@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Memory Pressure Alerts · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/052-memory-pressure-alerts/">
+  <meta name="description" content="Memory Pressure Alerts shows alerts when memory usage exceeds 80% and takes action at 95% capacity.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --alert: #ff4757;
+      --warning: #ffa502;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 375px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 2rem;
+    }
+    a {
+      color: var(--text);
+      text-decoration: none;
+    }
+    .card {
+      background-color: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .status {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .progress {
+      height: 10px;
+      background-color: var(--line);
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .progress-bar {
+      height: 100%;
+      background-color: var(--warning);
+      transition: width 0.3s;
+    }
+    .alert {
+      color: var(--alert);
+    }
+    .warning {
+      color: var(--warning);
+    }
+    button {
+      background-color: var(--text);
+      color: var(--card);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: var(--text-2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+    </header>
+
+    <main>
+      <div class="card">
+        <h1>Memory Pressure Alerts</h1>
+        <p>This demo simulates memory usage and shows alerts when it exceeds 80% and 95%.</p>
+        <div class="status" id="status">Status: Normal</div>
+        <div class="progress">
+          <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+        </div>
+        <button id="simulateBtn">Simulate Memory Usage</button>
+        <p>Current memory usage: <span id="usageValue">0</span>%</p>
+      </div>
+
+      <div class="card">
+        <h2>Alerts</h2>
+        <p id="alertsList">No alerts yet.</p>
+      </div>
+    </main>
+
+    <footer>
+      Project #52 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const progressBar = document.getElementById('progressBar');
+    const usageValue = document.getElementById('usageValue');
+    const simulateBtn = document.getElementById('simulateBtn');
+    const alertsList = document.getElementById('alertsList');
+
+    let memoryUsage = 0;
+    let alerts = [];
+
+    try {
+      const saved = localStorage.getItem('memoryAlerts');
+      if (saved) {
+        alerts = JSON.parse(saved);
+        updateAlertsDisplay();
+      }
+    } catch (e) {}
+
+    function updateAlertsDisplay() {
+      if (alerts.length === 0) {
+        alertsList.textContent = 'No alerts yet.';
+      } else {
+        alertsList.innerHTML = alerts.map(a => `<div>${a}</div>`).join('');
+      }
+    }
+
+    function addAlert(message) {
+      const now = new Date().toLocaleTimeString();
+      alerts.unshift(`[${now}] ${message}`);
+      if (alerts.length > 5) alerts.pop();
+      try {
+        localStorage.setItem('memoryAlerts', JSON.stringify(alerts));
+      } catch (e) {}
+      updateAlertsDisplay();
+    }
+
+    function updateMemoryUsage() {
+      memoryUsage = Math.min(100, memoryUsage + Math.floor(Math.random() * 5) + 1);
+      usageValue.textContent = memoryUsage;
+      progressBar.style.width = `${memoryUsage}%`;
+
+      if (memoryUsage >= 95) {
+        statusEl.textContent = 'Status: Critical';
+        statusEl.className = 'status alert';
+        addAlert('Memory usage at 95% - Taking action');
+      } else if (memoryUsage >= 80) {
+        statusEl.textContent = 'Status: Warning';
+        statusEl.className = 'status warning';
+        addAlert('Memory usage at 80% - Alert issued');
+      } else {
+        statusEl.textContent = 'Status: Normal';
+        statusEl.className = 'status';
+      }
+    }
+
+    simulateBtn.addEventListener('click', updateMemoryUsage);
+  </script>
+</body>
+</html>

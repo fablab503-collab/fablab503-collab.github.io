@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Device Pool Dashboard · Project 503 · D-CREATIONS</title>
+  <meta name="description" content="Operational view combining device metrics, job queue, and scheduling status.">
+  <link rel="canonical" href="https://dcreations.fr/503/055-device-pool-dashboard/">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
+    body { background: var(--bg); color: var(--text); padding: 1rem; line-height: 1.5; }
+    a { color: var(--text); text-decoration: none; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    .back-link { font-size: 0.9rem; }
+    .project-info { text-align: center; font-size: 0.9rem; color: var(--text-2); margin-top: 2rem; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+    .metric { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
+    .metric:last-child { border-bottom: none; }
+    .status { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.85rem; }
+    .status.running { background: #d4edda; color: #155724; }
+    .status.pending { background: #fff3cd; color: #856404; }
+    .status.error { background: #f8d7da; color: #721c24; }
+    .queue-item { padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
+    .queue-item:last-child { border-bottom: none; }
+    .schedule-item { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
+    .schedule-item:last-child { border-bottom: none; }
+    .time { font-weight: bold; color: var(--text); }
+    .progress-bar { height: 8px; background: var(--line); border-radius: 4px; margin-top: 0.5rem; overflow: hidden; }
+    .progress { height: 100%; background: #007bff; border-radius: 4px; }
+    @media (max-width: 375px) {
+      body { padding: 0.5rem; }
+      .card { padding: 1rem; }
+      .grid { gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/" class="back-link">← Project 503</a>
+    </header>
+
+    <main>
+      <h1>Device Pool Dashboard</h1>
+
+      <div class="grid">
+        <div class="card">
+          <h2>Device Metrics</h2>
+          <div class="metric">
+            <span>Total Devices</span>
+            <span id="total-devices">42</span>
+          </div>
+          <div class="metric">
+            <span>Active Devices</span>
+            <span id="active-devices">38</span>
+          </div>
+          <div class="metric">
+            <span>Offline Devices</span>
+            <span id="offline-devices">4</span>
+          </div>
+          <div class="metric">
+            <span>Utilization Rate</span>
+            <span id="utilization">87%</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Job Queue</h2>
+          <div class="queue-item">
+            <div>Image Processing - Job #1024</div>
+            <div class="status pending">Pending</div>
+          </div>
+          <div class="queue-item">
+            <div>Video Encoding - Job #1023</div>
+            <div class="status running">Running</div>
+          </div>
+          <div class="queue-item">
+            <div>Data Sync - Job #1022</div>
+            <div class="status error">Error</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Scheduling Status</h2>
+          <div class="schedule-item">
+            <span>Next Maintenance Window</span>
+            <span class="time">02:00 AM</span>
+          </div>
+          <div class="schedule-item">
+            <span>Backup Schedule</span>
+            <span class="time">Every 12 hours</span>
+          </div>
+          <div class="schedule-item">
+            <span>System Update</span>
+            <span class="time">Scheduled for 04:00 AM</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Resource Usage</h2>
+          <div class="metric">
+            <span>CPU Usage</span>
+            <span id="cpu-usage">68%</span>
+          </div>
+          <div class="metric">
+            <span>Memory Usage</span>
+            <span id="memory-usage">42%</span>
+          </div>
+          <div class="metric">
+            <span>Disk Space</span>
+            <span id="disk-space">78% used</span>
+          </div>
+          <div class="metric">
+            <span>Network Bandwidth</span>
+            <span id="network-bandwidth">3.2 Mbps</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="project-info">
+      Project #55 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    // Simulate data loading and persistence
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const savedData = localStorage.getItem('devicePoolData');
+        if (savedData) {
+          const data = JSON.parse(savedData);
+          document.getElementById('total-devices').textContent = data.totalDevices || 42;
+          document.getElementById('active-devices').textContent = data.activeDevices || 38;
+          document.getElementById('offline-devices').textContent = data.offlineDevices || 4;
+          document.getElementById('utilization').textContent = data.utilization || '87%';
+          document.getElementById('cpu-usage').textContent = data.cpuUsage || '68%';
+          document.getElementById('memory-usage').textContent = data.memoryUsage || '42%';
+          document.getElementById('disk-space').textContent = data.diskSpace || '78% used';
+          document.getElementById('network-bandwidth').textContent = data.networkBandwidth || '3.2 Mbps';
+        } else {
+          // Initialize with default values
+          const defaultData = {
+            totalDevices: 42,
+            activeDevices: 38,
+            offlineDevices: 4,
+            utilization: '87%',
+            cpuUsage: '68%',
+            memoryUsage: '42%',
+            diskSpace: '78% used',
+            networkBandwidth: '3.2 Mbps'
+          };
+          localStorage.setItem('devicePoolData', JSON.stringify(defaultData));
+        }
+      } catch (e) {
+        console.error('Failed to load data from localStorage:', e);
+      }
+
+      // Simulate periodic updates
+      setInterval(() => {
+        try {
+          const data = JSON.parse(localStorage.getItem('devicePoolData') || '{}');
+          data.utilization = `${Math.floor(Math.random() * 10) + 80}%`;
+          data.cpuUsage = `${Math.floor(Math.random() * 20) + 50}%`;
+          data.memoryUsage = `${Math.floor(Math.random() * 30) + 30}%`;
+          localStorage.setItem('devicePoolData', JSON.stringify(data));
+          
+          document.getElementById('utilization').textContent = data.utilization;
+          document.getElementById('cpu-usage').textContent = data.cpuUsage;
+          document.getElementById('memory-usage').textContent = data.memoryUsage;
+        } catch (e) {
+          console.error('Failed to update data:', e);
+        }
+      }, 10000);
+    });
+  </script>
+</body>
+</html>

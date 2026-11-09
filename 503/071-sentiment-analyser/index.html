@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sentiment Analyser · Project 503 · D-CREATIONS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://dcreations.fr/503/071-sentiment-analyser/">
+  <meta name="description" content="Classify input text as positive, negative, or neutral using a hand-built sentiment lexicon.">
+  <style>
+    :root {
+      --bg: #f4f4f2;
+      --card: #fff;
+      --text: #111;
+      --text-2: #5a5a5a;
+      --line: #e2e2de;
+      --border-radius: 8px;
+      --padding: 1rem;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card: #1c1c1c;
+        --text: #f2f2f2;
+        --text-2: #a8a8a8;
+        --line: #2c2c2c;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 1rem; }
+    .container { max-width: 768px; margin: 0 auto; }
+    header { margin-bottom: 2rem; }
+    a { color: var(--text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .card { background-color: var(--card); border: 1px solid var(--line); border-radius: var(--border-radius); padding: var(--padding); margin-bottom: 1rem; }
+    textarea { width: 100%; height: 120px; padding: 0.5rem; border: 1px solid var(--line); border-radius: var(--border-radius); background-color: var(--card); color: var(--text); resize: vertical; }
+    button { background-color: var(--text); color: var(--card); border: none; border-radius: var(--border-radius); padding: 0.5rem 1rem; cursor: pointer; font-weight: bold; margin-top: 0.5rem; }
+    button:hover { opacity: 0.9; }
+    .result { margin-top: 1rem; padding: 0.5rem; border-radius: var(--border-radius); text-align: center; font-weight: bold; }
+    .positive { background-color: #d4edda; color: #155724; }
+    .negative { background-color: #f8d7da; color: #721c24; }
+    .neutral { background-color: #fff3cd; color: #856404; }
+    footer { text-align: center; margin-top: 2rem; color: var(--text-2); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/503/">← Project 503</a>
+      <h1>Sentiment Analyser</h1>
+    </header>
+
+    <main>
+      <div class="card">
+        <textarea id="inputText" placeholder="Enter text to analyze..."></textarea>
+        <button id="analyzeBtn">Analyze Sentiment</button>
+        <div id="result" class="result" style="display: none;"></div>
+      </div>
+    </main>
+
+    <footer>
+      Project #71 of 503 · Daniel Madac, D-CREATIONS
+    </footer>
+  </div>
+
+  <script>
+    const positiveWords = new Set([
+      'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'awesome',
+      'love', 'like', 'happy', 'pleased', 'satisfied', 'delighted', 'thrilled',
+      'brilliant', 'outstanding', 'superb', 'perfect', 'marvelous', 'incredible'
+    ]);
+
+    const negativeWords = new Set([
+      'bad', 'terrible', 'awful', 'horrible', 'disgusting', 'hate', 'dislike',
+      'sad', 'angry', 'frustrated', 'annoyed', 'upset', 'disappointed', 'miserable',
+      'pathetic', 'useless', 'worthless', 'dreadful', 'abysmal', 'lousy', 'wretched'
+    ]);
+
+    const neutralWords = new Set([
+      'okay', 'fine', 'average', 'normal', 'standard', 'typical', 'usual',
+      'regular', 'common', 'ordinary', 'neutral', 'balanced', 'equilibrium',
+      'moderate', 'mild', 'gentle', 'calm', 'quiet', 'still'
+    ]);
+
+    const inputText = document.getElementById('inputText');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const resultDiv = document.getElementById('result');
+
+    function getSentiment(text) {
+      if (!text.trim()) return 'neutral';
+      
+      const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+      let score = 0;
+      
+      for (const word of words) {
+        if (positiveWords.has(word)) score++;
+        else if (negativeWords.has(word)) score--;
+        else if (neutralWords.has(word)) score += 0.1;
+      }
+      
+      if (score > 0.5) return 'positive';
+      if (score < -0.5) return 'negative';
+      return 'neutral';
+    }
+
+    function updateResult(sentiment) {
+      resultDiv.textContent = `Sentiment: ${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)}`;
+      resultDiv.className = `result ${sentiment}`;
+      resultDiv.style.display = 'block';
+    }
+
+    analyzeBtn.addEventListener('click', () => {
+      const text = inputText.value;
+      const sentiment = getSentiment(text);
+      updateResult(sentiment);
+      
+      try {
+        localStorage.setItem('lastSentiment', JSON.stringify({
+          text,
+          sentiment,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        console.warn('Failed to save to localStorage:', e);
+      }
+    });
+
+    try {
+      const saved = localStorage.getItem('lastSentiment');
+      if (saved) {
+        const { text, sentiment } = JSON.parse(saved);
+        inputText.value = text;
+        updateResult(sentiment);
+      }
+    } catch (e) {
+      console.warn('Failed to load from localStorage:', e);
+    }
+  </script>
+</body>
+</html>
