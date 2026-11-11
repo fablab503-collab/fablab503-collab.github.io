@@ -62,21 +62,6 @@
     }
   }
 
-  // "Work" menu (<details>): close with Escape or a click outside.
-  function closeMenus(except) {
-    var m = document.querySelectorAll('details.nav-menu[open]');
-    for (var k = 0; k < m.length; k++) if (m[k] !== except) m[k].open = false;
-  }
-  document.addEventListener('keydown', function (ev) {
-    if (ev.key !== 'Escape') return;
-    var open = document.querySelector('details.nav-menu[open]');
-    if (open) { open.open = false; var s = open.querySelector('summary'); if (s) s.focus(); }
-  });
-  document.addEventListener('click', function (ev) {
-    var inside = ev.target.closest && ev.target.closest('details.nav-menu');
-    closeMenus(inside);
-  });
-
   // Privacy page: "don't count my visits" switch for the visit counter (hit.js reads dc-nostats).
   var ns = document.querySelector('button[data-nostats]');
   if (ns) {
@@ -180,22 +165,39 @@
   }
 })();
 
-/* Header menu on narrow screens: the Menu button opens a centred dropdown with every page.
-   Closes on Escape, on a click outside, or after picking a page. */
+/* Phone and tablet menu: a native <details class="nav-sheet"> in the header, so it opens without this script.
+   This adds: aria-expanded in sync, Escape to close, the page behind made inert (focus stays in the menu),
+   closing after a link is picked, and closing when the window becomes desktop wide. */
 (function () {
-  var btn = document.querySelector('[data-nav-toggle]');
-  var header = document.querySelector('.site-header');
-  if (!btn || !header) return;
-  var set = function (open) {
-    header.classList.toggle('nav-open', open);
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  };
-  btn.addEventListener('click', function () { set(!header.classList.contains('nav-open')); });
+  var sheet = document.querySelector('[data-nav-sheet]');
+  if (!sheet) return;
+  var summary = sheet.querySelector('summary');
+  var root = document.documentElement;
+  var behind = document.querySelectorAll('main, body > footer');
+  function sync() {
+    var open = sheet.open;
+    if (summary) summary.setAttribute('aria-expanded', open ? 'true' : 'false');
+    root.classList.toggle('nav-open', open);
+    for (var i = 0; i < behind.length; i++) behind[i].inert = open;
+  }
+  function close(focus) {
+    if (!sheet.open) return;
+    sheet.open = false;
+    sync();
+    if (focus && summary) summary.focus();
+  }
+  sync();
+  sheet.addEventListener('toggle', sync);
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && header.classList.contains('nav-open')) { set(false); btn.focus(); }
+    if (e.key === 'Escape' && sheet.open) { e.preventDefault(); close(true); }
   });
-  document.addEventListener('click', function (e) {
-    if (header.classList.contains('nav-open') && !header.contains(e.target)) set(false);
+  sheet.addEventListener('click', function (e) {
+    if (e.target.closest && e.target.closest('a[href]')) close(false);
   });
-  header.querySelectorAll('.site-nav a').forEach(function (a) { a.addEventListener('click', function () { set(false); }); });
+  window.addEventListener('pageshow', function (e) { if (e.persisted) close(false); });
+  if (window.matchMedia) {
+    var wide = window.matchMedia('(min-width: 1024px)');
+    var onWide = function () { if (wide.matches) close(false); };
+    if (wide.addEventListener) wide.addEventListener('change', onWide); else if (wide.addListener) wide.addListener(onWide);
+  }
 })();
