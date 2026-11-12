@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repo Factory · D-CREATIONS</title>
+<meta name="description" content="Repo Factory: can open-source GitHub projects become phone mini-apps automatically, with zero code changes? Phase 1 tested 20 real repos: 25% worked.">
+<link rel="canonical" href="https://dcreations.fr/repo-factory/">
+<style>
+  :root { --bg: #f4f4f2; --card: #ffffff; --text: #111111; --text-2: #5a5a5a; --line: #e2e2de; --accent: #111111; --accent-fg: #ffffff; --ok: #1f7a3f; --mid: #a26300; --bad: #b3261e; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #121212; --card: #1c1c1c; --text: #f2f2f2; --text-2: #a8a8a8; --line: #2c2c2c; --accent: #f2f2f2; --accent-fg: #111111; --ok: #5cc483; --mid: #e0a64a; --bad: #f08a80; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 14px; }
+  header a { color: var(--text-2); text-decoration: none; }
+  .lang button { background: none; border: 1px solid var(--line); color: var(--text-2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
+  h1 { font-size: 44px; line-height: 1.1; margin: 8px 0 12px; letter-spacing: -0.02em; }
+  .lead { font-size: 19px; color: var(--text-2); margin: 0; }
+  .badge { display: inline-block; font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; color: var(--text-2); }
+  h2 { font-size: 22px; margin: 48px 0 16px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 32px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+  .stat b { display: block; font-size: 32px; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--text-2); font-size: 14px; }
+  .ok { color: var(--ok); } .mid { color: var(--mid); } .bad { color: var(--bad); }
+  .tbl { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; font-size: 15px; }
+  .tbl th, .tbl td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .tbl td.n { font-variant-numeric: tabular-nums; }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  figure img { width: 100%; display: block; }
+  figcaption { padding: 10px 14px; font-size: 14px; color: var(--text-2); }
+  ul.facts { padding-left: 20px; color: var(--text-2); } ul.facts li { margin: 6px 0; }
+  footer { margin: 64px 0 32px; font-size: 13px; color: var(--text-2); }
+  [data-l="fr"] { display: none; }
+  html[lang="fr"] [data-l="en"] { display: none; }
+  html[lang="fr"] [data-l="fr"] { display: revert; }
+  .scroll { overflow-x: auto; }
+  @media (max-width: 640px) { h1 { font-size: 34px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="/" data-l="en">← D-CREATIONS</a><a href="/fr/projets/" data-l="fr">← D-CREATIONS</a>
+    <span class="lang"><button type="button" id="lang" aria-label="Changer de langue / Switch language">FR</button></span>
+  </header>
+
+  <span class="badge" data-l="en">Research · Phase 1 · November 2026</span>
+  <span class="badge" data-l="fr">Recherche · Phase 1 · novembre 2026</span>
+  <h1>Repo Factory</h1>
+  <p class="lead" data-l="en">Can open-source GitHub projects become mini-apps on your phone automatically, with nobody rewriting a line of code? Before building anything, we measured it on 20 real projects.</p>
+  <p class="lead" data-l="fr">Des projets open source de GitHub peuvent-ils devenir des mini-apps sur téléphone automatiquement, sans réécrire une ligne de code ? Avant de construire quoi que ce soit, nous l'avons mesuré sur 20 vrais projets.</p>
+
+  <div class="stats">
+    <div class="stat"><b class="ok">5 / 20</b><span data-l="en">worked with zero changes (25%)</span><span data-l="fr">ont marché sans aucune modification (25 %)</span></div>
+    <div class="stat"><b class="mid">2</b><span data-l="en">built, but only partly work</span><span data-l="fr">compilés, mais ne marchent qu'en partie</span></div>
+    <div class="stat"><b class="bad">13</b><span data-l="en">failed to build</span><span data-l="fr">n'ont pas compilé</span></div>
+    <div class="stat"><b>1 / 20</b><span data-l="en">directly usable on a phone today</span><span data-l="fr">utilisable tel quel sur téléphone aujourd'hui</span></div>
+  </div>
+
+  <h2 data-l="en">The idea</h2><h2 data-l="fr">L'idée</h2>
+  <p data-l="en">One shell app for iPhone, iPad, Android, Mac and the browser that runs open-source projects as small sandboxed mini-apps, rebuilt automatically every week. The original authors' code is the app. App Store rules allow this only for HTML, JavaScript and WebAssembly mini-apps that the host indexes, rates and can remove, so everything must compile to the web.</p>
+  <p data-l="fr">Une seule app pour iPhone, iPad, Android, Mac et le navigateur, qui fait tourner des projets open source comme de petites mini-apps isolées, reconstruites automatiquement chaque semaine. Le code des auteurs d'origine est l'app. Les règles de l'App Store ne l'autorisent que pour des mini-apps HTML, JavaScript et WebAssembly que l'app hôte répertorie, classe et peut retirer : tout doit donc compiler pour le web.</p>
+
+  <h2 data-l="en">Results by language</h2><h2 data-l="fr">Résultats par langage</h2>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th data-l="en">Language</th><th data-l="fr">Langage</th><th data-l="en">Worked</th><th data-l="fr">Ont marché</th><th data-l="en">What stopped the rest</th><th data-l="fr">Ce qui a bloqué les autres</th></tr></thead>
+    <tbody>
+      <tr><td>Python</td><td class="n">2 / 3</td><td data-l="en">one dependency has no web version</td><td data-l="fr">une dépendance n'existe pas pour le web</td></tr>
+      <tr><td>C / C++</td><td class="n">1 / 2</td><td data-l="en">code that only compiles with one compiler</td><td data-l="fr">du code qui ne compile qu'avec un seul compilateur</td></tr>
+      <tr><td>Go</td><td class="n">1 / 3</td><td data-l="en">terminal and process features the web doesn't have</td><td data-l="fr">des fonctions de terminal et de processus absentes du web</td></tr>
+      <tr><td>Rust</td><td class="n">1 / 5</td><td data-l="en">system features, bundled C libraries</td><td data-l="fr">fonctions système, bibliothèques C intégrées</td></tr>
+      <tr><td>JavaScript / TypeScript</td><td class="n">0 / 6</td><td data-l="en">installs that break, server-only apps, files loaded from other sites</td><td data-l="fr">installations qui échouent, apps serveur, fichiers chargés depuis d'autres sites</td></tr>
+      <tr><td>Swift</td><td class="n">0 / 1</td><td data-l="en">no Swift-to-web compiler set up</td><td data-l="fr">pas de compilateur Swift vers le web installé</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 data-l="en">Evidence</h2><h2 data-l="fr">Preuves</h2>
+  <div class="shots">
+    <figure><img src="genact.png" alt="genact running in a headless browser, showing a scrolling fake hex dump" loading="lazy"><figcaption data-l="en">genact (Rust), built for the web with no changes: a real working app.</figcaption><figcaption data-l="fr">genact (Rust), compilé pour le web sans modification : une vraie app qui fonctionne.</figcaption></figure>
+    <figure><img src="yq.png" alt="yq command-line tool printing its help text in the browser" loading="lazy"><figcaption data-l="en">yq (Go) runs in the browser, but a command-line tool needs a terminal screen to be useful on a phone.</figcaption><figcaption data-l="fr">yq (Go) tourne dans le navigateur, mais un outil en ligne de commande a besoin d'un écran terminal pour servir sur téléphone.</figcaption></figure>
+  </div>
+
+  <h2 data-l="en">Safety and licences</h2><h2 data-l="fr">Sécurité et licences</h2>
+  <ul class="facts" data-l="en">
+    <li>Only MIT and Apache-2.0 projects. Every mini-app keeps its licence, a credits screen, "(community build)" in its name and a "not affiliated with the authors" note.</li>
+    <li>Builds run in a sandbox with no access to personal files and network access only to package registries. Every site a build contacts is logged.</li>
+    <li>Every build is scanned for known vulnerabilities, malware, native code and trackers. 5 projects were rejected for critical vulnerabilities, and none contained malware or trackers.</li>
+    <li>Nothing is published automatically: a person reviews every mini-app first.</li>
+  </ul>
+  <ul class="facts" data-l="fr">
+    <li>Uniquement des projets MIT et Apache-2.0. Chaque mini-app garde sa licence, un écran de crédits, « (version communautaire) » dans son nom et une mention « non affilié aux auteurs ».</li>
+    <li>Les compilations tournent dans un bac à sable, sans accès aux fichiers personnels, avec un réseau limité aux dépôts de paquets. Chaque site contacté par une compilation est enregistré.</li>
+    <li>Chaque compilation est analysée pour les vulnérabilités connues, les logiciels malveillants, le code natif et les traqueurs. 5 projets ont été rejetés pour des vulnérabilités critiques ; aucun ne contenait de logiciel malveillant ni de traqueur.</li>
+    <li>Rien n'est publié automatiquement : une personne vérifie chaque mini-app d'abord.</li>
+  </ul>
+
+  <h2 data-l="en">What's next</h2><h2 data-l="fr">La suite</h2>
+  <p data-l="en">25% is too low to build an app for "any GitHub project", but promising for a narrower one: web apps, Python tools, and Go and Rust tools that don't depend on the operating system. Phase 1b tests 100 projects with three factory fixes and a pre-filter. The shell app gets built only if at least 40% are genuinely usable.</p>
+  <p data-l="fr">25 % c'est trop peu pour une app « n'importe quel projet GitHub », mais prometteur pour un cadre plus étroit : apps web, outils Python, et outils Go et Rust qui ne dépendent pas du système d'exploitation. La phase 1b teste 100 projets avec trois corrections de l'usine et un pré-filtre. L'app ne sera construite que si au moins 40 % sont vraiment utilisables.</p>
+
+  <footer>
+    <span data-l="en">A D-CREATIONS research project. All tested projects belong to their authors; they are referenced only to report test results.</span>
+    <span data-l="fr">Un projet de recherche D-CREATIONS. Tous les projets testés appartiennent à leurs auteurs ; ils ne sont cités que pour rapporter les résultats des tests.</span>
+  </footer>
+</div>
+<script>
+  (function () {
+    var root = document.documentElement, btn = document.getElementById('lang');
+    function set(l) { root.lang = l; btn.textContent = l === 'fr' ? 'EN' : 'FR'; try { localStorage.setItem('lang', l); } catch (e) {} }
+    var saved = null; try { saved = localStorage.getItem('lang'); } catch (e) {}
+    set(saved || ((navigator.language || '').slice(0, 2) === 'fr' ? 'fr' : 'en'));
+    btn.addEventListener('click', function () { set(root.lang === 'fr' ? 'en' : 'fr'); });
+  })();
+</script>
+</body>
+</html>
