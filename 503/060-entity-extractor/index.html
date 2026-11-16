@@ -6,25 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/060-entity-extractor/">
   <meta name="description" content="Identify and label named entities (persons, organisations, locations) using a rule-based recogniser.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
+
     body {
-      font-family: system-ui, sans-serif;
+      font-family: var(--font);
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
@@ -44,7 +32,7 @@
       padding: 0.75rem;
       margin: 0.5rem 0;
       border: 1px solid var(--line);
-      border-radius: 4px;
+
       background-color: var(--card);
       color: var(--text);
     }
@@ -55,8 +43,8 @@
     .entities {
       margin-top: 1rem;
       padding: 0.75rem;
-      border: 1px solid var(--line);
-      border-radius: 4px;
+
+      border-radius: 24px;
       background-color: var(--card);
     }
     .entity {
@@ -66,19 +54,20 @@
       border-radius: 4px;
       font-size: 0.875rem;
     }
-    .person { background-color: #ffeb3b; color: #000; }
-    .org { background-color: #4caf50; color: white; }
-    .loc { background-color: #2196f3; color: white; }
+    .person { background-color: var(--mark); color: var(--text); }
+    .org { background-color: var(--green); color: #000; }
+    .loc { background-color: var(--blue); color: #000; }
     footer a {
       color: var(--text-2);
       text-decoration: none;
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
     <header>
-      <a href="/503/" style="color: var(--text);">← Project 503</a>
+      <a href="/503/" style="color: var(--text)">← Project 503</a>
     </header>
 
     <main>
@@ -86,7 +75,7 @@
       <p>Enter text below to identify named entities (persons, organisations, locations).</p>
       
       <textarea id="inputText" rows="6" placeholder="Paste or type your text here...">Apple Inc. is located in Cupertino, California. Tim Cook is the CEO.</textarea>
-      <button id="extractBtn">Extract Entities</button>
+      <button id="extractBtn" class="primary">Extract Entities</button>
       
       <div class="entities" id="entitiesContainer">
         <!-- Entities will appear here -->

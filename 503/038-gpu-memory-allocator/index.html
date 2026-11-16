@@ -6,25 +6,15 @@
   <meta name="description" content="Visualize GPU memory allocation blocks and demonstrate best-fit vs first-fit strategies.">
   <link rel="canonical" href="https://dcreations.fr/503/038-gpu-memory-allocator/">
   <title>GPU Memory Allocator · Project 503 · D-CREATIONS</title>
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
       --border-radius: 4px;
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
     body { background: var(--bg); color: var(--text); padding: 1rem; line-height: 1.5; }
     .container { max-width: 800px; margin: 0 auto; }
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
@@ -32,20 +22,21 @@
     a:hover { text-decoration: underline; }
     h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
     .controls { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
-    button { background: var(--card); border: 1px solid var(--line); padding: 0.5rem 1rem; border-radius: var(--border-radius); cursor: pointer; }
+    button { background: var(--card); border: 1px solid var(--line); padding: 0.5rem 1rem; border-radius: 999px; cursor: pointer; }
     button.active { background: var(--text); color: var(--card); }
     .memory-container { display: flex; gap: 0.25rem; height: 200px; margin-bottom: 1.5rem; border: 1px solid var(--line); border-radius: var(--border-radius); padding: 0.5rem; overflow-x: auto; }
     .block { display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: var(--text-2); border-radius: 2px; }
-    .free { background: #e8e8e8; }
-    .allocated { background: #4a90e2; color: white; }
+    .free { background: var(--card-2); }
+    .allocated { background: var(--blue); color: #000; }
     .stats { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-    .stat-card { background: var(--card); border: 1px solid var(--line); padding: 1rem; border-radius: var(--border-radius); flex: 1; min-width: 120px; }
+    .stat-card { background: var(--card); padding: 1rem; border-radius: 24px; flex: 1; min-width: 120px; }
     .stat-value { font-size: 1.5rem; font-weight: bold; margin-bottom: 0.25rem; }
     .legend { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
     .legend-item { display: flex; align-items: center; gap: 0.25rem; font-size: 0.875rem; }
     .legend-color { width: 1rem; height: 1rem; border-radius: 2px; }
     footer { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: 0.875rem; color: var(--text-2); }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -57,7 +48,7 @@
     <div class="controls">
       <button id="firstFit">First-Fit</button>
       <button id="bestFit" class="active">Best-Fit</button>
-      <button id="allocate">Allocate</button>
+      <button id="allocate" class="primary">Allocate</button>
       <button id="deallocate">Deallocate</button>
       <button id="reset">Reset</button>
     </div>
@@ -81,11 +72,11 @@
 
     <div class="legend">
       <div class="legend-item">
-        <div class="legend-color" style="background: #e8e8e8;"></div>
+        <div class="legend-color" style="background: var(--card-2)"></div>
         <span>Free</span>
       </div>
       <div class="legend-item">
-        <div class="legend-color" style="background: #4a90e2;"></div>
+        <div class="legend-color" style="background: var(--blue)"></div>
         <span>Allocated</span>
       </div>
     </div>

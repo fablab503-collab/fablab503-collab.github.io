@@ -7,38 +7,56 @@
 <meta name="description" content="MCP API Atlas: one map of the top 1,000 open-source MCP servers and 3,790 free public APIs, with their connections, and one Rust MCP server that searches the map and calls the free APIs no MCP server covers yet.">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <link rel="canonical" href="https://dcreations.fr/mcp-api-atlas/">
+<script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+<link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  :root { --bg: #f4f4f2; --card: #ffffff; --text: #111111; --text-2: #5a5a5a; --line: #e2e2de; --accent: #111111; --accent-fg: #ffffff; }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --bg: #121212; --card: #1c1c1c; --text: #f2f2f2; --text-2: #a8a8a8; --line: #2c2c2c; --accent: #f2f2f2; --accent-fg: #111111; }
-  }
+  /* App style: black and white, a little red, blue and green. Dark by default; light is the inverse. */
+  @font-face { font-family: "Inter Tight"; src: url("/fonts/inter-tight-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+  :root { color-scheme: dark; --bg: #000; --card: #141414; --card-2: #1f1f1f; --text: #fff; --text-2: #a1a1a1; --line: #2a2a2a; --line-2: #757575;
+    --red: #ff3b30; --blue: #0a84ff; --green: #30d158; --red-t: #ff3b30; --blue-t: #0a84ff; --green-t: #30d158;
+    --font: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  :root[data-theme="light"] { color-scheme: light; --bg: #fff; --card: #ebebeb; --card-2: #e0e0e0; --text: #000; --text-2: #595959; --line: #d6d6d6; --line-2: #7a7a7a;
+    --red-t: #c2130a; --blue-t: #0058d0; --green-t: #17722f; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
-  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 14px; }
-  header a { color: var(--text-2); text-decoration: none; }
-  header a:hover { color: var(--text); }
-  .lang button { background: none; border: 1px solid var(--line); color: var(--text-2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
-  .hero { display: grid; grid-template-columns: 180px 1fr; gap: 32px; align-items: center; padding: 32px 0 40px; }
-  .logo { width: 180px; height: 180px; border-radius: 50%; background: var(--card); display: grid; place-items: center; box-shadow: 0 12px 40px rgba(0,0,0,.10); }
-  .logo img { width: 130px; height: 130px; }
-  h1 { font-size: 44px; line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.02em; }
-  .lead { font-size: 19px; color: var(--text-2); margin: 0; }
-  .badge { display: inline-block; font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; margin-bottom: 14px; color: var(--text-2); }
-  h2 { font-size: 22px; margin: 48px 0 16px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-  .card h3 { margin: 0; font-size: 17px; }
-  .card p { margin: 0; color: var(--text-2); font-size: 15px; }
-  .num { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
-  ul.facts { padding-left: 20px; color: var(--text-2); }
-  ul.facts li { margin: 6px 0; }
-  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
-  footer { margin: 64px 0 32px; font-size: 13px; color: var(--text-2); }
-  [data-l="fr"] { display: none; }
-  html[lang="fr"] [data-l="en"] { display: none; }
-  html[lang="fr"] [data-l="fr"] { display: revert; }
-  @media (max-width: 640px) { .hero { grid-template-columns: 1fr; justify-items: start; } h1 { font-size: 34px; } .logo { width: 140px; height: 140px; } .logo img { width: 100px; height: 100px; } }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+  a { color: var(--blue-t); text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; font-size: 15px; }
+  header a { display: inline-flex; align-items: center; min-height: 44px; color: var(--text); text-decoration: none; font-weight: 500; }
+  header a:hover { color: var(--text-2); }
+  .lang button { min-height: 36px; padding: 0 16px; background: var(--card-2); border: 1px solid var(--line); color: var(--text); border-radius: 999px; font: 500 14px var(--font); cursor: pointer; }
+  .lang button:hover { border-color: var(--line-2); }
+  .hero { padding: 40px 0 8px; }
+  h1 { font-weight: 400; font-size: clamp(2.625rem, 1.4rem + 5.4vw, 4.75rem); line-height: 1.02; letter-spacing: -0.015em; text-transform: uppercase; margin: 0 0 20px; overflow-wrap: break-word; }
+  .lead { font-size: clamp(1.0625rem, 1rem + .4vw, 1.25rem); line-height: 1.55; color: var(--text-2); margin: 0; max-width: 36em; }
+  h2 { font-weight: 400; font-size: clamp(1.75rem, 1.3rem + 2vw, 2.75rem); line-height: 1.08; letter-spacing: -0.01em; text-transform: uppercase; margin: 72px 0 24px; overflow-wrap: break-word; }
+  .logo { width: 104px; height: 104px; border-radius: 24px; background: var(--card); display: grid; place-items: center; margin-bottom: 32px; }
+  .logo svg { width: 68px; height: 68px; color: var(--text); }
+  .badge { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 500; line-height: 1.4; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); background: var(--card); border-radius: 999px; padding: 6px 14px; margin-bottom: 20px; }
+  .badge::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border-radius: 24px; padding: 28px 24px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .card h3 { margin: 0; font-size: 21px; font-weight: 500; line-height: 1.25; }
+  .card p { margin: 0; color: var(--text-2); font-size: 16px; }
+  .num { font-size: 56px; font-weight: 400; letter-spacing: -0.02em; line-height: 1; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+  .faq { border-top: 1px solid var(--line); }
+  .faq details { border-bottom: 1px solid var(--line); }
+  .faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 22px 0; font-size: 19px; font-weight: 500; line-height: 1.3; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: ""; flex: none; width: 16px; height: 16px; transition: transform .2s ease;
+    background: linear-gradient(var(--text-2), var(--text-2)) center / 100% 1.5px no-repeat, linear-gradient(var(--text-2), var(--text-2)) center / 1.5px 100% no-repeat; }
+  .faq details[open] > summary::after { transform: rotate(45deg); }
+  .faq details > p { margin: 0 0 22px; color: var(--text-2); max-width: 40em; }
+  .faq details > p strong { color: var(--text); font-weight: 500; }
+  code { font: .8em var(--mono); background: var(--card-2); border-radius: 6px; padding: 2px 6px; white-space: nowrap; }
+  footer { margin: 96px 0 40px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 14px; color: var(--text-2); }
+  html:not([lang="fr"]) [data-l="fr"], html[lang="fr"] [data-l="en"] { display: none !important; }
+  @media (max-width: 640px) { h2 { margin-top: 56px; } footer { margin-top: 72px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 <script src="/hit.js" defer></script>
 </head>
@@ -50,7 +68,11 @@
   </header>
 
   <section class="hero">
-    <div class="logo"><img src="logo.svg" alt="MCP API Atlas logo"></div>
+    <div class="logo"><svg viewBox="0 0 120 120" role="img" aria-label="MCP API Atlas logo">
+        <path d="M60 60 L24 30 M60 60 L96 28 M60 60 L100 78 M60 60 L30 92 M60 60 L66 104 M24 30 L96 28 M30 92 L66 104 M100 78 L66 104" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        <g fill="currentColor"><circle cx="24" cy="30" r="8"/><circle cx="96" cy="28" r="7"/><circle cx="100" cy="78" r="8"/><circle cx="30" cy="92" r="7"/><circle cx="66" cy="104" r="6"/></g>
+        <circle cx="60" cy="60" r="15" fill="var(--card)" stroke="currentColor" stroke-width="4"/>
+      </svg></div>
     <div>
       <span class="badge" data-l="en">Working build · November 2026</span>
       <span class="badge" data-l="fr">Version fonctionnelle · novembre 2026</span>
@@ -83,30 +105,30 @@
   </div>
 
   <h2 data-l="en">The map</h2><h2 data-l="fr">La carte</h2>
-  <ul class="facts" data-l="en">
-    <li><strong>A knowledge graph.</strong> Every MCP server, every free API, the services they talk to (GitHub, Notion, weather, maps…), about 40 shared categories, languages and makers, built with graphify and grouped into communities.</li>
-    <li><strong>Real connections.</strong> An MCP server is linked to a service when its homepage or README names that service's domain or API host. Each link is marked as found in the source or deduced, with a confidence score.</li>
-    <li><strong>The gaps.</strong> Free, no-key, live APIs that no MCP server covers yet: those are the connector's targets.</li>
-  </ul>
-  <ul class="facts" data-l="fr">
-    <li><strong>Un graphe de connaissances.</strong> Chaque serveur MCP, chaque API gratuite, les services qu'ils utilisent (GitHub, Notion, météo, cartes…), une quarantaine de catégories communes, les langages et les auteurs, construit avec graphify et regroupé en communautés.</li>
-    <li><strong>De vraies connexions.</strong> Un serveur MCP est relié à un service quand sa page d'accueil ou son README cite le domaine ou l'adresse de l'API. Chaque lien est marqué « trouvé dans la source » ou « déduit », avec un score de confiance.</li>
-    <li><strong>Les manques.</strong> Les API gratuites, sans clé et en ligne qu'aucun serveur MCP ne couvre encore : ce sont les cibles du connecteur.</li>
-  </ul>
+  <div class="faq" data-l="en">
+    <details><summary>A knowledge graph.</summary><p>Every MCP server, every free API, the services they talk to (GitHub, Notion, weather, maps…), about 40 shared categories, languages and makers, built with graphify and grouped into communities.</p></details>
+    <details><summary>Real connections.</summary><p>An MCP server is linked to a service when its homepage or README names that service's domain or API host. Each link is marked as found in the source or deduced, with a confidence score.</p></details>
+    <details><summary>The gaps.</summary><p>Free, no-key, live APIs that no MCP server covers yet: those are the connector's targets.</p></details>
+  </div>
+  <div class="faq" data-l="fr">
+    <details><summary>Un graphe de connaissances.</summary><p>Chaque serveur MCP, chaque API gratuite, les services qu'ils utilisent (GitHub, Notion, météo, cartes…), une quarantaine de catégories communes, les langages et les auteurs, construit avec graphify et regroupé en communautés.</p></details>
+    <details><summary>De vraies connexions.</summary><p>Un serveur MCP est relié à un service quand sa page d'accueil ou son README cite le domaine ou l'adresse de l'API. Chaque lien est marqué « trouvé dans la source » ou « déduit », avec un score de confiance.</p></details>
+    <details><summary>Les manques.</summary><p>Les API gratuites, sans clé et en ligne qu'aucun serveur MCP ne couvre encore : ce sont les cibles du connecteur.</p></details>
+  </div>
 
   <h2 data-l="en">The connector (Rust)</h2><h2 data-l="fr">Le connecteur (Rust)</h2>
-  <ul class="facts" data-l="en">
-    <li><strong>One MCP server, six tools:</strong> <code>atlas_search</code>, <code>find_mcp_for_service</code>, <code>atlas_neighbors</code>, <code>list_free_apis</code>, <code>call_free_api</code>, <code>atlas_stats</code>.</li>
-    <li><strong>Why not rewrite every server in Rust?</strong> More than a thousand projects in many languages and licenses could never be checked properly. One small, tested Rust server that maps them all and fills the gaps does more.</li>
-    <li><strong>Safe by design.</strong> <code>call_free_api</code> only makes HTTPS GET requests to the API's own host, connects only to addresses it has checked (no private or local networks), follows at most three redirects, sends no cookies or credentials, and caps answers at 100 KB.</li>
-    <li><strong>Made by a team of AIs.</strong> Claude orchestrated, Antigravity researched the sources around the world, Vibe wrote the code, and Codex reviewed its security.</li>
-  </ul>
-  <ul class="facts" data-l="fr">
-    <li><strong>Un serveur MCP, six outils :</strong> <code>atlas_search</code>, <code>find_mcp_for_service</code>, <code>atlas_neighbors</code>, <code>list_free_apis</code>, <code>call_free_api</code>, <code>atlas_stats</code>.</li>
-    <li><strong>Pourquoi ne pas tout réécrire en Rust ?</strong> Plus d'un millier de projets dans de nombreux langages et licences ne pourraient jamais être vérifiés correctement. Un seul petit serveur Rust testé, qui les cartographie tous et comble les manques, fait mieux.</li>
-    <li><strong>Sûr dès la conception.</strong> <code>call_free_api</code> ne fait que des requêtes HTTPS GET vers l'hôte de l'API, ne se connecte qu'à des adresses vérifiées (jamais de réseau privé ou local), suit au plus trois redirections, n'envoie ni cookie ni identifiant et limite les réponses à 100 Ko.</li>
-    <li><strong>Fait par une équipe d'IA.</strong> Claude a orchestré, Antigravity a cherché les sources dans le monde entier, Vibe a écrit le code et Codex a vérifié sa sécurité.</li>
-  </ul>
+  <div class="faq" data-l="en">
+    <details><summary>One MCP server, six tools:</summary><p><code>atlas_search</code>, <code>find_mcp_for_service</code>, <code>atlas_neighbors</code>, <code>list_free_apis</code>, <code>call_free_api</code>, <code>atlas_stats</code>.</p></details>
+    <details><summary>Why not rewrite every server in Rust?</summary><p>More than a thousand projects in many languages and licenses could never be checked properly. One small, tested Rust server that maps them all and fills the gaps does more.</p></details>
+    <details><summary>Safe by design.</summary><p><code>call_free_api</code> only makes HTTPS GET requests to the API's own host, connects only to addresses it has checked (no private or local networks), follows at most three redirects, sends no cookies or credentials, and caps answers at 100 KB.</p></details>
+    <details><summary>Made by a team of AIs.</summary><p>Claude orchestrated, Antigravity researched the sources around the world, Vibe wrote the code, and Codex reviewed its security.</p></details>
+  </div>
+  <div class="faq" data-l="fr">
+    <details><summary>Un serveur MCP, six outils :</summary><p><code>atlas_search</code>, <code>find_mcp_for_service</code>, <code>atlas_neighbors</code>, <code>list_free_apis</code>, <code>call_free_api</code>, <code>atlas_stats</code>.</p></details>
+    <details><summary>Pourquoi ne pas tout réécrire en Rust ?</summary><p>Plus d'un millier de projets dans de nombreux langages et licences ne pourraient jamais être vérifiés correctement. Un seul petit serveur Rust testé, qui les cartographie tous et comble les manques, fait mieux.</p></details>
+    <details><summary>Sûr dès la conception.</summary><p><code>call_free_api</code> ne fait que des requêtes HTTPS GET vers l'hôte de l'API, ne se connecte qu'à des adresses vérifiées (jamais de réseau privé ou local), suit au plus trois redirections, n'envoie ni cookie ni identifiant et limite les réponses à 100 Ko.</p></details>
+    <details><summary>Fait par une équipe d'IA.</summary><p>Claude a orchestré, Antigravity a cherché les sources dans le monde entier, Vibe a écrit le code et Codex a vérifié sa sécurité.</p></details>
+  </div>
 
   <footer>
     <span data-l="en">Designed and built by Daniel Madac, D-CREATIONS, Montpellier. Working build; not published yet. "Free" comes from community lists: check each API's terms before relying on it.</span>

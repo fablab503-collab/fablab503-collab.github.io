@@ -1,0 +1,74 @@
+/* Project 503 mini-tools: the App style, shared by every /503/NNN-…/ page and loaded after the page's own <style>.
+   Black and white, with a little red, blue and green. Dark by default; light is the inverse, with the same
+   theme choice as the main site (the small script in each page sets data-theme="light").
+   A new page needs: that script, this stylesheet, and the tokens below instead of its own colours. */
+@font-face { font-family: "Inter Tight"; src: url("/fonts/inter-tight-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+
+:root {
+  color-scheme: dark;
+  --bg: #000; --card: #141414; --card-2: #1f1f1f; --text: #fff; --text-2: #a1a1a1; --line: #2a2a2a; --line-2: #757575;
+  /* accents: fills, dots and borders (black text on them) */
+  --red: #ff3b30; --blue: #0a84ff; --green: #30d158;
+  /* accents as text (AA on the page and on cards) */
+  --red-t: #ff3b30; --blue-t: #0a84ff; --green-t: #30d158;
+  /* soft tints behind normal text; --mark is the neutral highlight */
+  --red-soft: rgba(255, 59, 48, .22); --blue-soft: rgba(10, 132, 255, .24); --green-soft: rgba(48, 209, 88, .2); --mark: rgba(255, 255, 255, .16);
+  /* lighter steps of the three accents and two greys, for charts with many series (black text on all of them) */
+  --red-2: #ff8a82; --blue-2: #6cb4ff; --green-2: #8be4a4; --grey-1: #bdbdbd; --grey-2: #8e8e8e;
+  --font: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #fff; --card: #ebebeb; --card-2: #e0e0e0; --text: #000; --text-2: #595959; --line: #d6d6d6; --line-2: #7a7a7a;
+  --red-t: #c2130a; --blue-t: #0058d0; --green-t: #17722f;
+  --red-soft: rgba(255, 59, 48, .16); --blue-soft: rgba(10, 132, 255, .16); --green-soft: rgba(48, 209, 88, .22); --mark: rgba(0, 0, 0, .1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { min-width: 0 !important; background: var(--bg); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { max-width: 100%; }
+:where(button, input, select, textarea) { font-family: var(--font); }
+:where(pre, code, kbd, samp) { font-family: var(--mono); }
+:where(output) { display: block; }
+form { flex-wrap: wrap; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* Titles: large, light, uppercase */
+h1 { font-family: var(--font); font-weight: 400 !important; font-size: clamp(2rem, 1.2rem + 3.6vw, 3.5rem) !important; line-height: 1.04 !important; letter-spacing: -0.015em !important; text-transform: uppercase; overflow-wrap: break-word; }
+h2, h3 { font-weight: 500; }
+:where(h1) { margin-bottom: .4em; }
+
+/* The way back to the tracker, above the title */
+a[href="/503/"] { color: var(--text) !important; font-size: 15px; font-weight: 500; text-decoration: none !important; }
+a[href="/503/"]:hover { color: var(--text-2) !important; }
+header:has(> h1):has(> a[href="/503/"]) { display: block; }
+header:has(> h1) > a[href="/503/"] { display: inline-block; margin-bottom: .75rem; }
+
+/* Buttons are pills: dark by default, white for the main action. Grid cells, chips and "remove" crosses keep the page's own shape. */
+button:where(:not(.cell, .chip, .rm)), .btn {
+  min-height: 40px; padding: .5rem 1.15rem; background: var(--card-2); color: var(--text); border: 1px solid var(--line); border-radius: 999px;
+  font-family: var(--font); font-weight: 500; cursor: pointer;
+}
+button:where(:not(.cell, .chip, .rm)):hover, .btn:hover { border-color: var(--line-2); }
+button.primary, .btn.primary, .btn-primary, button.btn-primary { background: var(--text) !important; color: var(--bg) !important; border-color: var(--text) !important; border-radius: 999px; }
+button.primary:hover, .btn.primary:hover, .btn-primary:hover { opacity: .85; }
+button.small, button.mini { min-height: 30px; }
+button:disabled, .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Fields */
+textarea, select, input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]) {
+  min-width: 0; background: var(--card); color: var(--text); border: 1px solid var(--line-2); border-radius: 14px;
+}
+:where(textarea, select, input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="color"])) { padding: .6rem .8rem; }
+textarea::placeholder, input::placeholder { color: var(--text-2); opacity: 1; }
+input[type="range"] { accent-color: var(--text); }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--blue); }
+
+/* Cards: dark, round, no border */
+.card { background: var(--card); border: 0; border-radius: 24px; }
+
+footer, .footer { color: var(--text-2); }
+::selection { background: var(--blue); color: #000; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }

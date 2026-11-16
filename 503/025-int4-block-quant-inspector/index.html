@@ -6,26 +6,14 @@
   <meta name="description" content="Interactive workbench that packs 32 float weights into 4-bit nibbles with a shared FP16 scale per block (Q4_0, plus a Q4_K-style super-block mode) and measures the MSE quantization loss.">
   <link rel="canonical" href="https://dcreations.fr/503/025-int4-block-quant-inspector/">
   <title>Int4 Block Quant Inspector · Project 503 · D-CREATIONS</title>
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
+
     * { box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: var(--font);
       background: var(--bg);
       color: var(--text);
       margin: 0;
@@ -43,8 +31,8 @@
     .lede { margin: 0 0 20px; max-width: 68ch; color: var(--text-2); }
     .card {
       background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 12px;
+
+      border-radius: 24px;
       padding: 16px;
       margin-bottom: 14px;
     }
@@ -55,7 +43,7 @@
       color: var(--text);
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 8px;
+
       padding: 7px 10px;
     }
     input[type="number"] { width: 110px; }
@@ -68,7 +56,7 @@
     #customInfo { font-size: 13px; color: var(--text-2); }
     .hint { color: var(--text-2); font-size: 13px; margin: 12px 0 0; }
     .hexline {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-family: var(--mono);
       font-size: 12px;
       overflow-wrap: anywhere;
       background: var(--bg);
@@ -130,6 +118,7 @@
       h1 { font-size: 22px; }
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
 <main>
@@ -167,7 +156,7 @@
           <option value="q4k">Q4_K style · 256 per super-block</option>
         </select>
       </label>
-      <button id="randomize" type="button">Randomize weights</button>
+      <button id="randomize" type="button" class="primary">Randomize weights</button>
     </div>
     <label class="custom-label">Custom weights (optional)
       <textarea id="custom" rows="3" placeholder="Paste floats separated by spaces, commas or new lines — e.g. 0.31, -1.2, 0.05 …"></textarea>
@@ -610,14 +599,14 @@
     if (t > 1) t = 1;
     if (t < -1) t = -1;
     var a = Math.abs(t);
-    if (t >= 0) return "rgba(198,40,40," + a.toFixed(3) + ")";
-    return "rgba(33,101,180," + a.toFixed(3) + ")";
+    if (t >= 0) return "rgba(255,59,48," + a.toFixed(3) + ")";
+    return "rgba(10,132,255," + a.toFixed(3) + ")";
   }
 
   function errColor(e, maxErr) {
     var a = maxErr > 0 ? Math.abs(e) / maxErr : 0;
     if (a > 1) a = 1;
-    return a === 0 ? "" : "rgba(198,40,40," + (a * 0.95).toFixed(3) + ")";
+    return a === 0 ? "" : "rgba(255,59,48," + (a * 0.95).toFixed(3) + ")";
   }
 
   function paintGrid(key, colorFn, titleFn) {
@@ -789,9 +778,9 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, cssW, cssH);
     var cs = getComputedStyle(document.documentElement);
-    var colText = cs.getPropertyValue("--text").trim() || "#111";
-    var colText2 = cs.getPropertyValue("--text-2").trim() || "#5a5a5a";
-    var colLine = cs.getPropertyValue("--line").trim() || "#e2e2de";
+    var colText = cs.getPropertyValue("--text").trim() || "#fff";
+    var colText2 = cs.getPropertyValue("--text-2").trim() || "#a1a1a1";
+    var colLine = cs.getPropertyValue("--line").trim() || "#2a2a2a";
 
     var i, min = Infinity, max = -Infinity;
     for (i = 0; i < errs.length; i++) {

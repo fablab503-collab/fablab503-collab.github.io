@@ -6,24 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/013-bpe-tokenizer-playground/">
   <meta name="description" content="Interactive byte-pair encoding visualizer that splits user text into subword tokens and displays compression ratios.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
     body { background: var(--bg); color: var(--text); line-height: 1.5; padding: 1rem; }
     .container { max-width: 800px; margin: 0 auto; }
     header, footer { text-align: center; padding: 1rem 0; }
@@ -33,18 +21,19 @@
     .tokens { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
     .token { padding: 0.25rem 0.5rem; background: var(--line); border-radius: 4px; }
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 1rem 0; }
-    .stat-card { background: var(--card); padding: 1rem; border-radius: 4px; text-align: center; }
-    .highlight { background: #ffeb3b; }
-    .merge-step { margin: 1rem 0; padding: 1rem; background: var(--card); border-left: 4px solid #4caf50; }
+    .stat-card { background: var(--card); padding: 1rem; border-radius: 24px; text-align: center; }
+    .highlight { background: var(--mark); }
+    .merge-step { margin: 1rem 0; padding: 1rem; background: var(--card); border-left: 4px solid var(--green); }
     .merges-label { display: block; margin-top: 0.75rem; }
     input[type=range] { width: 100%; }
-    .token { font-family: ui-monospace, monospace; }
+    .token { font-family: var(--mono); }
     .token .eow { color: var(--text-2); }
-    .merge-step p { font-family: ui-monospace, monospace; }
+    .merge-step p { font-family: var(--mono); }
     .note { color: var(--text-2); font-size: 0.9rem; }
-    @media (prefers-color-scheme: dark) { .highlight { background: #6b5d00; } }
+     :root:not([data-theme="light"]) .highlight { background: var(--mark); } 
     footer { font-size: 0.9rem; color: var(--text-2); }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -59,7 +48,7 @@
       <textarea id="input-text" rows="4" placeholder="Enter text here...">low lower lowest slow slower slowest new newer newest wide wider widest the tokenizer learns the tokens that repeat most</textarea>
       <label class="merges-label" for="merges">Merges to learn: <strong id="merges-out">30</strong></label>
       <input id="merges" type="range" min="0" max="200" value="30">
-      <button id="tokenize-btn">Tokenize Text</button>
+      <button id="tokenize-btn" class="primary">Tokenize Text</button>
 
       <div id="output"></div>
     </main>

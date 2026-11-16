@@ -6,24 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/074-collocation-finder/">
   <meta name="description" content="Identify word pairs that co-occur more often than chance using pointwise mutual information.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
+
     body {
       font-family: var(--font);
       background-color: var(--bg);
@@ -94,6 +81,7 @@
       text-decoration: underline;
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <main>
@@ -101,7 +89,7 @@
     <h1>Collocation Finder</h1>
     <p>Enter text below to find word pairs that co-occur more often than chance using pointwise mutual information.</p>
     <textarea id="inputText" placeholder="Paste your text here..."></textarea>
-    <button id="findBtn">Find Collocations</button>
+    <button id="findBtn" class="primary">Find Collocations</button>
     <div class="results" id="results"></div>
   </main>
   <footer>

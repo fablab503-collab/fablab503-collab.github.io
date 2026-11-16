@@ -6,29 +6,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="https://dcreations.fr/503/078-passive-voice-detector/">
 <meta name="description" content="Paste any English text and this rule-based tool highlights likely passive-voice constructions so you can rewrite them in the active voice.">
+<script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+<link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  :root {
-    --bg: #f4f4f2;
-    --card: #fff;
-    --text: #111;
-    --text-2: #5a5a5a;
-    --line: #e2e2de;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #121212;
-      --card: #1c1c1c;
-      --text: #f2f2f2;
-      --text-2: #a8a8a8;
-      --line: #2c2c2c;
-    }
-  }
+
   * { box-sizing: border-box; }
   body {
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: var(--font);
     line-height: 1.5;
   }
   .wrap {
@@ -48,8 +36,8 @@
   .sub { color: var(--text-2); font-size: 14px; margin: 0 0 20px; }
   .card {
     background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 12px;
+
+    border-radius: 24px;
     padding: 16px;
     margin-bottom: 16px;
   }
@@ -59,7 +47,7 @@
     min-height: 140px;
     resize: vertical;
     border: 1px solid var(--line);
-    border-radius: 8px;
+
     background: var(--bg);
     color: var(--text);
     font: inherit;
@@ -72,7 +60,7 @@
     font: inherit;
     font-size: 14px;
     padding: 8px 16px;
-    border-radius: 8px;
+    border-radius: 999px;
     border: 1px solid var(--text);
     background: var(--text);
     color: var(--bg);
@@ -93,14 +81,12 @@
     min-height: 24px;
   }
   #output mark {
-    background: #ffe58a;
-    color: #111;
+    background: var(--mark);
+    color: var(--text);
     border-radius: 3px;
     padding: 0 2px;
   }
-  @media (prefers-color-scheme: dark) {
-    #output mark { background: #8a6d1a; color: #fff; }
-  }
+
   #list { margin: 8px 0 0; padding-left: 20px; font-size: 14px; color: var(--text-2); }
   #list li { margin-bottom: 4px; }
   #list code { color: var(--text); background: var(--bg); padding: 0 4px; border-radius: 4px; border: 1px solid var(--line); }
@@ -112,6 +98,7 @@
     margin-top: 32px;
   }
 </style>
+<link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
 <div class="wrap">
@@ -123,7 +110,7 @@
     <label for="input">Your text</label>
     <textarea id="input" placeholder="Type or paste English text here. Example: The report was written by Anna."></textarea>
     <div class="row">
-      <button id="check" type="button">Check text</button>
+      <button id="check" type="button" class="primary">Check text</button>
       <button id="clear" type="button" class="secondary">Clear</button>
       <span id="count"></span>
     </div>

@@ -6,25 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/075-text-similarity/">
   <meta name="description" content="Compute cosine similarity between two text documents using TF-IDF vector representation.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
+
     body {
-      font-family: system-ui, sans-serif;
+      font-family: var(--font);
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
@@ -47,8 +35,8 @@
     }
     .card {
       background-color: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 4px;
+
+      border-radius: 24px;
       padding: 1rem;
       margin-bottom: 1rem;
     }
@@ -57,7 +45,7 @@
       min-height: 120px;
       padding: 0.5rem;
       border: 1px solid var(--line);
-      border-radius: 4px;
+
       background-color: var(--card);
       color: var(--text);
       font-family: inherit;
@@ -67,7 +55,7 @@
       color: var(--card);
       border: none;
       padding: 0.5rem 1rem;
-      border-radius: 4px;
+      border-radius: 999px;
       cursor: pointer;
       font-family: inherit;
     }
@@ -78,11 +66,11 @@
       margin-top: 1rem;
       padding: 0.5rem;
       border-radius: 4px;
-      background-color: rgba(0, 128, 0, 0.1);
+      background-color: var(--green-soft);
     }
     .error {
-      color: red;
-      background-color: rgba(255, 0, 0, 0.1);
+      color: var(--text);
+      background-color: var(--red-soft);
     }
     .dark-mode-toggle {
       position: absolute;
@@ -90,6 +78,7 @@
       right: 1rem;
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -108,9 +97,9 @@
         <label for="text2">Document 2:</label>
         <textarea id="text2" placeholder="Enter second document..."></textarea>
         
-        <button id="calculate">Calculate Similarity</button>
+        <button id="calculate" class="primary">Calculate Similarity</button>
         
-        <div id="result" class="result" style="display: none;"></div>
+        <div id="result" class="result" style="display: none"></div>
       </div>
     </main>
 

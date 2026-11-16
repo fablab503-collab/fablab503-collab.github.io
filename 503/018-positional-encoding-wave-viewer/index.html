@@ -6,26 +6,14 @@
   <title>Positional Encoding Wave Viewer · Project 503 · D-CREATIONS</title>
   <link rel="canonical" href="https://dcreations.fr/503/018-positional-encoding-wave-viewer/">
   <meta name="description" content="Interactive sine and cosine positional encoding explorer with RoPE rotation sliders.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: var(--font);
       background: var(--bg);
       color: var(--text);
       padding: 16px;
@@ -54,8 +42,8 @@
     }
     .controls {
       background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 8px;
+
+      border-radius: 24px;
       padding: 12px;
       margin-bottom: 12px;
     }
@@ -78,7 +66,7 @@
       -webkit-appearance: none;
       appearance: none;
       background: var(--line);
-      border-radius: 3px;
+
       outline: none;
     }
     input[type="range"]::-webkit-slider-thumb {
@@ -87,14 +75,14 @@
       width: 14px;
       height: 14px;
       background: var(--text);
-      border-radius: 50%;
+
       cursor: pointer;
     }
     input[type="range"]::-moz-range-thumb {
       width: 14px;
       height: 14px;
       background: var(--text);
-      border-radius: 50%;
+
       cursor: pointer;
       border: none;
     }
@@ -118,6 +106,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <a href="/503/" class="header-link">← Project 503</a>
@@ -196,10 +185,11 @@
         return value || '#000';
       }
 
-      // Generate hue-based colors for dimensions
+      // One colour per dimension: the three accents, their second steps and two greys
       function getColorForDim(index, total) {
-        const hue = (index * 30) % 360;
-        return `hsl(${hue}, 70%, 50%)`;
+        const light = document.documentElement.getAttribute('data-theme') === 'light';
+        const series = light ? ["#0058d0","#17722f","#c2130a","#003a8c","#0f4d20","#7a0c06","#595959","#000000"] : ["#0a84ff","#30d158","#ff3b30","#6cb4ff","#8be4a4","#ff8a82","#bdbdbd","#8e8e8e"];
+        return series[index % series.length];
       }
 
       // Calculate positional encoding value using standard RoPE formula

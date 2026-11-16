@@ -6,36 +6,25 @@
   <meta name="description" content="See how sink tokens and a rolling 512-token attention window keep a simulated model coherent across a long token stream without its memory overflowing.">
   <link rel="canonical" href="https://dcreations.fr/503/023-sliding-window-attention-demo/">
   <title>Sliding Window Attention Demo · Project 503 · D-CREATIONS</title>
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-      --accent: #1a56db;
-      --accent-soft: #e3ecfd;
-      --sink: #0e9f6e;
-      --sink-soft: #dcf3ea;
-      --warn: #b45309;
+      --accent: var(--blue);
+      --accent-soft: var(--blue-soft);
+      --sink: var(--green);
+      --sink-soft: var(--green-soft);
+      --warn: var(--line-2);
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-        --accent: #8ab0ff;
-        --accent-soft: #26344d;
-        --sink: #34d399;
-        --sink-soft: #173a2c;
-        --warn: #fbbf24;
+
+      :root:not([data-theme="light"]) {
+        --sink-soft: #000;
       }
-    }
+
     * { box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: var(--font);
       background: var(--bg);
       color: var(--text);
       margin: 0;
@@ -49,8 +38,8 @@
     .lede { margin: 0 0 24px; max-width: 72ch; color: var(--text-2); }
     .card {
       background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 12px;
+
+      border-radius: 24px;
       padding: 20px;
       margin-bottom: 16px;
     }
@@ -73,7 +62,7 @@
       height: 76px;
       background: var(--bg);
       border: 1px solid var(--line);
-      border-radius: 10px;
+      border-radius: 16px;
     }
     .tok {
       flex: 0 0 12px;
@@ -87,11 +76,11 @@
       position: absolute;
       left: 0; right: 0; bottom: 0;
       height: 0;
-      background: var(--accent);
+      background: var(--accent); color: #000;
       transition: height 0.12s linear;
     }
     .tok.sink { background: var(--sink-soft); box-shadow: inset 0 0 0 1px var(--sink); }
-    .tok.sink i { background: var(--sink); }
+    .tok.sink i { background: var(--sink); color: #000; }
     .tok.out { background: var(--line); opacity: 0.45; }
     .tok.out i { height: 0 !important; }
     .legend {
@@ -103,24 +92,24 @@
       color: var(--text-2);
     }
     .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
-    .sink-sw { background: var(--sink); }
-    .win-sw { background: var(--accent); }
+    .sink-sw { background: var(--sink); color: #000; }
+    .win-sw { background: var(--accent); color: #000; }
     .out-sw { background: var(--line); border: 1px solid var(--text-2); }
     .legend-note { margin-left: auto; }
     .log {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-family: var(--mono);
       font-size: 13px;
       line-height: 1.5;
       max-height: 150px;
       overflow-y: auto;
       background: var(--bg);
       border: 1px solid var(--line);
-      border-radius: 10px;
+      border-radius: 16px;
       padding: 12px;
       word-break: break-word;
     }
     .log .q { font-weight: 600; }
-    .log .bad { color: var(--warn); }
+    .log .bad { color: var(--text-2); }
     .stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -134,7 +123,7 @@
       padding: 10px 16px;
       font-size: 15px;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 999px;
       background: var(--card);
       color: var(--text);
       cursor: pointer;
@@ -157,6 +146,7 @@
       margin-top: 16px;
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <main>
@@ -198,7 +188,7 @@
       <div class="card-title">Controls</div>
       <div class="buttons">
         <button id="bPlay" type="button">Pause</button>
-        <button id="bStep" type="button">+10 tokens</button>
+        <button id="bStep" type="button" class="primary">+10 tokens</button>
         <button id="bReset" type="button">Reset</button>
       </div>
       <div class="field">

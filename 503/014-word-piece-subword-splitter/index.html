@@ -6,26 +6,14 @@
   <title>Word Piece Subword Splitter · Project 503 · D-CREATIONS</title>
   <link rel="canonical" href="https://dcreations.fr/503/014-word-piece-subword-splitter/">
   <meta name="description" content="Live WordPiece tokenization sandbox that breaks sentences into root words and ##-prefixed continuations.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
+
     * { box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: var(--font);
       background: var(--bg);
       color: var(--text);
       margin: 0;
@@ -64,7 +52,7 @@
       min-height: 120px;
       padding: 0.75rem;
       border: 1px solid var(--line);
-      border-radius: 0.5rem;
+
       background: var(--card);
       color: var(--text);
       font-family: inherit;
@@ -77,7 +65,7 @@
       background: var(--card);
       color: var(--text);
       border: 1px solid var(--line);
-      border-radius: 0.5rem;
+      border-radius: 999px;
       padding: 0.5rem 1rem;
       font-size: 1rem;
       cursor: pointer;
@@ -86,10 +74,10 @@
     button:hover { background: var(--line); }
     .output {
       background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 0.5rem;
+
+      border-radius: 24px;
       padding: 1rem;
-      font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+      font-family: var(--mono);
       font-size: 0.875rem;
       white-space: pre-wrap;
       word-break: break-word;
@@ -104,9 +92,9 @@
       border-radius: 0.2rem;
       font-size: 0.875rem;
     }
-    .token.root   { background: rgba(0,120,255,0.15); }
-    .token.subword { background: rgba(0,200,100,0.15); }
-    .token.unk     { background: rgba(255,80,80,0.15); }
+    .token.root   { background: var(--blue-soft); }
+    .token.subword { background: var(--green-soft); }
+    .token.unk     { background: var(--red-soft); }
     .stats {
       margin-top: 1rem;
       font-size: 0.875rem;
@@ -121,6 +109,7 @@
       color: var(--text-2);
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -131,7 +120,7 @@
     </div>
 
     <textarea id="input" placeholder="Type or paste text here..."></textarea>
-    <button id="tokenize">Tokenize</button>
+    <button id="tokenize" class="primary">Tokenize</button>
 
     <div class="output" id="output"><em>Enter text and click Tokenize to see subword units.</em></div>
 

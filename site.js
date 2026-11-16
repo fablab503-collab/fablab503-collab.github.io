@@ -151,7 +151,7 @@
     }
   }
 
-  // Theme toggle in the header: auto -> light -> dark -> auto (state lives in the head script, window.dcTheme).
+  // Theme toggle in the footer: dark (default) -> light -> auto -> dark (state lives in the head script, window.dcTheme).
   var tb = document.querySelector('[data-theme-toggle]');
   if (tb && window.dcTheme) {
     var labels = {}; try { labels = JSON.parse(tb.getAttribute('data-labels')); } catch (e) {}
@@ -159,7 +159,7 @@
     label();
     tb.addEventListener('click', function () {
       var c = window.dcTheme.get();
-      window.dcTheme.set(c === 'auto' ? 'light' : c === 'light' ? 'dark' : 'auto');
+      window.dcTheme.set(c === 'dark' ? 'light' : c === 'light' ? 'auto' : 'dark');
       label();
     });
   }

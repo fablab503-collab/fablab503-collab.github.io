@@ -6,48 +6,39 @@
   <title>GPU Shared Queue · Project 503 · D-CREATIONS</title>
   <meta name="description" content="Demonstrates a shared queue where multiple jobs can use a single GPU in time slices.">
   <link rel="canonical" href="https://dcreations.fr/503/053-gpu-shared-queue/">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
       --shadow: rgba(0,0,0,.1);
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
     body { background: var(--bg); color: var(--text); line-height: 1.5; padding: 1rem; }
     .container { max-width: 800px; margin: 0 auto; }
     header, footer { text-align: center; padding: 1rem 0; }
     a { color: var(--text); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px var(--shadow); }
+    .card { background: var(--card); border-radius: 24px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px var(--shadow); }
     h1, h2, h3 { margin-bottom: 1rem; }
     .queue-list { list-style: none; }
     .queue-item { padding: 1rem; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
     .queue-item:last-child { border-bottom: none; }
     .status { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem; }
-    .status.waiting { background: #ffeb3b; color: #111; }
-    .status.running { background: #4caf50; color: white; }
-    .status.completed { background: #2196f3; color: white; }
+    .status.waiting { background: var(--mark); color: var(--text); }
+    .status.running { background: var(--green); color: #000; }
+    .status.completed { background: var(--blue); color: #000; }
     .controls { display: flex; gap: 0.5rem; margin-top: 1rem; }
-    button { padding: 0.5rem 1rem; border: none; border-radius: 4px; background: var(--text); color: var(--card); cursor: pointer; }
+    button { padding: 0.5rem 1rem; border: none; border-radius: 999px; background: var(--text); color: var(--card); cursor: pointer; }
     button:hover { opacity: 0.9; }
     .job-form { display: flex; gap: 0.5rem; margin-top: 1rem; }
-    input, select { padding: 0.5rem; border: 1px solid var(--line); border-radius: 4px; background: var(--card); color: var(--text); flex: 1; }
+    input, select { padding: 0.5rem; border: 1px solid var(--line); background: var(--card); color: var(--text); flex: 1; }
     .info { font-size: 0.875rem; color: var(--text-2); margin-top: 0.5rem; }
-    .gpu-status { display: flex; justify-content: space-between; padding: 1rem; background: var(--card); border-radius: 8px; margin-top: 1rem; }
+    .gpu-status { display: flex; justify-content: space-between; padding: 1rem; background: var(--card); border-radius: 24px; margin-top: 1rem; }
     .gpu-status span { font-weight: bold; }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -67,7 +58,7 @@
             <option value="normal">Normal</option>
             <option value="high">High</option>
           </select>
-          <button type="submit">Add Job</button>
+          <button type="submit" class="primary">Add Job</button>
         </form>
       </div>
 

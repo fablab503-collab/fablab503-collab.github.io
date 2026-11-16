@@ -6,24 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/068-stemmer-demo/">
   <meta name="description" content="Apply a simple Porter stemmer to every word and display the stemmed forms in a side-by-side table.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
+
     body {
       background-color: var(--bg);
       color: var(--text);
@@ -69,9 +56,6 @@
       border-bottom: 1px solid var(--line);
     }
     .link-back {
-      position: absolute;
-      top: 1rem;
-      left: 1rem;
       color: var(--text-2);
       text-decoration: none;
     }
@@ -82,6 +66,7 @@
       font-size: 0.9rem;
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <a href="/503/" class="link-back">← Project 503</a>
@@ -89,7 +74,7 @@
     <h1>Stemmer Demo</h1>
     <p>Enter text below to see stemmed words in the table.</p>
     <textarea id="inputText" placeholder="Enter your text here..."></textarea>
-    <button id="stemButton">Stem Words</button>
+    <button id="stemButton" class="primary">Stem Words</button>
     <table id="resultTable">
       <thead>
         <tr>

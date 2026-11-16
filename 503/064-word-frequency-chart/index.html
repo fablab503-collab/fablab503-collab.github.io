@@ -6,25 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/064-word-frequency-chart/">
   <meta name="description" content="Count every word in the input and render a horizontal bar chart of the top-20 most frequent terms.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
+
     body {
-      font-family: system-ui, sans-serif;
+      font-family: var(--font);
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
@@ -46,7 +34,7 @@
       background-color: var(--card);
       color: var(--text);
       border: 1px solid var(--line);
-      border-radius: 4px;
+
       resize: vertical;
     }
     button {
@@ -55,7 +43,7 @@
       background-color: var(--card);
       color: var(--text);
       border: 1px solid var(--line);
-      border-radius: 4px;
+      border-radius: 999px;
       cursor: pointer;
     }
     button:hover {
@@ -109,13 +97,14 @@
       text-decoration: underline;
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
     <a href="/503/">← Project 503</a>
     <h1>Word Frequency Chart</h1>
     <textarea id="input" placeholder="Enter your text here..."></textarea>
-    <button id="analyze">Analyze Words</button>
+    <button id="analyze" class="primary">Analyze Words</button>
     <div class="chart" id="chart"></div>
     <div class="footer">
       Project #64 of 503 · Daniel Madac, D-CREATIONS

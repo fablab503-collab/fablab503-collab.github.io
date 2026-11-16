@@ -1,5 +1,8 @@
 /* Visit Stats dashboard (dcreations.fr/stats/). Data from the Worker dcreations-visit-stats, see
    visit-stats/README.md. The token lives in this browser's localStorage only. */
+/* App style, same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();
+
 (function () {
   var API = '/api/stats';
   var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);

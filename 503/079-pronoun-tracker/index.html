@@ -6,28 +6,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="https://dcreations.fr/503/079-pronoun-tracker/">
 <meta name="description" content="Paste any text and see a pie-chart breakdown of its pronouns by type: personal, possessive and reflexive.">
+<script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+<link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  :root {
-    --bg: #f4f4f2;
-    --card: #fff;
-    --text: #111;
-    --text-2: #5a5a5a;
-    --line: #e2e2de;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #121212;
-      --card: #1c1c1c;
-      --text: #f2f2f2;
-      --text-2: #a8a8a8;
-      --line: #2c2c2c;
-    }
-  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: var(--font);
     line-height: 1.5;
     min-height: 100vh;
     display: flex;
@@ -47,8 +35,8 @@
   .sub { color: var(--text-2); font-size: 15px; margin-bottom: 20px; }
   .card {
     background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 12px;
+
+    border-radius: 24px;
     padding: 20px;
     margin-bottom: 20px;
   }
@@ -58,7 +46,7 @@
     min-height: 140px;
     resize: vertical;
     border: 1px solid var(--line);
-    border-radius: 8px;
+
     background: var(--bg);
     color: var(--text);
     font: inherit;
@@ -71,7 +59,7 @@
     background: var(--text);
     color: var(--bg);
     border: none;
-    border-radius: 8px;
+    border-radius: 999px;
     padding: 10px 18px;
     font: inherit;
     font-size: 14px;
@@ -95,8 +83,8 @@
     flex: 1;
     min-width: 100px;
     background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 12px;
+
+    border-radius: 24px;
     padding: 14px 16px;
   }
   .stat .num { font-size: 24px; font-weight: 700; }
@@ -112,6 +100,7 @@
     font-size: 13px;
   }
 </style>
+<link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="topbar"><a href="/503/">← Project 503</a></div>
@@ -123,7 +112,7 @@
       <label for="text">Your text</label>
       <textarea id="text" placeholder="Type or paste text here…"></textarea>
       <div class="row">
-        <button id="analyze">Analyze</button>
+        <button id="analyze" class="primary">Analyze</button>
         <button id="sample" class="ghost">Load a sample</button>
         <button id="clear" class="ghost">Clear</button>
       </div>
@@ -167,7 +156,7 @@
     reflexive:  ["myself","yourself","himself","herself","itself","ourselves","yourselves","themselves"]
   };
   var TYPE_ORDER = ["personal", "possessive", "reflexive"];
-  var COLORS = { personal: "#4a7fd4", possessive: "#e0a13c", reflexive: "#5cb87a" };
+  var COLORS = { personal: "#0a84ff", possessive: "#8e8e8e", reflexive: "#30d158" };
   var LABELS = { personal: "Personal", possessive: "Possessive", reflexive: "Reflexive" };
 
   var PRONOUN_MAP = {};

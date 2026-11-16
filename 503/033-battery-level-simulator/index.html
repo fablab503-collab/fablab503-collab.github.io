@@ -6,47 +6,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/033-battery-level-simulator/">
   <meta name="description" content="Simulate battery drain rates for different job types and show low-battery alerts at 20% and 5%.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-      --alert-20: #ff9500;
-      --alert-5: #ff3b30;
+      --alert-20: var(--line-2);
+      --alert-5: var(--red);
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
     body { background: var(--bg); color: var(--text); padding: 1rem; min-height: 100vh; display: flex; flex-direction: column; }
     .container { max-width: 375px; margin: 0 auto; width: 100%; }
     header { text-align: center; margin-bottom: 2rem; }
     a { color: var(--text); text-decoration: none; }
-    .project-link { position: absolute; top: 1rem; left: 1rem; }
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card { background: var(--card); border-radius: 24px; padding: 1.5rem; margin-bottom: 1.5rem; }
     h1 { font-size: 1.5rem; margin-bottom: 1rem; }
     .battery-display { font-size: 4rem; text-align: center; margin: 1.5rem 0; }
     .battery-level { height: 20px; background: var(--line); border-radius: 10px; overflow: hidden; margin: 1rem 0; }
-    .battery-fill { height: 100%; width: 100%; background: #4cd964; transition: width 0.5s ease; }
+    .battery-fill { height: 100%; width: 100%; background: var(--green); color: #000; transition: width 0.5s ease; }
     .alerts { margin-top: 1rem; }
     .alert { padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; display: none; }
-    .alert-20 { background: var(--alert-20); color: white; }
-    .alert-5 { background: var(--alert-5); color: white; }
+    .alert-20 { background: var(--alert-20); color: #000; }
+    .alert-5 { background: var(--alert-5); color: #000; }
     .jobs { display: grid; gap: 1rem; margin-top: 1rem; }
     .job { padding: 1rem; border-radius: 6px; background: var(--line); cursor: pointer; transition: transform 0.2s; }
     .job:hover { transform: translateY(-2px); }
-    .job.active { background: #007aff; color: white; }
+    .job.active { background: var(--blue); color: #000; }
     .stats { display: flex; justify-content: space-between; margin-top: 1rem; font-size: 0.9rem; color: var(--text-2); }
     footer { text-align: center; margin-top: auto; padding: 1rem 0; font-size: 0.9rem; color: var(--text-2); }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <a href="/503/" class="project-link">← Project 503</a>
@@ -86,11 +76,11 @@
 
   <script>
     const jobs = [
-      { name: "Web Browsing", drain: 0.2, color: "#007aff" },
-      { name: "Video Streaming", drain: 0.8, color: "#ff9500" },
+      { name: "Web Browsing", drain: 0.2, color: "#0a84ff" },
+      { name: "Video Streaming", drain: 0.8, color: "#bdbdbd" },
       { name: "Gaming", drain: 1.2, color: "#ff3b30" },
-      { name: "Audio Recording", drain: 0.6, color: "#34c759" },
-      { name: "Photo Editing", drain: 1.0, color: "#5856d6" }
+      { name: "Audio Recording", drain: 0.6, color: "#30d158" },
+      { name: "Photo Editing", drain: 1.0, color: "#6cb4ff" }
     ];
 
     let batteryLevel = 100;
@@ -152,6 +142,7 @@
         jobEl.className = 'job';
         jobEl.textContent = job.name;
         jobEl.style.backgroundColor = job.color;
+        jobEl.style.color = '#000';
         jobEl.addEventListener('click', () => selectJob(job));
         jobsContainer.appendChild(jobEl);
       });

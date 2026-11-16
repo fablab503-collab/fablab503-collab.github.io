@@ -6,20 +6,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="https://dcreations.fr/503/030-priority-scheduler-demo/">
 <meta name="description" content="Interactive demo of preemptive priority scheduling: high-priority jobs interrupt lower-priority ones, shown live on a Gantt chart.">
+<script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+<link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 :root{
-  --bg:#f4f4f2; --card:#fff; --text:#111; --text-2:#5a5a5a; --line:#e2e2de;
-  --high:#c0392b; --mid:#b9770e; --low:#1e8449;
+  --high:var(--red); --mid:var(--line-2); --low:var(--green);
 }
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#121212; --card:#1c1c1c; --text:#f2f2f2; --text-2:#a8a8a8; --line:#2c2c2c;
-    --high:#ff7a66; --mid:#e5b567; --low:#5fd39a;
-  }
-}
+
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-family:var(--font);
   line-height:1.5}
 header.top{padding:16px 20px}
 a.back{color:var(--text-2);text-decoration:none;font-size:14px}
@@ -27,17 +24,17 @@ a.back:hover{color:var(--text)}
 main{max-width:880px;margin:0 auto;padding:0 16px 32px}
 h1{font-size:24px;margin:8px 0 6px}
 .lede{color:var(--text-2);margin:0 0 18px;max-width:64ch}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+.card{background:var(--card);border-radius:24px;
   padding:16px;margin-bottom:16px}
 .card h2{font-size:16px;margin:0 0 10px}
 .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 button,select,input{font:inherit;color:var(--text)}
-button{padding:8px 14px;border:1px solid var(--line);border-radius:8px;
+button{padding:8px 14px;border:1px solid var(--line);border-radius:999px;
   background:var(--bg);cursor:pointer}
 button:hover{background:var(--line)}
 button:disabled{opacity:.5;cursor:default}
 label.speed{display:flex;align-items:center;gap:6px;color:var(--text-2);font-size:14px}
-select,input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+select,input{padding:8px 10px;border:1px solid var(--line);background:var(--bg)}
 .form{display:flex;flex-wrap:wrap;gap:8px}
 #inName{width:110px}
 #inArrival,#inBurst{width:86px}
@@ -45,18 +42,18 @@ select,input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;bac
 .status{font-weight:600;margin:12px 0 0}
 .gantt-wrap{overflow-x:auto;padding-bottom:4px}
 .gantt{display:flex;gap:2px}
-.cell{width:36px;height:36px;flex:0 0 auto;border-radius:6px;color:#fff;font-size:10px;
+.cell{width:36px;height:36px;flex:0 0 auto;border-radius:6px;color:#000;font-size:10px;
   display:flex;align-items:center;justify-content:center;overflow:hidden;
   text-shadow:0 1px 2px rgba(0,0,0,.45)}
 .gantt.time{margin-top:4px}
 .gantt.time .cell{background:transparent;color:var(--text-2);height:14px;
   text-shadow:none;font-size:10px}
 .queue{display:flex;flex-wrap:wrap;gap:8px;min-height:26px;align-items:center}
-.chip{color:#fff;border-radius:6px;padding:2px 8px;font-size:12px;display:inline-block}
+.chip{color:#000;border-radius:6px;padding:2px 8px;font-size:12px;display:inline-block}
 .prio{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
-.prio.high{color:var(--high);border-color:var(--high)}
-.prio.mid{color:var(--mid);border-color:var(--mid)}
-.prio.low{color:var(--low);border-color:var(--low)}
+.prio.high{color:var(--red-t);border-color:var(--high)}
+.prio.mid{color:var(--text-2);border-color:var(--mid)}
+.prio.low{color:var(--green-t);border-color:var(--low)}
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -64,6 +61,7 @@ th{color:var(--text-2);font-weight:600}
 footer{text-align:center;color:var(--text-2);font-size:13px;
   padding:24px 16px 40px;border-top:1px solid var(--line);margin-top:8px}
 </style>
+<link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
 <header class="top"><a class="back" href="/503/">← Project 503</a></header>
@@ -75,7 +73,7 @@ footer{text-align:center;color:var(--text-2);font-size:13px;
 
   <section class="card">
     <div class="controls">
-      <button id="btnStart" type="button">Start</button>
+      <button id="btnStart" type="button" class="primary">Start</button>
       <button id="btnStep" type="button">Step</button>
       <button id="btnReset" type="button">Reset</button>
       <button id="btnDemo" type="button">Load demo jobs</button>
@@ -145,7 +143,7 @@ function esc(s){return String(s).replace(/[&<>"']/g,function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function num(v,d){v=Number(v);return isFinite(v)?v:d;}
 
-var PALETTE=["#e4572e","#2e86ab","#7b2d8b","#3a9d23","#d9a404","#c2377a","#0a9396","#5a5ad6"];
+var PALETTE=["#0a84ff","#30d158","#ff3b30","#6cb4ff","#8be4a4","#ff8a82","#bdbdbd","#8e8e8e"];
 var PRIO={1:{label:"High",cls:"high"},2:{label:"Medium",cls:"mid"},3:{label:"Low",cls:"low"}};
 var DEMO=[["J1",0,5,3],["J2",1,3,1],["J3",2,2,2],["J4",4,2,1],["J5",3,4,3]];
 

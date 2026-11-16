@@ -6,44 +6,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/063-text-diff-viewer/">
   <meta name="description" content="Compare two text passages side by side and highlight added, removed, and changed words.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
     body { background: var(--bg); color: var(--text); padding: 1rem; line-height: 1.5; }
     .container { max-width: 800px; margin: 0 auto; }
     h1 { text-align: center; margin-bottom: 1.5rem; }
     .input-group { margin-bottom: 1rem; }
     label { display: block; margin-bottom: 0.5rem; color: var(--text-2); }
-    textarea { width: 100%; height: 120px; padding: 0.75rem; background: var(--card); border: 1px solid var(--line); border-radius: 4px; color: var(--text); resize: vertical; }
-    button { background: var(--card); color: var(--text); border: 1px solid var(--line); padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 0.5rem 0; }
+    textarea { width: 100%; height: 120px; padding: 0.75rem; background: var(--card); border: 1px solid var(--line); color: var(--text); resize: vertical; }
+    button { background: var(--card); color: var(--text); border: 1px solid var(--line); padding: 0.75rem 1.5rem; border-radius: 999px; cursor: pointer; font-weight: bold; margin: 0.5rem 0; }
     button:hover { background: var(--line); }
     .diff-container { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
     .diff-column { flex: 1; min-width: 300px; }
     .diff-column h2 { margin-bottom: 0.75rem; color: var(--text-2); }
-    .diff-content { background: var(--card); padding: 1rem; border-radius: 4px; border: 1px solid var(--line); min-height: 200px; }
-    .word-added { background-color: #d4edda; color: #155724; }
-    .word-removed { background-color: #f8d7da; color: #721c24; text-decoration: line-through; }
-    .word-changed { background-color: #fff3cd; color: #856404; }
+    .diff-content { background: var(--card); padding: 1rem; border-radius: 24px; min-height: 200px; }
+    .word-added { background-color: var(--green-soft); color: var(--text); }
+    .word-removed { background-color: var(--red-soft); color: var(--text); text-decoration: line-through; }
+    .word-changed { background-color: var(--mark); color: var(--text); }
     .footer { margin-top: 2rem; text-align: center; color: var(--text-2); font-size: 0.9rem; }
     a { color: var(--text); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .project-link { position: absolute; top: 1rem; left: 1rem; }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <a href="/503/" class="project-link">← Project 503</a>
@@ -57,7 +45,7 @@
       <label for="text2">Modified Text:</label>
       <textarea id="text2" placeholder="Enter the modified text here..."></textarea>
     </div>
-    <button id="diffBtn">Compare Texts</button>
+    <button id="diffBtn" class="primary">Compare Texts</button>
     <div class="diff-container">
       <div class="diff-column">
         <h2>Original</h2>

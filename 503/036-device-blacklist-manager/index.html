@@ -6,49 +6,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/036-device-blacklist-manager/">
   <meta name="description" content="Manage device blacklists and job rerouting automatically.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
       --border-radius: 4px;
       --transition: all 0.3s ease;
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
     body { background-color: var(--bg); color: var(--text); line-height: 1.5; padding: 1rem; }
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
     a { color: var(--text); text-decoration: none; }
     a:hover { text-decoration: underline; }
     h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-    .card { background-color: var(--card); border: 1px solid var(--line); border-radius: var(--border-radius); padding: 1.25rem; margin-bottom: 1.5rem; }
+    .card { background-color: var(--card); border-radius: 24px; padding: 1.25rem; margin-bottom: 1.5rem; }
     .device-list { list-style: none; }
     .device-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
     .device-item:last-child { border-bottom: none; }
     .device-info { flex-grow: 1; }
     .device-name { font-weight: 600; }
     .device-status { font-size: 0.875rem; color: var(--text-2); }
-    .toggle-btn { background-color: var(--line); border: none; border-radius: var(--border-radius); padding: 0.375rem 0.75rem; cursor: pointer; transition: var(--transition); }
+    .toggle-btn { background-color: var(--line); border: none; border-radius: 999px; padding: 0.375rem 0.75rem; cursor: pointer; transition: var(--transition); }
     .toggle-btn:hover { background-color: var(--text-2); color: var(--card); }
-    .blacklisted { background-color: #ffebee; }
-    .blacklisted .device-name { color: #c62828; }
-    .job-rerouting { margin-top: 1rem; padding: 0.75rem; background-color: #e8f5e9; border-radius: var(--border-radius); }
+    .blacklisted { background-color: rgba(255, 59, 48, .1); }
+    .blacklisted .device-name { color: var(--red-t); }
+    .job-rerouting { margin-top: 1rem; padding: 0.75rem; background-color: var(--green-soft); border-radius: var(--border-radius); }
     footer { text-align: center; margin-top: 2rem; color: var(--text-2); font-size: 0.875rem; }
     @media (max-width: 375px) {
       body { padding: 0.75rem; }
       .card { padding: 1rem; }
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <header>

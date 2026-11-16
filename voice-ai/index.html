@@ -6,32 +6,50 @@
 <title>voice ai · D-CREATIONS</title>
 <meta name="description" content="voice ai: voice translation into more than 195 languages that keeps your own voice, with the same tone, the same words and the same way of speaking.">
 <link rel="canonical" href="https://dcreations.fr/voice-ai/">
+<script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+<link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  :root { --bg: #f4f4f2; --card: #ffffff; --text: #111111; --text-2: #5a5a5a; --line: #e2e2de; }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --bg: #121212; --card: #1c1c1c; --text: #f2f2f2; --text-2: #a8a8a8; --line: #2c2c2c; }
-  }
+  /* App style: black and white, a little red, blue and green. Dark by default; light is the inverse. */
+  @font-face { font-family: "Inter Tight"; src: url("/fonts/inter-tight-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+  :root { color-scheme: dark; --bg: #000; --card: #141414; --card-2: #1f1f1f; --text: #fff; --text-2: #a1a1a1; --line: #2a2a2a; --line-2: #757575;
+    --red: #ff3b30; --blue: #0a84ff; --green: #30d158; --red-t: #ff3b30; --blue-t: #0a84ff; --green-t: #30d158;
+    --font: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  :root[data-theme="light"] { color-scheme: light; --bg: #fff; --card: #ebebeb; --card-2: #e0e0e0; --text: #000; --text-2: #595959; --line: #d6d6d6; --line-2: #7a7a7a;
+    --red-t: #c2130a; --blue-t: #0058d0; --green-t: #17722f; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
-  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 14px; }
-  header a { color: var(--text-2); text-decoration: none; }
-  header a:hover { color: var(--text); }
-  .lang button { background: none; border: 1px solid var(--line); color: var(--text-2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
-  .hero { display: grid; grid-template-columns: 180px 1fr; gap: 32px; align-items: center; padding: 32px 0 40px; }
-  .logo { width: 180px; height: 180px; border-radius: 50%; background: var(--card); display: grid; place-items: center; box-shadow: 0 12px 40px rgba(0,0,0,.10); }
-  .logo svg { width: 110px; height: 110px; color: var(--text); }
-  h1 { font-size: 44px; line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.02em; }
-  .lead { font-size: 19px; color: var(--text-2); margin: 0; }
-  h2 { font-size: 22px; margin: 40px 0 16px; }
-  ul.facts { padding-left: 20px; color: var(--text-2); }
-  ul.facts li { margin: 6px 0; }
-  .badge { display: inline-block; font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; margin-bottom: 14px; color: var(--text-2); }
-  footer { margin: 64px 0 32px; font-size: 13px; color: var(--text-2); }
-  [data-l="fr"] { display: none; }
-  html[lang="fr"] [data-l="en"] { display: none; }
-  html[lang="fr"] [data-l="fr"] { display: revert; }
-  @media (max-width: 640px) { .hero { grid-template-columns: 1fr; justify-items: start; } h1 { font-size: 34px; } .logo { width: 140px; height: 140px; } .logo svg { width: 86px; height: 86px; } }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+  a { color: var(--blue-t); text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; font-size: 15px; }
+  header a { display: inline-flex; align-items: center; min-height: 44px; color: var(--text); text-decoration: none; font-weight: 500; }
+  header a:hover { color: var(--text-2); }
+  .lang button { min-height: 36px; padding: 0 16px; background: var(--card-2); border: 1px solid var(--line); color: var(--text); border-radius: 999px; font: 500 14px var(--font); cursor: pointer; }
+  .lang button:hover { border-color: var(--line-2); }
+  .hero { padding: 40px 0 8px; }
+  h1 { font-weight: 400; font-size: clamp(2.625rem, 1.4rem + 5.4vw, 4.75rem); line-height: 1.02; letter-spacing: -0.015em; text-transform: uppercase; margin: 0 0 20px; overflow-wrap: break-word; }
+  .lead { font-size: clamp(1.0625rem, 1rem + .4vw, 1.25rem); line-height: 1.55; color: var(--text-2); margin: 0; max-width: 36em; }
+  h2 { font-weight: 400; font-size: clamp(1.75rem, 1.3rem + 2vw, 2.75rem); line-height: 1.08; letter-spacing: -0.01em; text-transform: uppercase; margin: 72px 0 24px; overflow-wrap: break-word; }
+  .logo { width: 104px; height: 104px; border-radius: 24px; background: var(--card); display: grid; place-items: center; margin-bottom: 32px; }
+  .logo svg { width: 60px; height: 60px; color: var(--text); }
+  .badge { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 500; line-height: 1.4; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); background: var(--card); border-radius: 999px; padding: 6px 14px; margin-bottom: 20px; }
+  .badge::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
+  .faq { border-top: 1px solid var(--line); }
+  .faq details { border-bottom: 1px solid var(--line); }
+  .faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 22px 0; font-size: 19px; font-weight: 500; line-height: 1.3; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: ""; flex: none; width: 16px; height: 16px; transition: transform .2s ease;
+    background: linear-gradient(var(--text-2), var(--text-2)) center / 100% 1.5px no-repeat, linear-gradient(var(--text-2), var(--text-2)) center / 1.5px 100% no-repeat; }
+  .faq details[open] > summary::after { transform: rotate(45deg); }
+  .faq details > p { margin: 0 0 22px; color: var(--text-2); max-width: 40em; }
+  .faq details > p strong { color: var(--text); font-weight: 500; }
+  footer { margin: 96px 0 40px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 14px; color: var(--text-2); }
+  html:not([lang="fr"]) [data-l="fr"], html[lang="fr"] [data-l="en"] { display: none !important; }
+  @media (max-width: 640px) { h2 { margin-top: 56px; } footer { margin-top: 72px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 <script src="/hit.js" defer></script>
 </head>
@@ -58,18 +76,18 @@
   </section>
 
   <h2 data-l="en">How it works</h2><h2 data-l="fr">Comment ça marche</h2>
-  <ul class="facts" data-l="en">
-    <li><strong>Your voice, not a synthetic one.</strong> The translation is spoken with the voice of the person who is talking.</li>
-    <li><strong>Same tone.</strong> Emotion, rhythm and intonation carry over from the original sentence.</li>
-    <li><strong>Same words.</strong> The translation follows the speaker's vocabulary and level of language, not a generic phrasing.</li>
-    <li><strong>More than 195 languages.</strong> One voice, every language.</li>
-  </ul>
-  <ul class="facts" data-l="fr">
-    <li><strong>Votre voix, pas une voix de synthèse.</strong> La traduction est dite avec la voix de la personne qui parle.</li>
-    <li><strong>Le même ton.</strong> L'émotion, le rythme et l'intonation de la phrase d'origine sont conservés.</li>
-    <li><strong>Les mêmes mots.</strong> La traduction suit le vocabulaire et le niveau de langue de la personne, pas une formulation générique.</li>
-    <li><strong>Plus de 195 langues.</strong> Une seule voix, toutes les langues.</li>
-  </ul>
+  <div class="faq" data-l="en">
+    <details><summary>Your voice, not a synthetic one.</summary><p>The translation is spoken with the voice of the person who is talking.</p></details>
+    <details><summary>Same tone.</summary><p>Emotion, rhythm and intonation carry over from the original sentence.</p></details>
+    <details><summary>Same words.</summary><p>The translation follows the speaker's vocabulary and level of language, not a generic phrasing.</p></details>
+    <details><summary>More than 195 languages.</summary><p>One voice, every language.</p></details>
+  </div>
+  <div class="faq" data-l="fr">
+    <details><summary>Votre voix, pas une voix de synthèse.</summary><p>La traduction est dite avec la voix de la personne qui parle.</p></details>
+    <details><summary>Le même ton.</summary><p>L'émotion, le rythme et l'intonation de la phrase d'origine sont conservés.</p></details>
+    <details><summary>Les mêmes mots.</summary><p>La traduction suit le vocabulaire et le niveau de langue de la personne, pas une formulation générique.</p></details>
+    <details><summary>Plus de 195 langues.</summary><p>Une seule voix, toutes les langues.</p></details>
+  </div>
 
   <footer>
     <span data-l="en">Designed and built by Daniel Madac, D-CREATIONS, Montpellier.</span>

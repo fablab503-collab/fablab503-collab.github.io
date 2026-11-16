@@ -6,46 +6,37 @@
   <title>CPU Affinity Simulator · Project 503 · D-CREATIONS</title>
   <meta name="description" content="A simulator showing how CPU thread affinity affects performance by binding jobs to specific cores.">
   <link rel="canonical" href="https://dcreations.fr/503/039-cpu-affinity-simulator/">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-      --primary: #007bff;
+      --primary: var(--blue);
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
     body { background-color: var(--bg); color: var(--text); padding: 1rem; line-height: 1.5; }
     header { margin-bottom: 1.5rem; }
-    a { color: var(--primary); text-decoration: none; }
+    a { color: var(--blue-t); text-decoration: none; }
     .container { max-width: 800px; margin: 0 auto; }
-    .card { background-color: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card { background-color: var(--card); border-radius: 24px; padding: 1.5rem; margin-bottom: 1.5rem; }
     h1, h2 { margin-bottom: 1rem; }
     .cores { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
     .core { background-color: var(--line); border-radius: 4px; padding: 0.75rem; text-align: center; flex: 1 1 80px; min-width: 80px; }
-    .core.active { background-color: var(--primary); color: white; }
+    .core.active { background-color: var(--primary); color: #000; }
     .jobs { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
     .job { background-color: var(--line); border-radius: 4px; padding: 0.75rem; text-align: center; flex: 1 1 120px; min-width: 120px; }
-    .job.active { background-color: #28a745; color: white; }
+    .job.active { background-color: var(--green); color: #000; }
     .controls { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
-    button { padding: 0.5rem 1rem; border: none; border-radius: 4px; background-color: var(--primary); color: white; cursor: pointer; }
+    button { padding: 0.5rem 1rem; border: none; border-radius: 999px; cursor: pointer; }
     button:hover { opacity: 0.9; }
     .stats { display: flex; justify-content: space-between; margin-top: 1rem; font-size: 0.9rem; color: var(--text-2); }
     footer { text-align: center; margin-top: 2rem; color: var(--text-2); font-size: 0.9rem; }
     .status { padding: 0.5rem; border-radius: 4px; margin: 1rem 0; text-align: center; }
-    .success { background-color: #d4edda; color: #155724; }
-    .error { background-color: #f8d7da; color: #721c24; }
+    .success { background-color: var(--green-soft); color: var(--text); }
+    .error { background-color: var(--red-soft); color: var(--text); }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -65,7 +56,7 @@
         <div class="jobs" id="jobs-container"></div>
         
         <div class="controls">
-          <button id="run-btn">Run Simulation</button>
+          <button id="run-btn" class="primary">Run Simulation</button>
           <button id="reset-btn">Reset</button>
         </div>
         

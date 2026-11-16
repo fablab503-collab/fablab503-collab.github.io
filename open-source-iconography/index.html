@@ -7,56 +7,73 @@
 <meta name="description" content="Open Source Iconography: 474,699 icons from 280 sets, nearly all under open licenses, joined into one offline library, and a knowledge graph that links 995 shared icon concepts to Iconclass and 530 to the Chinese Iconography Thesaurus, with the art-history image tools Iconclass, AIKON, Panoptic, Tropy, Mirador and OpenSeadragon.">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <link rel="canonical" href="https://dcreations.fr/open-source-iconography/">
+<script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+<link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  :root { --bg: #f4f4f2; --card: #ffffff; --text: #111111; --text-2: #5a5a5a; --line: #e2e2de; --accent: #111111; --accent-fg: #ffffff; }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --bg: #121212; --card: #1c1c1c; --text: #f2f2f2; --text-2: #a8a8a8; --line: #2c2c2c; --accent: #f2f2f2; --accent-fg: #111111; }
-  }
+  /* App style: black and white, a little red, blue and green. Dark by default; light is the inverse. */
+  @font-face { font-family: "Inter Tight"; src: url("/fonts/inter-tight-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+  :root { color-scheme: dark; --bg: #000; --card: #141414; --card-2: #1f1f1f; --text: #fff; --text-2: #a1a1a1; --line: #2a2a2a; --line-2: #757575;
+    --red: #ff3b30; --blue: #0a84ff; --green: #30d158; --red-t: #ff3b30; --blue-t: #0a84ff; --green-t: #30d158;
+    --font: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  :root[data-theme="light"] { color-scheme: light; --bg: #fff; --card: #ebebeb; --card-2: #e0e0e0; --text: #000; --text-2: #595959; --line: #d6d6d6; --line-2: #7a7a7a;
+    --red-t: #c2130a; --blue-t: #0058d0; --green-t: #17722f; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
-  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 14px; }
-  header a { color: var(--text-2); text-decoration: none; }
-  header a:hover { color: var(--text); }
-  .lang button { background: none; border: 1px solid var(--line); color: var(--text-2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
-  .hero { display: grid; grid-template-columns: 180px 1fr; gap: 32px; align-items: center; padding: 32px 0 40px; }
-  .logo { width: 180px; height: 180px; border-radius: 50%; background: var(--card); display: grid; place-items: center; box-shadow: 0 12px 40px rgba(0,0,0,.10); }
-  .logo img { width: 124px; height: 124px; }
-  h1 { font-size: 44px; line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.02em; }
-  .lead { font-size: 19px; color: var(--text-2); margin: 0; }
-  .badge { display: inline-block; font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; margin-bottom: 14px; color: var(--text-2); }
-  h2 { font-size: 22px; margin: 48px 0 16px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-  .card h3 { margin: 0; font-size: 17px; }
-  .card p { margin: 0; color: var(--text-2); font-size: 15px; }
-  .num { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
-  ul.facts { padding-left: 20px; color: var(--text-2); }
-  ul.facts li { margin: 6px 0; }
-  ul.facts strong { color: var(--text); }
-  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
-  .strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
-  .strip figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 6px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+  a { color: var(--blue-t); text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; font-size: 15px; }
+  header a { display: inline-flex; align-items: center; min-height: 44px; color: var(--text); text-decoration: none; font-weight: 500; }
+  header a:hover { color: var(--text-2); }
+  .lang button { min-height: 36px; padding: 0 16px; background: var(--card-2); border: 1px solid var(--line); color: var(--text); border-radius: 999px; font: 500 14px var(--font); cursor: pointer; }
+  .lang button:hover { border-color: var(--line-2); }
+  .hero { padding: 40px 0 8px; }
+  h1 { font-weight: 400; font-size: clamp(2.625rem, 1.4rem + 5.4vw, 4.75rem); line-height: 1.02; letter-spacing: -0.015em; text-transform: uppercase; margin: 0 0 20px; overflow-wrap: break-word; }
+  .lead { font-size: clamp(1.0625rem, 1rem + .4vw, 1.25rem); line-height: 1.55; color: var(--text-2); margin: 0; max-width: 36em; }
+  h2 { font-weight: 400; font-size: clamp(1.75rem, 1.3rem + 2vw, 2.75rem); line-height: 1.08; letter-spacing: -0.01em; text-transform: uppercase; margin: 72px 0 24px; overflow-wrap: break-word; }
+  .logo { width: 104px; height: 104px; border-radius: 24px; background: var(--card); display: grid; place-items: center; margin-bottom: 32px; }
+  .logo svg { width: 68px; height: 68px; }
+  .logo .l { stroke: var(--text); } .logo .g { fill: var(--text); } .logo .t { fill: var(--card); stroke: var(--text); }
+  .badge { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 500; line-height: 1.4; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); background: var(--card); border-radius: 999px; padding: 6px 14px; margin-bottom: 20px; }
+  .badge::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border-radius: 24px; padding: 28px 24px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .card h3 { margin: 0; font-size: 21px; font-weight: 500; line-height: 1.25; }
+  .card p { margin: 0; color: var(--text-2); font-size: 16px; }
+  .num { font-size: 56px; font-weight: 400; letter-spacing: -0.02em; line-height: 1; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+  .faq { border-top: 1px solid var(--line); }
+  .faq details { border-bottom: 1px solid var(--line); }
+  .faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 22px 0; font-size: 19px; font-weight: 500; line-height: 1.3; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: ""; flex: none; width: 16px; height: 16px; transition: transform .2s ease;
+    background: linear-gradient(var(--text-2), var(--text-2)) center / 100% 1.5px no-repeat, linear-gradient(var(--text-2), var(--text-2)) center / 1.5px 100% no-repeat; }
+  .faq details[open] > summary::after { transform: rotate(45deg); }
+  .faq details > p { margin: 0 0 22px; color: var(--text-2); max-width: 40em; }
+  .faq details > p strong { color: var(--text); font-weight: 500; }
+  code { font: .8em var(--mono); background: var(--card-2); border-radius: 6px; padding: 2px 6px; white-space: nowrap; }
+  .strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; }
+  .strip figure { margin: 0; background: var(--card); border-radius: 20px; padding: 20px 6px 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
   .strip svg { width: 40px; height: 40px; color: var(--text); }
-  .strip figcaption { font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text-2); text-align: center; overflow-wrap: anywhere; }
-  .table { width: 100%; border-collapse: collapse; font-size: 15px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
-  .table th, .table td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  .table th { font-size: 13px; color: var(--text-2); font-weight: 600; }
+  .strip figcaption { font: 11px var(--mono); color: var(--text-2); text-align: center; overflow-wrap: anywhere; }
+  .scroll { overflow-x: auto; margin-top: 32px; background: var(--card); border-radius: 24px; padding: 6px 24px; }
+  .table { width: 100%; border-collapse: collapse; font-size: 16px; }
+  .table th, .table td { text-align: left; padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .table th { font-size: 12.5px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); }
   .table tr:last-child td { border-bottom: 0; }
-  .table td.n { white-space: nowrap; font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; }
-  .scroll { overflow-x: auto; }
-  .proj { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-  .proj a { color: var(--text); text-decoration: none; font-weight: 600; }
+  .table td.n { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--text-2); }
+  .proj { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .proj .card { gap: 6px; padding: 22px 24px; }
+  .proj a { color: var(--text); text-decoration: none; font-size: 19px; font-weight: 500; line-height: 1.3; }
   .proj a:hover { text-decoration: underline; }
-  .proj .card { gap: 4px; padding: 16px; }
-  .proj .meta { font-size: 13px; color: var(--text-2); }
-  footer { margin: 64px 0 32px; font-size: 13px; color: var(--text-2); }
+  .proj .meta { font-size: 13.5px; color: var(--text-2); }
   footer p { margin: 0 0 10px; }
-  [data-l="fr"] { display: none; }
-  html[lang="fr"] [data-l="en"] { display: none; }
-  html[lang="fr"] [data-l="fr"] { display: revert; }
-  html[lang="fr"] .badge[data-l="fr"] { display: inline-block; }
-  @media (max-width: 640px) { .hero { grid-template-columns: 1fr; justify-items: start; } h1 { font-size: 34px; } .logo { width: 140px; height: 140px; } .logo img { width: 96px; height: 96px; } .table th, .table td { padding: 8px 10px; } }
+  footer { margin: 96px 0 40px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 14px; color: var(--text-2); }
+  html:not([lang="fr"]) [data-l="fr"], html[lang="fr"] [data-l="en"] { display: none !important; }
+  @media (max-width: 640px) { h2 { margin-top: 56px; } footer { margin-top: 72px; } .scroll { padding: 4px 18px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
@@ -67,7 +84,17 @@
   </header>
 
   <section class="hero">
-    <div class="logo"><img id="logo" src="logo.svg" alt="Open Source Iconography logo: four icon tiles (star, heart, crown, lightning) linked to an eye" data-alt-fr="Logo d'Open Source Iconography : quatre tuiles d'icônes (étoile, cœur, couronne, éclair) reliées à un œil"></div>
+    <div class="logo"><svg id="logo" viewBox="0 0 120 120" role="img" aria-label="Open Source Iconography logo: four icon tiles (star, heart, crown, lightning) linked to an eye" data-alt-fr="Logo d'Open Source Iconography : quatre tuiles d'icônes (étoile, cœur, couronne, éclair) reliées à un œil">
+        <path class="l" stroke-width="3" stroke-linecap="round" fill="none" d="M60 60 L28 28 M60 60 L92 28 M60 60 L28 92 M60 60 L92 92 M28 28 L92 28 M28 92 L92 92 M28 28 L28 92"/>
+        <rect class="t" x="13" y="13" width="30" height="30" rx="8" stroke-width="3"/><rect class="t" x="77" y="13" width="30" height="30" rx="8" stroke-width="3"/>
+        <rect class="t" x="13" y="77" width="30" height="30" rx="8" stroke-width="3"/><rect class="t" x="77" y="77" width="30" height="30" rx="8" stroke-width="3"/>
+        <polygon class="g" points="28.0,18.0 30.5,24.5 37.5,24.9 32.1,29.3 33.9,36.1 28.0,32.3 22.1,36.1 23.9,29.3 18.5,24.9 25.5,24.5"/>
+        <path class="g" d="M92 37 C84 31 82.5 27.5 82.5 25 A4.8 4.8 0 0 1 92 23.6 A4.8 4.8 0 0 1 101.5 25 C101.5 27.5 100 31 92 37 Z"/>
+        <path class="g" d="M19.5 99 L21 86 L25 91 L28 84 L31 91 L35 86 L36.5 99 Z"/>
+        <path class="g" d="M95 83 L86 94 L91.5 94 L89 101 L98 90 L92.5 90 Z"/>
+        <path class="t" stroke-width="3.5" stroke-linejoin="round" d="M41 60 C47 49 53.5 45 60 45 C66.5 45 73 49 79 60 C73 71 66.5 75 60 75 C53.5 75 47 71 41 60 Z"/>
+        <circle class="g" cx="60" cy="60" r="6.5"/>
+      </svg></div>
     <div>
       <span class="badge" data-l="en">Working build · November 2026</span>
       <span class="badge" data-l="fr">Version fonctionnelle · novembre 2026</span>
@@ -116,30 +143,30 @@
   </div>
 
   <h2 data-l="en">The library</h2><h2 data-l="fr">La bibliothèque</h2>
-  <ul class="facts" data-l="en">
-    <li><strong>Every icon, one format.</strong> Lucide, Phosphor (all six weights), Tabler (outline and filled) and Material Design Icons come straight from their own repositories with their tags and categories; the other sets come from Iconify's collection. Each icon gets an Iconify-style id such as <code>mdi:anchor</code> or <code>ph:acorn-bold</code>.</li>
-    <li><strong>Search everything offline.</strong> A single page finds any icon by name, tag or set and filters by license, colour, style and animation, straight from the files on the disk.</li>
-    <li><strong>Licenses checked.</strong> Every set's license is sorted into plain groups (free with no credit needed, credit the author, share-alike, non-commercial only, check the license). 18 labels from the upstream catalogue were corrected after reading each project's own license, and brand logos are marked as trademarks of their owners.</li>
-  </ul>
-  <ul class="facts" data-l="fr">
-    <li><strong>Chaque icône, un seul format.</strong> Lucide, Phosphor (ses six graisses), Tabler (contour et plein) et Material Design Icons viennent directement de leurs dépôts avec leurs mots-clés et catégories ; les autres jeux viennent de la collection Iconify. Chaque icône reçoit un identifiant au format Iconify, comme <code>mdi:anchor</code> ou <code>ph:acorn-bold</code>.</li>
-    <li><strong>Tout chercher hors ligne.</strong> Une seule page retrouve n'importe quelle icône par nom, mot-clé ou jeu, et filtre par licence, couleur, style et animation, directement depuis les fichiers du disque.</li>
-    <li><strong>Licences vérifiées.</strong> La licence de chaque jeu est rangée en groupes simples (libre sans mention, mention de l'auteur, partage à l'identique, usage non commercial, licence à vérifier). 18 indications du catalogue d'origine ont été corrigées après lecture de la licence de chaque projet, et les logos de marques sont signalés comme marques déposées.</li>
-  </ul>
+  <div class="faq" data-l="en">
+    <details><summary>Every icon, one format.</summary><p>Lucide, Phosphor (all six weights), Tabler (outline and filled) and Material Design Icons come straight from their own repositories with their tags and categories; the other sets come from Iconify's collection. Each icon gets an Iconify-style id such as <code>mdi:anchor</code> or <code>ph:acorn-bold</code>.</p></details>
+    <details><summary>Search everything offline.</summary><p>A single page finds any icon by name, tag or set and filters by license, colour, style and animation, straight from the files on the disk.</p></details>
+    <details><summary>Licenses checked.</summary><p>Every set's license is sorted into plain groups (free with no credit needed, credit the author, share-alike, non-commercial only, check the license). 18 labels from the upstream catalogue were corrected after reading each project's own license, and brand logos are marked as trademarks of their owners.</p></details>
+  </div>
+  <div class="faq" data-l="fr">
+    <details><summary>Chaque icône, un seul format.</summary><p>Lucide, Phosphor (ses six graisses), Tabler (contour et plein) et Material Design Icons viennent directement de leurs dépôts avec leurs mots-clés et catégories ; les autres jeux viennent de la collection Iconify. Chaque icône reçoit un identifiant au format Iconify, comme <code>mdi:anchor</code> ou <code>ph:acorn-bold</code>.</p></details>
+    <details><summary>Tout chercher hors ligne.</summary><p>Une seule page retrouve n'importe quelle icône par nom, mot-clé ou jeu, et filtre par licence, couleur, style et animation, directement depuis les fichiers du disque.</p></details>
+    <details><summary>Licences vérifiées.</summary><p>La licence de chaque jeu est rangée en groupes simples (libre sans mention, mention de l'auteur, partage à l'identique, usage non commercial, licence à vérifier). 18 indications du catalogue d'origine ont été corrigées après lecture de la licence de chaque projet, et les logos de marques sont signalés comme marques déposées.</p></details>
+  </div>
 
   <h2 data-l="en">The graph</h2><h2 data-l="fr">Le graphe</h2>
-  <ul class="facts" data-l="en">
-    <li><strong>Built with graphify.</strong> Projects, icon sets, licenses, makers, set categories, icon topics and the icon concepts that many sets share, grouped into communities.</li>
-    <li><strong>The art-history bridge.</strong> Where the same word exists, a shared icon concept is matched to its notation in Iconclass, the classification used by museums to describe what images show, and to its term in the Chinese Iconography Thesaurus, with their parent classes: 995 concepts in Iconclass, 530 in the thesaurus.</li>
-    <li><strong>Real code links.</strong> Found in the projects' own code: AIKON uses Mirador; Mirador uses OpenSeadragon; Mirador draws its icons with Google Material Icons; Panoptic draws its icons with Bootstrap Icons.</li>
-    <li><strong>Alternatives.</strong> Icon sets from different makers that draw the same concepts are linked as similar.</li>
-  </ul>
-  <ul class="facts" data-l="fr">
-    <li><strong>Construit avec graphify.</strong> Projets, jeux d'icônes, licences, auteurs, catégories, thèmes et les concepts d'icônes que beaucoup de jeux partagent, regroupés en communautés.</li>
-    <li><strong>Le pont vers l'histoire de l'art.</strong> Quand le même mot existe, un concept d'icône partagé est relié à sa notation Iconclass, la classification qu'utilisent les musées pour décrire ce que montrent les images, et à son terme dans le thésaurus d'iconographie chinoise, avec leurs classes parentes : 995 concepts dans Iconclass, 530 dans le thésaurus.</li>
-    <li><strong>De vrais liens dans le code.</strong> Trouvés dans le code des projets : AIKON utilise Mirador ; Mirador utilise OpenSeadragon ; Mirador dessine ses icônes avec Google Material Icons ; Panoptic dessine ses icônes avec Bootstrap Icons.</li>
-    <li><strong>Alternatives.</strong> Les jeux d'auteurs différents qui dessinent les mêmes concepts sont reliés comme similaires.</li>
-  </ul>
+  <div class="faq" data-l="en">
+    <details><summary>Built with graphify.</summary><p>Projects, icon sets, licenses, makers, set categories, icon topics and the icon concepts that many sets share, grouped into communities.</p></details>
+    <details><summary>The art-history bridge.</summary><p>Where the same word exists, a shared icon concept is matched to its notation in Iconclass, the classification used by museums to describe what images show, and to its term in the Chinese Iconography Thesaurus, with their parent classes: 995 concepts in Iconclass, 530 in the thesaurus.</p></details>
+    <details><summary>Real code links.</summary><p>Found in the projects' own code: AIKON uses Mirador; Mirador uses OpenSeadragon; Mirador draws its icons with Google Material Icons; Panoptic draws its icons with Bootstrap Icons.</p></details>
+    <details><summary>Alternatives.</summary><p>Icon sets from different makers that draw the same concepts are linked as similar.</p></details>
+  </div>
+  <div class="faq" data-l="fr">
+    <details><summary>Construit avec graphify.</summary><p>Projets, jeux d'icônes, licences, auteurs, catégories, thèmes et les concepts d'icônes que beaucoup de jeux partagent, regroupés en communautés.</p></details>
+    <details><summary>Le pont vers l'histoire de l'art.</summary><p>Quand le même mot existe, un concept d'icône partagé est relié à sa notation Iconclass, la classification qu'utilisent les musées pour décrire ce que montrent les images, et à son terme dans le thésaurus d'iconographie chinoise, avec leurs classes parentes : 995 concepts dans Iconclass, 530 dans le thésaurus.</p></details>
+    <details><summary>De vrais liens dans le code.</summary><p>Trouvés dans le code des projets : AIKON utilise Mirador ; Mirador utilise OpenSeadragon ; Mirador dessine ses icônes avec Google Material Icons ; Panoptic dessine ses icônes avec Bootstrap Icons.</p></details>
+    <details><summary>Alternatives.</summary><p>Les jeux d'auteurs différents qui dessinent les mêmes concepts sont reliés comme similaires.</p></details>
+  </div>
 
   <div class="scroll">
   <table class="table">
@@ -190,12 +217,12 @@
     var saved = null; try { saved = localStorage.getItem('iconography-lang'); } catch (e) {}
     var lang = saved || (/^fr/i.test(navigator.language) ? 'fr' : 'en');
     var logo = document.getElementById('logo'), strip = document.getElementById('strip');
-    var text = { en: { alt: logo.alt, strip: strip.getAttribute('aria-label') },
+    var text = { en: { alt: logo.getAttribute('aria-label'), strip: strip.getAttribute('aria-label') },
                  fr: { alt: logo.getAttribute('data-alt-fr'), strip: strip.getAttribute('data-label-fr') } };
     function set(l) {
       root.lang = l; btn.textContent = l === 'fr' ? 'EN' : 'FR';
       btn.setAttribute('aria-label', l === 'fr' ? 'EN: switch to English / passer en anglais' : 'FR: passer en français / switch to French');
-      logo.alt = text[l].alt; strip.setAttribute('aria-label', text[l].strip);
+      logo.setAttribute('aria-label', text[l].alt); strip.setAttribute('aria-label', text[l].strip);
     }
     set(lang);
     btn.addEventListener('click', function () { lang = lang === 'fr' ? 'en' : 'fr'; set(lang); try { localStorage.setItem('iconography-lang', lang); } catch (e) {} });

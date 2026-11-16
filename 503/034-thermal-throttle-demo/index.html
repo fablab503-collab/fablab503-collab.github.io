@@ -6,46 +6,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/034-thermal-throttle-demo/">
   <meta name="description" content="Demonstrates how device performance degrades under sustained load with temperature thresholds.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-      --temp-high: #ff4d4d;
-      --temp-normal: #4d94ff;
-      --temp-low: #4dff88;
+      --temp-high: var(--red);
+      --temp-normal: var(--blue);
+      --temp-low: var(--green);
     }
-    
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
-    
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
     body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 1rem; }
     .container { max-width: 800px; margin: 0 auto; }
     header { text-align: center; margin-bottom: 2rem; }
     h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
     .project-link { color: var(--text); text-decoration: none; display: inline-block; margin-bottom: 1rem; }
     .project-link:hover { text-decoration: underline; }
-    .card { background-color: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
-    .temp-display { font-size: 3rem; text-align: center; margin: 1rem 0; }
+    .card { background-color: var(--card); border-radius: 24px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .temp-display { font-size: clamp(1.75rem, 9vw, 3rem); text-align: center; margin: 1rem 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .temp-bar { height: 20px; background-color: var(--line); border-radius: 10px; overflow: hidden; margin: 1rem 0; }
     .temp-fill { height: 100%; border-radius: 10px; width: 0%; transition: width 0.5s ease; }
     .controls { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin: 1rem 0; }
-    button { padding: 0.75rem 1.5rem; background-color: var(--text); color: var(--card); border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    button { padding: 0.75rem 1.5rem; background-color: var(--text); color: var(--card); border: none; border-radius: 999px; cursor: pointer; font-weight: bold; }
     button:hover { opacity: 0.9; }
     .status { text-align: center; margin: 1rem 0; font-weight: bold; }
     .info { font-size: 0.9rem; color: var(--text-2); margin-top: 1rem; }
     footer { text-align: center; margin-top: 2rem; font-size: 0.9rem; color: var(--text-2); }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -64,7 +53,7 @@
         <div class="status" id="status">Normal Performance</div>
         
         <div class="controls">
-          <button id="startBtn">Start Load</button>
+          <button id="startBtn" class="primary">Start Load</button>
           <button id="stopBtn">Stop Load</button>
           <button id="resetBtn">Reset</button>
         </div>
@@ -102,17 +91,17 @@
       
       // Update bar color based on temperature
       if (temperature > 75) {
-        tempFill.style.backgroundColor = '#ff4d4d';
+        tempFill.style.backgroundColor = 'var(--red)';
         statusDisplay.textContent = 'Critical Performance';
-        statusDisplay.style.color = '#ff4d4d';
+        statusDisplay.style.color = 'var(--red-t)';
       } else if (temperature > 65) {
-        tempFill.style.backgroundColor = '#ff9900';
+        tempFill.style.backgroundColor = 'var(--line-2)';
         statusDisplay.textContent = 'Warning Performance';
-        statusDisplay.style.color = '#ff9900';
+        statusDisplay.style.color = 'var(--text-2)';
       } else {
-        tempFill.style.backgroundColor = '#4dff88';
+        tempFill.style.backgroundColor = 'var(--green)';
         statusDisplay.textContent = 'Normal Performance';
-        statusDisplay.style.color = '#4dff88';
+        statusDisplay.style.color = 'var(--green-t)';
       }
       
       // Update bar width

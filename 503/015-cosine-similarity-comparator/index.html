@@ -6,26 +6,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Two-input vector embedding studio that computes deterministic n-gram hash embeddings for two sentences and plots their cosine similarity score on a radial gauge.">
 <link rel="canonical" href="https://dcreations.fr/503/015-cosine-similarity-comparator/">
+<script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+<link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-:root {
-  --bg: #f4f4f2;
-  --card: #fff;
-  --text: #111;
-  --text-2: #5a5a5a;
-  --line: #e2e2de;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #121212;
-    --card: #1c1c1c;
-    --text: #f2f2f2;
-    --text-2: #a8a8a8;
-    --line: #2c2c2c;
-  }
-}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family: var(--font);
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -66,8 +54,8 @@ a:hover { text-decoration: underline; }
 }
 .card {
   background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 12px;
+
+  border-radius: 24px;
   padding: 20px;
   margin-bottom: 16px;
 }
@@ -89,7 +77,7 @@ a:hover { text-decoration: underline; }
   min-height: 80px;
   padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+
   font-family: inherit;
   font-size: 15px;
   background: var(--card);
@@ -111,7 +99,7 @@ a:hover { text-decoration: underline; }
   background: var(--text);
   color: var(--bg);
   border: none;
-  border-radius: 8px;
+  border-radius: 999px;
   cursor: pointer;
   transition: opacity 0.2s;
 }
@@ -170,6 +158,7 @@ a:hover { text-decoration: underline; }
   }
 }
 </style>
+<link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
 <div class="main">
@@ -189,11 +178,11 @@ a:hover { text-decoration: underline; }
       <textarea class="textarea" id="sentenceB" placeholder="The fast brown fox leaps over the sleepy dog"></textarea>
     </div>
     
-    <button class="btn" id="computeBtn">Compute Cosine Similarity</button>
+    <button class="btn primary" id="computeBtn">Compute Cosine Similarity</button>
   </div>
 
   <div class="card">
-    <h2 class="h1" style="margin-bottom: 16px;">Similarity Score</h2>
+    <h2 class="h1" style="margin-bottom: 16px">Similarity Score</h2>
     <div class="gauge-container">
       <canvas id="gauge"></canvas>
       <div class="score-label" id="scoreLabel">
@@ -269,11 +258,12 @@ const resultText = document.getElementById('resultText');
 let currentScore = 0;
 
 function getGaugeColors() {
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
   return {
-    bgArc: isDark ? '#3c3c3c' : '#e0e0e0',
-    ticks: isDark ? '#505050' : '#b0b0b0',
-    labels: isDark ? '#808080' : '#666'
+    bgArc: isDark ? '#2a2a2a' : '#d6d6d6',
+    ticks: isDark ? '#757575' : '#7a7a7a',
+    labels: isDark ? '#a1a1a1' : '#595959',
+    arc: isDark ? '#fff' : '#000'
   };
 }
 
@@ -341,16 +331,11 @@ function drawGauge(score) {
     // Draw active arc based on score (0 to 1)
     const scoreAngle = startAngle + (endAngle - startAngle) * score;
     
-    // Gradient from green to red
-    const gradient = ctx.createLinearGradient(centerX - radius, centerY, centerX + radius, centerY);
-    gradient.addColorStop(0, '#22c55e');
-    gradient.addColorStop(0.5, '#eab308');
-    gradient.addColorStop(1, '#ef4444');
     
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, startAngle, scoreAngle);
     ctx.lineWidth = barWidth;
-    ctx.strokeStyle = gradient;
+    ctx.strokeStyle = getGaugeColors().arc;
     ctx.stroke();
   } catch (e) {
     console.error('Error drawing gauge:', e);

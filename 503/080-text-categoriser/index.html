@@ -6,29 +6,17 @@
 <title>Text Categoriser · Project 503 · D-CREATIONS</title>
 <meta name="description" content="Classify any text into predefined categories using a naive Bayes classifier trained on examples embedded in this page — fully offline, no server needed.">
 <link rel="canonical" href="https://dcreations.fr/503/080-text-categoriser/">
+<script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+<link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  :root{
-    --bg:#f4f4f2;
-    --card:#fff;
-    --text:#111;
-    --text-2:#5a5a5a;
-    --line:#e2e2de;
-  }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --bg:#121212;
-      --card:#1c1c1c;
-      --text:#f2f2f2;
-      --text-2:#a8a8a8;
-      --line:#2c2c2c;
-    }
-  }
+
   *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; }
   body{
     background:var(--bg);
     color:var(--text);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:var(--font);
     line-height:1.55;
     min-height:100vh;
     display:flex;
@@ -61,8 +49,8 @@
   }
   .card{
     background:var(--card);
-    border:1px solid var(--line);
-    border-radius:14px;
+
+    border-radius:24px;
     padding:20px;
   }
   label{
@@ -81,7 +69,6 @@
     color:var(--text);
     background:var(--bg);
     border:1px solid var(--line);
-    border-radius:10px;
   }
   textarea:focus{
     outline:2px solid var(--text-2);
@@ -98,7 +85,7 @@
     font-size:15px;
     font-weight:600;
     padding:10px 18px;
-    border-radius:10px;
+    border-radius:999px;
     border:1px solid var(--text);
     background:var(--text);
     color:var(--bg);
@@ -206,6 +193,7 @@
     h1{ font-size:22px; }
   }
 </style>
+<link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="top">
@@ -219,7 +207,7 @@
       <label for="input">Your text</label>
       <textarea id="input" placeholder="Type or paste a sentence or paragraph…"></textarea>
       <div class="actions">
-        <button id="classifyBtn" type="button">Classify</button>
+        <button id="classifyBtn" type="button" class="primary">Classify</button>
         <button id="clearBtn" type="button" class="secondary">Clear</button>
       </div>
       <div class="examples">

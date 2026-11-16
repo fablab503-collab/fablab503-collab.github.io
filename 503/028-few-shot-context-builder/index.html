@@ -6,38 +6,26 @@
   <title>Few Shot Context Builder · Project 503 · D-CREATIONS</title>
   <meta name="description" content="Drag-and-drop composer that selects the best few-shot examples from a local dataset by TF-IDF similarity to your query and assembles a ready-to-copy prompt.">
   <link rel="canonical" href="https://dcreations.fr/503/028-few-shot-context-builder/">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-      --accent: #2563eb;
-      --accent-ink: #fff;
+      --accent: var(--blue);
+      --accent-ink: #000;
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-        --accent: #60a5fa;
-        --accent-ink: #0b1220;
-      }
-    }
+
     * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 1rem;
       background: var(--bg);
       color: var(--text);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--font);
       line-height: 1.5;
       min-height: 100vh;
     }
-    a { color: var(--accent); }
+    a { color: var(--blue-t); }
     .back {
       display: inline-block;
       margin-bottom: .75rem;
@@ -53,8 +41,8 @@
     @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
     .card {
       background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 10px;
+
+      border-radius: 24px;
       padding: 1rem;
       margin-bottom: 1rem;
     }
@@ -71,7 +59,7 @@
       background: var(--bg);
       color: var(--text);
       border: 1px solid var(--line);
-      border-radius: 8px;
+
       padding: .6rem .7rem;
       font: inherit;
       font-size: .9rem;
@@ -84,12 +72,11 @@
       border: 1px solid var(--line);
       background: var(--bg);
       color: var(--text);
-      border-radius: 8px;
+      border-radius: 999px;
       padding: .45rem .8rem;
       cursor: pointer;
     }
     button:hover { border-color: var(--text-2); }
-    button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
     label.klabel { display: flex; align-items: center; gap: .5rem; font-size: .875rem; color: var(--text-2); flex: 1; min-width: 180px; }
     label.klabel input[type="range"] { flex: 1; min-width: 90px; }
     #kVal { font-variant-numeric: tabular-nums; color: var(--text); min-width: 1.2em; text-align: center; }
@@ -123,7 +110,7 @@
     li.ex.pinned { border-color: var(--accent); }
     li.ex.auto { border-style: dashed; }
     .scorebar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: .5rem; }
-    .scorebar i { display: block; height: 100%; background: var(--accent); }
+    .scorebar i { display: block; height: 100%; background: var(--accent); color: #000; }
     li.empty { color: var(--text-2); font-size: .85rem; padding: .4rem 0; }
     .hint { font-size: .78rem; color: var(--text-2); margin: 0 0 .5rem; }
     pre#promptOut {
@@ -132,7 +119,7 @@
       border-radius: 8px;
       padding: .7rem .8rem;
       font-size: .8rem;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-family: var(--mono);
       white-space: pre-wrap;
       word-break: break-word;
       max-height: 420px;
@@ -150,6 +137,7 @@
       margin-top: 1rem;
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <a class="back" href="/503/">← Project 503</a>
@@ -167,7 +155,7 @@
               <input type="range" id="k" min="0" max="8" step="1" value="4">
               <span id="kVal">4</span>
             </label>
-            <button id="autoBtn" class="primary">Auto-select best</button>
+            <button id="autoBtn" class="primary primary">Auto-select best</button>
             <button id="clearBtn">Clear pins</button>
           </div>
           <p class="status" id="status" role="status" aria-live="polite"></p>

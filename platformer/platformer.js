@@ -92,7 +92,9 @@
   //-------------------------------------------------------------------------
 
   function palette() {
-    var d = dark && dark.matches;
+    // The page theme when the page sets one (data-theme on <html>, as the 404 page does), else the device setting.
+    var t = document.documentElement.getAttribute("data-theme");
+    var d = t ? t === "dark" : !!(dark && dark.matches);
     INK = d ? '#fff' : '#000'; PAPER = d ? '#000' : '#fff';
   }
   palette();

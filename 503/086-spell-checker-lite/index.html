@@ -6,21 +6,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="https://dcreations.fr/503/086-spell-checker-lite/">
 <meta name="description" content="Spell Checker Lite flags potentially misspelled words against an embedded dictionary and suggests corrections by edit distance, fully offline in one HTML file.">
+<script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+<link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 :root{
-  --bg:#f4f4f2; --card:#fff; --text:#111; --text-2:#5a5a5a; --line:#e2e2de;
-  --flag:#b3261e; --flag-bg:#fdeceb; --accent:#111; --accent-text:#fff; --ok:#1a7f37;
+  --flag:var(--red); --flag-bg:var(--red-soft); --accent:var(--text); --accent-text:var(--bg); --ok:var(--green);
 }
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#121212; --card:#1c1c1c; --text:#f2f2f2; --text-2:#a8a8a8; --line:#2c2c2c;
-    --flag:#ff8a80; --flag-bg:#3a1d1b; --accent:#f2f2f2; --accent-text:#121212; --ok:#6fdc8c;
-  }
-}
+
 *{box-sizing:border-box}
 body{
   margin:0; background:var(--bg); color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-family:var(--font);
   line-height:1.5; padding:16px;
 }
 .back{
@@ -29,30 +26,30 @@ body{
 }
 .back:hover{color:var(--text); text-decoration:underline}
 .card{
-  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  background:var(--card); border-radius:24px;
   max-width:720px; margin:0 auto; padding:20px;
 }
 h1{font-size:22px; margin:0 0 6px}
 .sub{color:var(--text-2); font-size:14px; margin:0 0 16px}
 textarea{
   width:100%; min-height:140px; resize:vertical; padding:12px;
-  border:1px solid var(--line); border-radius:10px; background:var(--bg);
+  border:1px solid var(--line); background:var(--bg);
   color:var(--text); font:inherit; font-size:15px;
 }
 .row{display:flex; gap:8px; margin:12px 0; flex-wrap:wrap}
 button{
   border:1px solid var(--accent); background:var(--accent); color:var(--accent-text);
-  border-radius:10px; padding:9px 16px; font:inherit; font-size:14px; cursor:pointer;
+  border-radius:999px; padding:9px 16px; font:inherit; font-size:14px; cursor:pointer;
 }
 button.ghost{background:transparent; color:var(--text); border-color:var(--line)}
 button.small{padding:5px 10px; font-size:13px}
 #stats{font-size:13px; color:var(--text-2); margin:4px 0 12px}
 #output{
-  border:1px solid var(--line); border-radius:10px; padding:12px; font-size:15px;
+  border:1px solid var(--line); border-radius:16px; padding:12px; font-size:15px;
   white-space:pre-wrap; word-break:break-word; min-height:48px; background:var(--bg);
 }
 .flag{
-  background:var(--flag-bg); color:var(--flag); border-bottom:2px solid var(--flag);
+  background:var(--flag-bg); color:var(--text); border-bottom:2px solid var(--flag);
   cursor:pointer; border-radius:3px; padding:0 1px;
 }
 #panel{
@@ -69,7 +66,7 @@ summary{cursor:pointer; color:var(--text)}
 .dict-row{display:flex; gap:6px; margin:10px 0; flex-wrap:wrap}
 .dict-row input{
   flex:1; min-width:140px; padding:8px 10px; border:1px solid var(--line);
-  border-radius:8px; background:var(--bg); color:var(--text); font:inherit; font-size:14px;
+   background:var(--bg); color:var(--text); font:inherit; font-size:14px;
 }
 #custom-list{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
 #custom-list span{
@@ -80,6 +77,7 @@ footer{
   text-align:center; color:var(--text-2); font-size:13px; margin:22px 0 8px;
 }
 </style>
+<link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
 <a class="back" href="/503/">← Project 503</a>
@@ -88,7 +86,7 @@ footer{
   <p class="sub">Type or paste text below. Words that are not in the embedded dictionary are flagged, and corrections are suggested by edit distance. Everything runs offline in this page.</p>
   <textarea id="input" placeholder="Start typing here…" spellcheck="false"></textarea>
   <div class="row">
-    <button id="check">Check spelling</button>
+    <button id="check" class="primary">Check spelling</button>
     <button id="clear" class="ghost">Clear</button>
   </div>
   <p id="stats"></p>
@@ -220,7 +218,7 @@ function runCheck(){
   var total = text.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g) || [];
   stats.textContent = total.length + " words checked · " + flagged + " flagged" +
     (flagged ? " · click a flagged word for suggestions" : " · no problems found");
-  stats.style.color = flagged ? "var(--flag)" : "var(--ok)";
+  stats.style.color = flagged ? "var(--red-t)" : "var(--green-t)";
 }
 
 output.addEventListener("click", function(ev){

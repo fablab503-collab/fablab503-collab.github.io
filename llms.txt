@@ -1,0 +1,39 @@
+# D-CREATIONS
+
+> D-CREATIONS is Daniel Madac's studio in Montpellier, France: iOS and Mac apps, hardware prototypes, AI automation, websites and photo.
+
+## Main pages
+- [Home](https://dcreations.fr/en/)
+- [Projects](https://dcreations.fr/en/projects/)
+- [Pricing](https://dcreations.fr/en/pricing/)
+- [About](https://dcreations.fr/en/about/)
+- [Contact](https://dcreations.fr/en/contact/)
+- [Library](https://dcreations.fr/en/library/)
+- [French version](https://dcreations.fr/fr/)
+
+## Projects
+- [My AI team](https://dcreations.fr/en/projects/ai-team/): My AI team: A WhatsApp agent that takes a task, plans it and hands it to several coding agents, with usage limits, reviews and my approval before anything…
+- [AI engineering toolkit](https://dcreations.fr/en/projects/ai-toolkit/): AI engineering toolkit: A library of 2,400+ procedural skills that AI agents search instead of loading, an MCP server to serve it, 18 Claude Code plugins, and…
+- [Atlas Terminal](https://dcreations.fr/en/projects/atlas-terminal/): Atlas Terminal: A Mac terminal with an iPhone remote: run and watch your commands from anywhere.
+- [Bouclier](https://dcreations.fr/en/projects/bouclier/): Bouclier: Ad, tracker and malware blocker for Safari (Mac, iPhone, iPad), Chrome, Edge, Firefox and Android.
+- [CineBuddy](https://dcreations.fr/en/projects/cinebuddy/): CineBuddy: Find a verified adult to go to the cinema with, in France.
+- [Cinema 101](https://dcreations.fr/en/projects/cinema-101/): Cinema 101: A colour grading app for iPhone, iPad and Mac.
+- [daniel-brain](https://dcreations.fr/en/projects/daniel-brain/): daniel-brain: 12 open-source Claude Code skills: the working methods behind these projects.
+- [DotWorld](https://dcreations.fr/en/projects/dotworld/): DotWorld: The world drawn entirely as dots on a globe, built for OLED screens, with daily news per country.
+- [Element 0](https://dcreations.fr/en/projects/element0/): Element 0: A 56 mm e-ink companion with a living face and a voice: press the button, ask, and the iPhone app gets the answer from Claude.
+- [Prototypes from the FabLab](https://dcreations.fr/en/projects/fablab-case/): Prototypes from the FabLab: Fire-retardant museum models in PETG and carbon fibre, eyewear parts, laser-cut boards and aluminium panels for start-ups and…
+- [Majordome](https://dcreations.fr/en/projects/majordome/): Majordome: A private AI assistant on the iPhone: capture tickets, letters and voice notes, nothing leaves the phone.
+- [MCP API Atlas](https://dcreations.fr/en/projects/mcp-api-atlas/): MCP API Atlas: One map of the top 1,000 open-source MCP servers and 3,790 free APIs with every link between them, and a Rust MCP server that lets AI…
+- [Open Source Iconography](https://dcreations.fr/en/projects/open-source-iconography/): Open Source Iconography: 474,699 icons from 280 sets, nearly all under open licenses, in one offline library with their licenses checked, and a knowledge…
+- [Phoenix Display](https://dcreations.fr/en/projects/phoenix/): Phoenix Display: Turn another Mac into a second 5K screen over HEVC, mirror or extend.
+- [Project 503](https://dcreations.fr/en/projects/project-503/): Project 503: 503 projects before 5 March 2027, built and automated step by step toward local AI on every device and agents you approve from your phone with…
+- [QuickTime Play](https://dcreations.fr/en/projects/quicktime-play/): QuickTime Play: A video player app for the Mac.
+- [Toulouse Marathon](https://dcreations.fr/en/projects/toulouse-marathon/): Toulouse Marathon: Running Position #2 (Relay Leg 2: km 5.70 → 15.28, 9.58 km from Île du Ramier to Prairie des Filtres via Oncopole) in the Toulouse…
+- [VeloTrack](https://dcreations.fr/en/projects/velotrack/): VeloTrack: Offline bike computer for Android and Wear OS: maps on the phone, rides without signal, GPX export.
+- [Local video AI toolkit](https://dcreations.fr/en/projects/video-ai-toolkit/): Local video AI toolkit: Video tools powered by AI models that run locally on the Mac, nothing sent online.
+- [Visualiser](https://dcreations.fr/en/projects/visualiser/): Visualiser: Paste a GitHub link and see the project running in the browser, with its files, code and README, without downloading or installing anything.
+- [voice ai](https://dcreations.fr/en/projects/voice-ai/): voice ai: Voice translation into more than 195 languages that keeps your real voice, with the same tone and the same words: your own voice, made polyglot.
+- [YouTube Zeus](https://dcreations.fr/en/projects/zeus/): YouTube Zeus: Turns YouTube videos and channels into organised Markdown notes, with local AI summaries and an MCP server.
+
+## Other
+- [Sitemap](https://dcreations.fr/sitemap.xml)

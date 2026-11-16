@@ -6,42 +6,28 @@
   <title>Round Robin Scheduler · Project 503 · D-CREATIONS</title>
   <meta name="description" content="Deal jobs to your devices in round-robin order and watch the schedule draw itself on a visual timeline.">
   <link rel="canonical" href="https://dcreations.fr/503/029-round-robin-scheduler/">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-      --accent: #2563eb;
-      --on-accent: #111;
-      --j1: #f4c95d; --j2: #8ecae6; --j3: #a8dfa0; --j4: #f4a261;
-      --j5: #cdb4f6; --j6: #f7a8b8; --j7: #8fd8c8; --j8: #d9d9d3;
+      --accent: var(--blue);
+      --on-accent: #000;
+      --j1: var(--blue); --j2: var(--green); --j3: var(--red); --j4: var(--blue-2);
+      --j5: var(--green-2); --j6: var(--red-2); --j7: var(--grey-1); --j8: var(--grey-2);
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-        --accent: #60a5fa;
-        --on-accent: #f2f2f2;
-        --j1: #a07c1f; --j2: #2f6f9f; --j3: #3f7d3a; --j4: #b06a2c;
-        --j5: #7d5fb8; --j6: #b05a72; --j7: #2f8577; --j8: #4a4a44;
-      }
-    }
+
     * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 1rem;
       background: var(--bg);
       color: var(--text);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--font);
       line-height: 1.5;
       min-height: 100vh;
     }
-    a { color: var(--accent); }
+    a { color: var(--blue-t); }
     .back {
       display: inline-block;
       margin: 0.25rem 0 1rem;
@@ -55,8 +41,8 @@
     .lede { color: var(--text-2); margin: 0 0 1rem; max-width: 62ch; }
     .card {
       background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 12px;
+
+      border-radius: 24px;
       padding: 1rem;
       margin-bottom: 1rem;
     }
@@ -77,7 +63,7 @@
       color: var(--text);
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 8px;
+
       padding: 0.45rem 0.6rem;
     }
     input[type="text"] { flex: 1 1 110px; min-width: 0; }
@@ -154,6 +140,7 @@
       margin: 0 auto;
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <a class="back" href="/503/">← Project 503</a>

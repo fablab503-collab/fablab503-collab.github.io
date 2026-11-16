@@ -6,24 +6,11 @@
   <title>Fairness Scheduler · Project 503 · D-CREATIONS</title>
   <meta name="description" content="A fairness scheduler that ensures all users/devices get fair access to resources over time with weighted fairness.">
   <link rel="canonical" href="https://dcreations.fr/503/057-fairness-scheduler/">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
+
     body {
       margin: 0;
       padding: 20px;
@@ -49,10 +36,10 @@
     }
     .card {
       background-color: var(--card);
-      border: 1px solid var(--line);
+
       padding: 20px;
       margin-bottom: 20px;
-      border-radius: 4px;
+      border-radius: 24px;
     }
     h1, h2 {
       margin-top: 0;
@@ -61,7 +48,7 @@
       padding: 8px 12px;
       font-family: var(--font);
       border: 1px solid var(--line);
-      border-radius: 4px;
+
       background-color: var(--card);
       color: var(--text);
     }
@@ -90,7 +77,7 @@
     }
     .progress-fill {
       height: 100%;
-      background-color: #4CAF50;
+      background-color: var(--green); color: #000;
       width: 0%;
       transition: width 0.3s;
     }
@@ -103,6 +90,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -118,7 +106,7 @@
         <h2>Add User/Device</h2>
         <input type="text" id="userInput" placeholder="User or device name">
         <input type="number" id="weightInput" placeholder="Weight (1-10)" min="1" max="10" value="1">
-        <button id="addBtn">Add</button>
+        <button id="addBtn" class="primary">Add</button>
       </div>
 
       <div class="card">

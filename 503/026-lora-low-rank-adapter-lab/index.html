@@ -6,34 +6,24 @@
   <meta name="description" content="Adjust the LoRA rank r from 1 to 16 and see how the low-rank matrices A and B cut the trainable parameter count compared with full fine-tuning of a whole weight matrix.">
   <link rel="canonical" href="https://dcreations.fr/503/026-lora-low-rank-adapter-lab/">
   <title>Lora Low Rank Adapter Lab · Project 503 · D-CREATIONS</title>
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-      --accent: #2456d6;
-      --pos: #d64545;
-      --neg: #3b6fd4;
-      --mid: #ffffff;
+      --accent: var(--blue);
+      --pos: var(--red);
+      --neg: var(--blue);
+      --mid: var(--card);
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-        --accent: #8ab0ff;
-        --pos: #ff8585;
-        --neg: #6f9bff;
-        --mid: #1c1c1c;
+
+      :root:not([data-theme="light"]) {
+        --mid: var(--card-2);
       }
-    }
+
     * { box-sizing: border-box; }
     body {
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--font);
       background: var(--bg);
       color: var(--text);
       margin: 0;
@@ -46,7 +36,7 @@
     .toplink:hover, .toplink:focus { color: var(--text); }
     h1 { font-size: clamp(22px, 5vw, 28px); line-height: 1.2; margin: 0 0 8px; }
     .lede { color: var(--text-2); margin: 0 0 18px; max-width: 65ch; }
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 0 0 16px; }
+    .card { background: var(--card); border-radius: 24px; padding: 16px; margin: 0 0 16px; }
     .card h2 { font-size: 13px; margin: 0 0 12px; color: var(--text-2); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
     .controls { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; }
     .field { display: flex; flex-direction: column; gap: 6px; flex: 1 1 220px; }
@@ -56,8 +46,8 @@
     .rank-line output { font-size: 20px; font-weight: 700; min-width: 62px; text-align: right; font-variant-numeric: tabular-nums; }
     .rank-scale { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-2); }
     select, button { font: inherit; }
-    select { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
-    .btn { background: var(--text); color: var(--bg); border: 1px solid var(--text); border-radius: 9px; padding: 9px 14px; cursor: pointer; }
+    select { background: var(--card); color: var(--text); border: 1px solid var(--line); padding: 8px 10px; }
+    .btn { background: var(--text); color: var(--bg); border: 1px solid var(--text); border-radius: 999px; padding: 9px 14px; cursor: pointer; }
     .btn:hover { opacity: .85; }
     .formula { font-size: 13px; color: var(--text-2); margin: 14px 0 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
@@ -71,7 +61,7 @@
     .bar-track { background: var(--line); border-radius: 6px; height: 16px; overflow: hidden; }
     .bar-fill { height: 100%; width: 0; border-radius: 6px; }
     .bar-fill.full { background: var(--text-2); }
-    .bar-fill.lora { background: var(--accent); }
+    .bar-fill.lora { background: var(--accent); color: #000; }
     .bar-val { text-align: right; font-variant-numeric: tabular-nums; }
     .bar-note { font-size: 12px; color: var(--text-2); margin: 8px 0 0; }
     .mats { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
@@ -82,6 +72,7 @@
     .note { font-size: 12px; color: var(--text-2); }
     footer { color: var(--text-2); font-size: 13px; text-align: center; margin-top: 22px; }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="wrap">

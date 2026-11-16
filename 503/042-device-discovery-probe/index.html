@@ -6,37 +6,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/042-device-discovery-probe/">
   <meta name="description" content="Simulate discovering new devices on a local network with ping and capability checks.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
       --shadow: rgba(0,0,0,.05);
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
     body { background: var(--bg); color: var(--text); line-height: 1.5; padding: 1rem; }
     .container { max-width: 800px; margin: 0 auto; }
     header { margin-bottom: 2rem; }
     a { color: var(--text); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px var(--shadow); }
+    .card { background: var(--card); border-radius: 24px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px var(--shadow); }
     h1 { font-size: 1.5rem; margin-bottom: 1rem; }
     .status { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem; }
-    .success { background: #d4edda; color: #155724; }
-    .error { background: #f8d7da; color: #721c24; }
-    .warning { background: #fff3cd; color: #856404; }
-    .btn { background: var(--text); color: var(--card); border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+    .success { background: var(--green-soft); color: var(--text); }
+    .error { background: var(--red-soft); color: var(--text); }
+    .warning { background: var(--mark); color: var(--text); }
+    .btn { background: var(--text); color: var(--card); border: none; padding: 0.5rem 1rem; border-radius: 999px; cursor: pointer; font-size: 1rem; }
     .btn:hover { opacity: 0.9; }
     .device-list { margin-top: 1rem; }
     .device-item { padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
@@ -45,9 +35,10 @@
     .device-ip { color: var(--text-2); font-size: 0.875rem; }
     .capabilities { margin-top: 0.5rem; }
     .capability { display: inline-block; background: var(--line); padding: 0.25rem 0.5rem; border-radius: 4px; margin-right: 0.5rem; font-size: 0.75rem; }
-    .log { font-family: monospace; background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 1rem; margin-top: 1rem; height: 200px; overflow-y: auto; }
+    .log { font-family: var(--mono); background: var(--card); border-radius: 24px; padding: 1rem; margin-top: 1rem; height: 200px; overflow-y: auto; }
     footer { text-align: center; margin-top: 2rem; color: var(--text-2); font-size: 0.875rem; }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -59,7 +50,7 @@
       <div class="card">
         <h1>Device Discovery Probe</h1>
         <p>Simulate discovering new devices on a local network with ping and capability checks.</p>
-        <button id="scanBtn" class="btn">Scan Network</button>
+        <button id="scanBtn" class="btn primary">Scan Network</button>
         <div id="log" class="log"></div>
       </div>
 

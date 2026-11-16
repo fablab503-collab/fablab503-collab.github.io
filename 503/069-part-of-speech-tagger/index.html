@@ -6,24 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/069-part-of-speech-tagger/">
   <meta name="description" content="Tag every word with a POS label using a rule-based tagger.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
     body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 1rem; }
     .container { max-width: 800px; margin: 0 auto; }
     header { text-align: center; margin-bottom: 2rem; }
@@ -35,17 +23,18 @@
     .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
     .tag { padding: 0.25rem 0.5rem; background-color: var(--card); border: 1px solid var(--line); }
     footer { text-align: center; margin-top: 3rem; color: var(--text-2); font-size: 0.9rem; }
-    .pos-noun { background-color: #e3f2fd; }
-    .pos-verb { background-color: #f3e5f5; }
-    .pos-adjective { background-color: #e8f5e9; }
-    .pos-adverb { background-color: #fff3e0; }
-    .pos-pronoun { background-color: #fce4ec; }
-    .pos-preposition { background-color: #f1f8e9; }
-    .pos-conjunction { background-color: #fff8e1; }
-    .pos-determiner { background-color: #e0f2f1; }
-    .pos-article { background-color: #f3e5f5; }
-    .pos-punctuation { background-color: #ffebee; }
+    .pos-noun { background-color: var(--blue-soft); }
+    .pos-verb { background-color: var(--red-soft); }
+    .pos-adjective { background-color: var(--green-soft); }
+    .pos-adverb { background-color: var(--mark); }
+    .pos-pronoun { background-color: var(--red-soft); }
+    .pos-preposition { background-color: var(--green-soft); }
+    .pos-conjunction { background-color: var(--mark); }
+    .pos-determiner { background-color: var(--blue-soft); }
+    .pos-article { background-color: var(--red-soft); }
+    .pos-punctuation { background-color: var(--red-soft); }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -59,7 +48,7 @@
       
       <textarea id="inputText" placeholder="Enter your text here...">The quick brown fox jumps over the lazy dog. She runs quickly through the park.</textarea>
       
-      <button id="tagButton">Tag Words</button>
+      <button id="tagButton" class="primary">Tag Words</button>
       
       <div class="tags" id="outputTags"></div>
     </main>

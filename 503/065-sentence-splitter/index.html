@@ -6,25 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/065-sentence-splitter/">
   <meta name="description" content="Break a block of text into individual sentences using a rule-based tokenizer and display them as a numbered list.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
+
     body {
-      font-family: system-ui, sans-serif;
+      font-family: var(--font);
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
@@ -48,7 +36,7 @@
       padding: 0.75rem;
       margin: 0.5rem 0;
       border: 1px solid var(--line);
-      border-radius: 4px;
+
       background-color: var(--card);
       color: var(--text);
     }
@@ -68,6 +56,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -77,7 +66,7 @@
     
     <main>
       <textarea id="input" placeholder="Enter your text here..." rows="8">This is the first sentence. Here is another one! And a third one? Yes, it's working.</textarea>
-      <button id="split">Split Sentences</button>
+      <button id="split" class="primary">Split Sentences</button>
       <ol id="output"></ol>
     </main>
     

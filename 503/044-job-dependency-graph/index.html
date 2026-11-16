@@ -6,43 +6,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/044-job-dependency-graph/">
   <meta name="description" content="Visualize job dependencies in a graph structure.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
       --border-radius: 4px;
       --padding: 16px;
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
     body { background-color: var(--bg); color: var(--text); padding: var(--padding); line-height: 1.5; }
     h1 { margin-bottom: 16px; font-size: 1.5rem; }
     .container { max-width: 800px; margin: 0 auto; }
     .graph-container { background-color: var(--card); border-radius: var(--border-radius); padding: var(--padding); margin-bottom: 24px; }
     .controls { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-    input, button { padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--border-radius); background-color: var(--card); color: var(--text); }
+    input, button { padding: 8px 12px; border: 1px solid var(--line); background-color: var(--card); color: var(--text); }
     button { cursor: pointer; }
     .graph { min-height: 300px; position: relative; }
-    .node { position: absolute; width: 120px; padding: 12px; text-align: center; background-color: var(--card); border: 1px solid var(--line); border-radius: var(--border-radius); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .node { position: absolute; width: 120px; padding: 12px; text-align: center; background-color: var(--card); border-radius: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .node-label { font-weight: bold; margin-bottom: 4px; }
     .node-deps { font-size: 0.85rem; color: var(--text-2); }
     .edge { position: absolute; background-color: var(--line); transform-origin: 0 0; }
-    .instructions { margin-top: 16px; padding: 12px; background-color: var(--card); border-radius: var(--border-radius); font-size: 0.9rem; color: var(--text-2); }
+    .instructions { margin-top: 16px; padding: 12px; background-color: var(--card); border-radius: 24px; font-size: 0.9rem; color: var(--text-2); }
     footer { text-align: center; margin-top: 32px; font-size: 0.9rem; color: var(--text-2); }
     a { color: var(--text); text-decoration: none; }
     a:hover { text-decoration: underline; }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -51,7 +42,7 @@
     <div class="graph-container">
       <div class="controls">
         <input type="text" id="jobName" placeholder="Job name">
-        <button id="addJob">Add Job</button>
+        <button id="addJob" class="primary">Add Job</button>
         <input type="text" id="depName" placeholder="Dependency job">
         <button id="addDep">Add Dependency</button>
       </div>

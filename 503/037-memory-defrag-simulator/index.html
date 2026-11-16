@@ -6,24 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="canonical" href="https://dcreations.fr/503/037-memory-defrag-simulator/">
   <meta name="description" content="Simulate memory fragmentation and defragmentation for large model loading.">
+  <script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+  (function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+  <link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root {
-      --bg: #f4f4f2;
-      --card: #fff;
-      --text: #111;
-      --text-2: #5a5a5a;
-      --line: #e2e2de;
-      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #121212;
-        --card: #1c1c1c;
-        --text: #f2f2f2;
-        --text-2: #a8a8a8;
-        --line: #2c2c2c;
-      }
-    }
+
     body {
       margin: 0;
       padding: 1rem;
@@ -49,8 +36,8 @@
     }
     .card {
       background-color: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 4px;
+
+      border-radius: 24px;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
     }
@@ -66,16 +53,16 @@
     .cell {
       aspect-ratio: 1;
       border: 1px solid var(--line);
-      background-color: #ddd;
+      background-color: var(--card-2);
     }
     .allocated {
-      background-color: #4CAF50;
+      background-color: var(--green); color: #000;
     }
     .fragmented {
-      background-color: #f44336;
+      background-color: var(--red); color: #000;
     }
     .defragmented {
-      background-color: #2196F3;
+      background-color: var(--blue); color: #000;
     }
     .controls {
       display: flex;
@@ -88,7 +75,7 @@
       background-color: var(--text);
       color: var(--card);
       border: none;
-      border-radius: 4px;
+      border-radius: 999px;
       cursor: pointer;
       font-family: var(--font);
     }
@@ -109,6 +96,7 @@
       font-size: 0.9rem;
     }
   </style>
+  <link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="container">
@@ -124,7 +112,7 @@
         <h2>Memory Layout</h2>
         <div class="memory-grid" id="memoryGrid"></div>
         <div class="controls">
-          <button id="fragmentBtn">Fragment Memory</button>
+          <button id="fragmentBtn" class="primary">Fragment Memory</button>
           <button id="defragBtn">Defragment</button>
           <button id="resetBtn">Reset</button>
         </div>

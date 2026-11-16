@@ -6,42 +6,63 @@
 <title>Kilnform &nbsp;·&nbsp; D-CREATIONS</title>
 <meta name="description" content="Kilnform: a demo shop of customizable cups and plant pots, built by one AI agent from a measured design profile of a big product website. Live demo and source.">
 <link rel="canonical" href="https://dcreations.fr/kilnform/">
+<script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+<link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  @font-face { font-family: "Overpass"; src: url("overpass.woff2") format("woff2-variations"); font-weight: 100 900; font-display: swap; }
-  :root { --bg: #ffffff; --card: #ffffff; --text: #000000; --text-2: #555555; --line: #dddddd; --accent: #000000; --accent-fg: #ffffff; }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --bg: #000000; --card: #0d0d0d; --text: #ffffff; --text-2: #aaaaaa; --line: #2a2a2a; --accent: #ffffff; --accent-fg: #000000; }
-  }
+  /* App style: black and white, a little red, blue and green. Dark by default; light is the inverse. */
+  @font-face { font-family: "Inter Tight"; src: url("/fonts/inter-tight-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+  :root { color-scheme: dark; --bg: #000; --card: #141414; --card-2: #1f1f1f; --text: #fff; --text-2: #a1a1a1; --line: #2a2a2a; --line-2: #757575;
+    --red: #ff3b30; --blue: #0a84ff; --green: #30d158; --red-t: #ff3b30; --blue-t: #0a84ff; --green-t: #30d158;
+    --font: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  :root[data-theme="light"] { color-scheme: light; --bg: #fff; --card: #ebebeb; --card-2: #e0e0e0; --text: #000; --text-2: #595959; --line: #d6d6d6; --line-2: #7a7a7a;
+    --red-t: #c2130a; --blue-t: #0058d0; --green-t: #17722f; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 "Overpass", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
-  header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 14px; }
-  header a { color: var(--text-2); text-decoration: none; }
-  header a:hover { color: var(--text); }
-  .lang button { background: none; border: 1px solid var(--line); color: var(--text-2); border-radius: 999px; padding: 4px 12px; font: inherit; cursor: pointer; }
-  .hero { padding: 32px 0 24px; }
-  h1 { font-size: 48px; line-height: 1.05; margin: 8px 0 12px; letter-spacing: -0.02em; font-weight: 800; }
-  .lead { font-size: 19px; color: var(--text-2); margin: 0; max-width: 680px; }
-  .badge { display: inline-block; font-size: 13px; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; margin-bottom: 14px; color: var(--text-2); }
-  .shot { margin: 28px 0 0; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; aspect-ratio: 16 / 10; background: var(--card); }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+  a { color: var(--blue-t); text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0; font-size: 15px; }
+  header a { display: inline-flex; align-items: center; min-height: 44px; color: var(--text); text-decoration: none; font-weight: 500; }
+  header a:hover { color: var(--text-2); }
+  .lang button { min-height: 36px; padding: 0 16px; background: var(--card-2); border: 1px solid var(--line); color: var(--text); border-radius: 999px; font: 500 14px var(--font); cursor: pointer; }
+  .lang button:hover { border-color: var(--line-2); }
+  .hero { padding: 40px 0 8px; }
+  h1 { font-weight: 400; font-size: clamp(2.625rem, 1.4rem + 5.4vw, 4.75rem); line-height: 1.02; letter-spacing: -0.015em; text-transform: uppercase; margin: 0 0 20px; overflow-wrap: break-word; }
+  .lead { font-size: clamp(1.0625rem, 1rem + .4vw, 1.25rem); line-height: 1.55; color: var(--text-2); margin: 0; max-width: 36em; }
+  h2 { font-weight: 400; font-size: clamp(1.75rem, 1.3rem + 2vw, 2.75rem); line-height: 1.08; letter-spacing: -0.01em; text-transform: uppercase; margin: 72px 0 24px; overflow-wrap: break-word; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 500; line-height: 1.4; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); background: var(--card); border-radius: 999px; padding: 6px 14px; margin-bottom: 20px; }
+  .badge::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--blue); }
+  .shot { margin: 40px 0 0; border-radius: 24px; overflow: hidden; aspect-ratio: 16 / 10; background: var(--card); }
   .shot iframe { width: 100%; height: 100%; border: 0; display: block; }
-  h2 { font-size: 22px; margin: 48px 0 16px; font-weight: 700; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-  .card h3 { margin: 0; font-size: 17px; }
-  .card p { margin: 0; color: var(--text-2); font-size: 15px; }
-  .card .foot { margin-top: auto; padding-top: 10px; font-size: 13px; color: var(--text-2); }
-  .btn { display: inline-block; align-self: flex-start; margin-top: 8px; background: var(--accent); color: var(--accent-fg); text-decoration: none; border-radius: 999px; padding: 9px 18px; font-weight: 700; font-size: 15px; }
-  .btn.ghost { background: none; color: var(--text); border: 1px solid var(--line); }
-  .btn:focus-visible, button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-  ul.facts { padding-left: 20px; color: var(--text-2); }
-  ul.facts li { margin: 6px 0; }
-  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; word-break: break-all; }
-  footer { margin: 64px 0 32px; font-size: 13px; color: var(--text-2); }
-  [data-l="fr"] { display: none; }
-  html[lang="fr"] [data-l="en"] { display: none; }
-  html[lang="fr"] [data-l="fr"] { display: revert; }
-  @media (max-width: 640px) { h1 { font-size: 36px; } .shot { aspect-ratio: 3 / 4; } }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border-radius: 24px; padding: 28px 24px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .card h3 { margin: 0; font-size: 21px; font-weight: 500; line-height: 1.25; }
+  .card p { margin: 0; color: var(--text-2); font-size: 16px; }
+  .card .foot { margin-top: auto; padding-top: 12px; font-size: 13px; color: var(--text-2); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; align-self: flex-start; min-height: 46px; margin-top: 8px; padding: 0 22px; background: var(--text); color: var(--bg); border: 1px solid var(--text); border-radius: 999px; font: 500 16px/1.2 var(--font); text-decoration: none; cursor: pointer; }
+  .btn:hover { opacity: .85; }
+  .btn.ghost { background: var(--card-2); color: var(--text); border-color: var(--line); }
+  .btn.ghost:hover { opacity: 1; border-color: var(--line-2); }
+  ul.rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  ul.rows li { padding: 18px 0; border-bottom: 1px solid var(--line); color: var(--text-2); }
+  ul.rows strong { color: var(--text); font-weight: 500; }
+  .faq { border-top: 1px solid var(--line); }
+  .faq details { border-bottom: 1px solid var(--line); }
+  .faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 22px 0; font-size: 19px; font-weight: 500; line-height: 1.3; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: ""; flex: none; width: 16px; height: 16px; transition: transform .2s ease;
+    background: linear-gradient(var(--text-2), var(--text-2)) center / 100% 1.5px no-repeat, linear-gradient(var(--text-2), var(--text-2)) center / 1.5px 100% no-repeat; }
+  .faq details[open] > summary::after { transform: rotate(45deg); }
+  .faq details > p { margin: 0 0 22px; color: var(--text-2); max-width: 40em; }
+  .faq details > p strong { color: var(--text); font-weight: 500; }
+  code { font: .8em var(--mono); background: var(--card-2); border-radius: 6px; padding: 2px 6px; overflow-wrap: anywhere; }
+  footer { margin: 96px 0 40px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 14px; color: var(--text-2); }
+  html:not([lang="fr"]) [data-l="fr"], html[lang="fr"] [data-l="en"] { display: none !important; }
+  @media (max-width: 640px) { h2 { margin-top: 56px; } footer { margin-top: 72px; } .shot { aspect-ratio: 3 / 4; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 <script src="/hit.js" defer></script>
 </head>
@@ -81,30 +102,30 @@
   </div>
 
   <h2 data-l="en">The range</h2><h2 data-l="fr">La gamme</h2>
-  <ul class="facts" data-l="en">
+  <ul class="rows" data-l="en">
     <li><strong>Pebble</strong> small espresso cup, 90 ml &nbsp;·&nbsp; <strong>Flute</strong> tall cup, 250 ml &nbsp;·&nbsp; <strong>Cairn</strong> wide bowl cup, 400 ml</li>
     <li><strong>Roam</strong> tumbler with lid, 400 ml &nbsp;·&nbsp; <strong>Hearth</strong> extra-big mug, 600 ml &nbsp;·&nbsp; <strong>Nomad</strong> travel cup, 600 ml</li>
     <li><strong>Terra Planter</strong> plant pots of 1 L, 3 L and 8 L with a drainage saucer</li>
   </ul>
-  <ul class="facts" data-l="fr">
+  <ul class="rows" data-l="fr">
     <li><strong>Pebble</strong> petite tasse à expresso, 90 ml &nbsp;·&nbsp; <strong>Flute</strong> tasse haute, 250 ml &nbsp;·&nbsp; <strong>Cairn</strong> tasse bol, 400 ml</li>
     <li><strong>Roam</strong> gobelet avec couvercle, 400 ml &nbsp;·&nbsp; <strong>Hearth</strong> très grand mug, 600 ml &nbsp;·&nbsp; <strong>Nomad</strong> tasse de voyage, 600 ml</li>
     <li><strong>Terra Planter</strong> pots pour plantes de 1 L, 3 L et 8 L avec soucoupe</li>
   </ul>
 
   <h2 data-l="en">How it was made</h2><h2 data-l="fr">Comment elle a été faite</h2>
-  <ul class="facts" data-l="en">
-    <li><strong>Measure first.</strong> D-CREATIONS measured the public pages of the 100 most-visited websites with a headless browser: type scale, colours, corner radius, layout, images, motion, mobile breakpoints. Each site became a design profile with a playful nickname.</li>
-    <li><strong>One agent, one profile.</strong> A single Google Antigravity agent (Gemini 4 Argon) read the profile nicknamed “Applodian” and built this shop from its rules: full-width alternating tiles, large tight headlines, pill buttons, a sticky buy bar, a compare grid.</li>
-    <li><strong>Original, not a copy.</strong> The style is studied; the brand, the names, the text, the drawings and the code are new. No logo, photo, font file, text or code of any other company is used.</li>
-    <li><strong>Checked.</strong> Tested at desktop and phone width: no console errors, no sideways scrolling, the configurator and bag work.</li>
-  </ul>
-  <ul class="facts" data-l="fr">
-    <li><strong>Mesurer d'abord.</strong> D-CREATIONS a mesuré les pages publiques des 100 sites les plus visités avec un navigateur automatique : échelle typographique, couleurs, arrondis, mise en page, images, animations, points de rupture mobiles. Chaque site est devenu un profil de design avec un surnom ludique.</li>
-    <li><strong>Un agent, un profil.</strong> Un seul agent Google Antigravity (Gemini 4 Argon) a lu le profil surnommé « Applodian » et a construit cette boutique avec ses règles : grandes bandes alternées, gros titres serrés, boutons en pilule, barre d'achat fixe, grille comparative.</li>
-    <li><strong>Original, pas une copie.</strong> Le style est étudié ; la marque, les noms, les textes, les dessins et le code sont nouveaux. Aucun logo, photo, fichier de police, texte ou code d'une autre entreprise n'est utilisé.</li>
-    <li><strong>Vérifiée.</strong> Testée en largeur ordinateur et téléphone : aucune erreur, pas de défilement horizontal, le configurateur et le panier fonctionnent.</li>
-  </ul>
+  <div class="faq" data-l="en">
+    <details><summary>Measure first.</summary><p>D-CREATIONS measured the public pages of the 100 most-visited websites with a headless browser: type scale, colours, corner radius, layout, images, motion, mobile breakpoints. Each site became a design profile with a playful nickname.</p></details>
+    <details><summary>One agent, one profile.</summary><p>A single Google Antigravity agent (Gemini 4 Argon) read the profile nicknamed “Applodian” and built this shop from its rules: full-width alternating tiles, large tight headlines, pill buttons, a sticky buy bar, a compare grid.</p></details>
+    <details><summary>Original, not a copy.</summary><p>The style is studied; the brand, the names, the text, the drawings and the code are new. No logo, photo, font file, text or code of any other company is used.</p></details>
+    <details><summary>Checked.</summary><p>Tested at desktop and phone width: no console errors, no sideways scrolling, the configurator and bag work.</p></details>
+  </div>
+  <div class="faq" data-l="fr">
+    <details><summary>Mesurer d'abord.</summary><p>D-CREATIONS a mesuré les pages publiques des 100 sites les plus visités avec un navigateur automatique : échelle typographique, couleurs, arrondis, mise en page, images, animations, points de rupture mobiles. Chaque site est devenu un profil de design avec un surnom ludique.</p></details>
+    <details><summary>Un agent, un profil.</summary><p>Un seul agent Google Antigravity (Gemini 4 Argon) a lu le profil surnommé « Applodian » et a construit cette boutique avec ses règles : grandes bandes alternées, gros titres serrés, boutons en pilule, barre d'achat fixe, grille comparative.</p></details>
+    <details><summary>Original, pas une copie.</summary><p>Le style est étudié ; la marque, les noms, les textes, les dessins et le code sont nouveaux. Aucun logo, photo, fichier de police, texte ou code d'une autre entreprise n'est utilisé.</p></details>
+    <details><summary>Vérifiée.</summary><p>Testée en largeur ordinateur et téléphone : aucune erreur, pas de défilement horizontal, le configurateur et le panier fonctionnent.</p></details>
+  </div>
 
   <footer>
     <span data-l="en">Kilnform is a fictional brand made for a design study by Daniel Madac, D-CREATIONS, Montpellier. It is not a real shop and is not affiliated with any company whose website was measured.</span>

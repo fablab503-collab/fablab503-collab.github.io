@@ -6,28 +6,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="https://dcreations.fr/503/091-syllable-stress-demo/">
 <meta name="description" content="A tiny offline demo that guesses the stressed syllable of an English word and draws its stress pattern.">
+<script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+<link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  :root {
-    --bg: #f4f4f2;
-    --card: #fff;
-    --text: #111;
-    --text-2: #5a5a5a;
-    --line: #e2e2de;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #121212;
-      --card: #1c1c1c;
-      --text: #f2f2f2;
-      --text-2: #a8a8a8;
-      --line: #2c2c2c;
-    }
-  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: var(--font);
     line-height: 1.5;
     padding: 16px;
     display: flex;
@@ -42,8 +30,8 @@
   p.note { color: var(--text-2); font-size: 0.95rem; margin-bottom: 20px; }
   .card {
     background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 12px;
+
+    border-radius: 24px;
     padding: 20px;
   }
   form { display: flex; gap: 8px; margin-bottom: 20px; }
@@ -53,7 +41,7 @@
     padding: 10px 12px;
     font-size: 1rem;
     border: 1px solid var(--line);
-    border-radius: 8px;
+
     background: var(--bg);
     color: var(--text);
   }
@@ -61,7 +49,7 @@
     padding: 10px 16px;
     font-size: 1rem;
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: 999px;
     background: var(--text);
     color: var(--bg);
     cursor: pointer;
@@ -96,6 +84,7 @@
     padding: 24px 0 8px;
   }
 </style>
+<link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
   <div class="top"><a href="/503/">← Project 503</a></div>
@@ -105,7 +94,7 @@
     <div class="card">
       <form id="wordForm">
         <input type="text" id="wordInput" placeholder="e.g. banana" autocomplete="off" maxlength="40">
-        <button type="submit">Show</button>
+        <button type="submit" class="primary">Show</button>
       </form>
       <div class="chips" id="chips">
         <button type="button" data-word="banana">banana</button>

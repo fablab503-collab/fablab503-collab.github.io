@@ -6,23 +6,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="canonical" href="https://dcreations.fr/503/087-abbreviation-expander/">
 <meta name="description" content="Abbreviation Expander finds common abbreviations in your text and expands them to their full forms using a built-in lookup table, fully offline in one HTML file.">
+<script>/* Same theme as the main site: black by default; light if the visitor chose light, or auto on a light device by day. */
+(function () { try { var t = localStorage.getItem('theme'), h = new Date().getHours(); if (t === 'light' || (t === 'auto' && h >= 7 && h < 22 && !matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {} })();</script>
+<link rel="preload" href="/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 :root{
-  --bg:#f4f4f2; --card:#fff; --text:#111; --text-2:#5a5a5a; --line:#e2e2de;
-  --accent:#111; --accent-text:#fff; --ok:#1a7f37;
-  --abbr:#0b5394; --abbr-bg:#e8f0fb;
+  --accent:var(--text); --accent-text:var(--bg); --ok:var(--green);
+  --abbr:var(--blue); --abbr-bg:var(--blue-soft);
 }
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#121212; --card:#1c1c1c; --text:#f2f2f2; --text-2:#a8a8a8; --line:#2c2c2c;
-    --accent:#f2f2f2; --accent-text:#121212; --ok:#6fdc8c;
-    --abbr:#8ab6f0; --abbr-bg:#22303f;
-  }
-}
+
 *{box-sizing:border-box}
 body{
   margin:0; background:var(--bg); color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-family:var(--font);
   line-height:1.5; padding:16px;
 }
 .back{
@@ -31,30 +27,30 @@ body{
 }
 .back:hover{color:var(--text); text-decoration:underline}
 .card{
-  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  background:var(--card); border-radius:24px;
   max-width:720px; margin:0 auto; padding:20px;
 }
 h1{font-size:22px; margin:0 0 6px}
 .sub{color:var(--text-2); font-size:14px; margin:0 0 16px}
 textarea{
   width:100%; min-height:140px; resize:vertical; padding:12px;
-  border:1px solid var(--line); border-radius:10px; background:var(--bg);
+  border:1px solid var(--line); background:var(--bg);
   color:var(--text); font:inherit; font-size:15px;
 }
 .row{display:flex; gap:8px; margin:12px 0; flex-wrap:wrap}
 button{
   border:1px solid var(--accent); background:var(--accent); color:var(--accent-text);
-  border-radius:10px; padding:9px 16px; font:inherit; font-size:14px; cursor:pointer;
+  border-radius:999px; padding:9px 16px; font:inherit; font-size:14px; cursor:pointer;
 }
 button.ghost{background:transparent; color:var(--text); border-color:var(--line)}
 button.small{padding:5px 10px; font-size:13px}
 #stats{font-size:13px; color:var(--text-2); margin:4px 0 12px}
 #output{
-  border:1px solid var(--line); border-radius:10px; padding:12px; font-size:15px;
+  border:1px solid var(--line); border-radius:16px; padding:12px; font-size:15px;
   white-space:pre-wrap; word-break:break-word; min-height:48px; background:var(--bg);
 }
 .abbr{
-  background:var(--abbr-bg); color:var(--abbr); border-bottom:2px solid var(--abbr);
+  background:var(--abbr-bg); color:var(--text); border-bottom:2px solid var(--abbr);
   cursor:pointer; border-radius:3px; padding:0 1px;
 }
 .abbr.open{border-bottom-style:dotted}
@@ -69,7 +65,7 @@ summary{cursor:pointer; color:var(--text)}
 .dict-row{display:flex; gap:6px; margin:10px 0; flex-wrap:wrap}
 .dict-row input{
   flex:1; min-width:140px; padding:8px 10px; border:1px solid var(--line);
-  border-radius:8px; background:var(--bg); color:var(--text); font:inherit; font-size:14px;
+   background:var(--bg); color:var(--text); font:inherit; font-size:14px;
 }
 #custom-list{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
 #custom-list span{
@@ -80,6 +76,7 @@ footer{
   text-align:center; color:var(--text-2); font-size:13px; margin:22px 0 8px;
 }
 </style>
+<link rel="stylesheet" href="/503/app-style.css">
 </head>
 <body>
 <a class="back" href="/503/">← Project 503</a>
@@ -88,7 +85,7 @@ footer{
   <p class="sub">Type or paste text below. Common abbreviations are highlighted; click one to expand it, or expand them all at once. Everything runs offline in this page.</p>
   <textarea id="input" placeholder="Start typing here…" spellcheck="false"></textarea>
   <div class="row">
-    <button id="run">Find abbreviations</button>
+    <button id="run" class="primary">Find abbreviations</button>
     <button id="expand-all" class="ghost">Expand all</button>
     <button id="collapse-all" class="ghost">Collapse all</button>
     <button id="sample" class="ghost">Sample text</button>
@@ -218,7 +215,7 @@ function runFind(){
   }
   output.appendChild(document.createTextNode(text.slice(last)));
   stats.textContent = count + " abbreviation" + (count === 1 ? "" : "s") + " found · click one in the text to expand it";
-  stats.style.color = count ? "var(--ok)" : "var(--text-2)";
+  stats.style.color = count ? "var(--green-t)" : "var(--text-2)";
   Object.keys(seen).forEach(function(nk){
     var rec = seen[nk];
     var chip = document.createElement("span");
